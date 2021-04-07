@@ -1,0 +1,47 @@
+[tool.black]
+line-length = 79
+
+[tool.poetry]
+name = "deepl"
+version = "0.1.0"
+description = "Python library for the DeepL API."
+authors = ["DeepL GmbH <support@deepl.com>"]
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/DeepLcom/deepl-python"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+include = [
+    "CHANGELOG.md"
+]
+
+[tool.poetry.urls]
+"Bug Tracker" = "https://github.com/DeepLcom/deepl-python/issues"
+
+[tool.coverage.run]
+omit = [".*", "*/site-packages/*", "tests/*"]
+
+[tool.coverage.report]
+fail_under = 70
+
+[tool.poetry.dependencies]
+python = ">=3.6.2,<4"
+requests = "^2"
+
+[tool.poetry.dev-dependencies]
+black = "^21.4b2"
+pytest = "^6.2.3"
+pydantic = "^1.8.1"
+coverage = "^5.5"
+tox = "^3.23.1"
+
+[tool.poetry.scripts]
+deepl = "deepl.__main__:main"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

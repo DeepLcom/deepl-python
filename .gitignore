@@ -1,0 +1,9 @@
+__pycache__
+.idea/
+venv*/
+dist/
+.pytest_cache/
+htmlcov/
+.coverage
+.python-version
+.tox/
