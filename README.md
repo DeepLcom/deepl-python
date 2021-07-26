@@ -70,7 +70,11 @@ logging.basicConfig()
 logging.getLogger('deepl').setLevel(logging.DEBUG)
 ```
 
-### Command Line Interface
+### Exceptions
+All module functions may raise `deepl.DeepLException` or one of its subclasses.
+If invalid arguments are provided, they may raise the standard exceptions `ValueError` and `TypeError`. 
+
+## Command Line Interface
 The library can be run on the command line supporting all API functions. Use the `--help` option for 
 usage information:
 ```shell

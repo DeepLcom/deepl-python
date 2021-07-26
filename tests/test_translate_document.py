@@ -147,7 +147,7 @@ def test_invalid_document(translator, tmpdir):
     input_document.write_text(example_text["EN"])
     output_document = output_dir / "document.xyz"
 
-    with pytest.raises(Exception, match="Invalid file"):
+    with pytest.raises(deepl.DeepLException, match="Invalid file"):
         translator.translate_document_from_filepath(
             input_document, output_path=output_document, **default_lang_args
         )
@@ -172,7 +172,7 @@ def test_translate_document_low_level(
     assert status.ok and not status.done
 
     # Calling download() before document is ready will fail
-    with pytest.raises(Exception, match="Document not ready"):
+    with pytest.raises(deepl.DeepLException, match="Document not ready"):
         with open(output_document_path, "wb") as output_file:
             translator.translate_document_download(handle, output_file)
 
@@ -260,5 +260,5 @@ def test_recreate_document_handle_invalid(translator):
     doc_id = "12AB" * 8  # IDs are 32 hex characters
     doc_key = "CD34" * 16  # Keys are 64 hex characters
     handle = deepl.DocumentHandle(doc_id, doc_key)
-    with pytest.raises(Exception, match="Not found"):
+    with pytest.raises(deepl.DeepLException, match="Not found"):
         translator.translate_document_get_status(handle)

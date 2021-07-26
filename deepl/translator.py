@@ -266,7 +266,7 @@ class Translator:
         skip_language_check: bool = False,
     ):
         if not auth_key:
-            raise DeepLException("auth_key must not be empty")
+            raise ValueError("auth_key must not be empty")
         self._auth_key = auth_key
 
         if server_url is None:
@@ -390,7 +390,7 @@ class Translator:
         if source_lang is not None and not any(
             source_lang == lang.code for lang in self.get_source_languages()
         ):
-            raise Exception(
+            raise DeepLException(
                 f"source_lang ({source_lang}) must be one of the supported "
                 "language codes, or None for auto-detection"
             )
@@ -398,7 +398,7 @@ class Translator:
         if not any(
             target_lang == lang.code for lang in self.get_target_languages()
         ):
-            raise Exception(
+            raise DeepLException(
                 f"target_lang ({target_lang}) must be one of the supported language codes"
             )
 
@@ -485,16 +485,16 @@ class Translator:
         for text_param in text:
             if isinstance(text_param, str):
                 if len(text_param) == 0:
-                    raise Exception("text parameters must not be empty")
+                    raise ValueError("text parameters must not be empty")
                 text_flattened.append(text_param)
             elif hasattr(text_param, "__iter__"):
                 text_flattened.extend(text_param)
             else:
-                raise Exception(
+                raise TypeError(
                     "text parameters must be a string or an iterable of strings"
                 )
         if not text_flattened:
-            raise Exception("text parameter is required")
+            raise TypeError("text parameter is required")
 
         request_data = self._check_language_and_formality(
             source_lang, target_lang, formality
@@ -621,7 +621,7 @@ class Translator:
             if status.ok:
                 self.translate_document_download(handle, output_document)
         except Exception as e:
-            raise DocumentTranslationException(str(e), handle)
+            raise DocumentTranslationException(str(e), handle) from e
 
         if not status.ok:
             raise DocumentTranslationException(
@@ -715,7 +715,7 @@ class Translator:
         )
 
         if status_code == http.HTTPStatus.SERVICE_UNAVAILABLE:
-            raise Exception("Document not ready for download")
+            raise DeepLException("Document not ready for download")
         self._raise_for_status(status_code, "<file>", json)
 
         if output_file:

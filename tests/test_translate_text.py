@@ -104,13 +104,13 @@ def test_target_lang(translator):
 
 def test_invalid_language(translator):
     with pytest.raises(
-        Exception,
+        deepl.DeepLException,
         match="target_lang.*must be one of the supported language codes",
     ):
         translator.translate_text(example_text["EN"], target_lang="XX")
 
     with pytest.raises(
-        Exception,
+        deepl.DeepLException,
         match="source_lang.*must be one of the supported language codes",
     ):
         translator.translate_text(
@@ -118,23 +118,23 @@ def test_invalid_language(translator):
         )
 
 
-def test_invalid_text(translator):
-    with pytest.raises(Exception, match="text parameters must be a string"):
-        translator.translate_text(123, target_lang="DE")
-    with pytest.raises(Exception, match="text parameter is required"):
-        translator.translate_text(target_lang="DE")
-
-
 def test_skip_language_check(server):
     translator = deepl.Translator(
         server.auth_key, server_url=server.server_url, skip_language_check=True
     )
-    with pytest.raises(Exception, match="target_lang"):
+    with pytest.raises(deepl.DeepLException, match="target_lang"):
         translator.translate_text(example_text["EN"], target_lang="XX")
-    with pytest.raises(Exception, match="source_lang"):
+    with pytest.raises(deepl.DeepLException, match="source_lang"):
         translator.translate_text(
             example_text["EN"], source_lang="XX", target_lang="DE"
         )
+
+
+def test_invalid_text(translator):
+    with pytest.raises(TypeError, match="text parameters must be a string"):
+        translator.translate_text(123, target_lang="DE")
+    with pytest.raises(TypeError, match="text parameter is required"):
+        translator.translate_text(target_lang="DE")
 
 
 @needs_mock_server
@@ -185,9 +185,9 @@ def test_formality(translator):
     )
     assert "Wie geht es dir?" == result.text
 
-    with pytest.raises(Exception, match=r".*formality.*"):
+    with pytest.raises(deepl.DeepLException, match=r".*formality.*"):
         result = translator.translate_text(
-            "How are you?", target_lang="DE", formality="unknown"
+            "How are you?", target_lang="DE", formality="invalid"
         )
 
 
@@ -268,23 +268,25 @@ def test_invalid_url(server):
     translator = deepl.Translator(
         server.auth_key, server_url="https://example.com"
     )
-    with pytest.raises(Exception, match="check server_url"):
+    with pytest.raises(deepl.DeepLException, match="check server_url"):
         translator.translate_text("Hello, world!", target_lang="DE")
 
 
 def test_empty_auth_key(server):
-    with pytest.raises(Exception, match=r"auth_key must not be empty"):
+    with pytest.raises(ValueError, match=r"auth_key must not be empty"):
         translator = deepl.Translator("", server_url=server.server_url)
 
 
 def test_invalid_auth_key(server):
     translator = deepl.Translator("invalid", server_url=server.server_url)
-    with pytest.raises(Exception, match=r".*Authorization failure.*"):
+    with pytest.raises(
+        deepl.AuthorizationException, match=r".*Authorization failure.*"
+    ):
         translator.translate_text("Hello, world!", target_lang="DE")
 
 
 def test_empty_text(translator):
-    with pytest.raises(Exception, match=r".*empty.*"):
+    with pytest.raises(ValueError, match=r".*empty.*"):
         translator.translate_text("", target_lang="DE")
 
 
