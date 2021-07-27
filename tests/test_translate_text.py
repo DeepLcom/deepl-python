@@ -18,23 +18,6 @@ def test_string_list(translator):
     assert example_text["DE"] == result[1].text
 
 
-def test_multiple_text(translator):
-    result = translator.translate_text(
-        example_text["FR"],
-        [example_text["JA"], example_text["EN"]],
-        example_text["CS"],
-        target_lang="DE",
-    )
-    assert example_text["DE"] == result[0].text
-    assert "FR" == result[0].detected_source_lang
-    assert example_text["DE"] == result[1].text
-    assert "JA" == result[1].detected_source_lang
-    assert example_text["DE"] == result[2].text
-    assert "EN" == result[2].detected_source_lang
-    assert example_text["DE"] == result[3].text
-    assert "CS" == result[3].detected_source_lang
-
-
 def test_string_generator(translator):
     def gen():
         yield example_text["EN"]
@@ -131,9 +114,9 @@ def test_skip_language_check(server):
 
 
 def test_invalid_text(translator):
-    with pytest.raises(TypeError, match="text parameters must be a string"):
+    with pytest.raises(TypeError, match="text parameter"):
         translator.translate_text(123, target_lang="DE")
-    with pytest.raises(TypeError, match="text parameter is required"):
+    with pytest.raises(TypeError):
         translator.translate_text(target_lang="DE")
 
 

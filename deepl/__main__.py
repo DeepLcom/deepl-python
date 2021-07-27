@@ -52,12 +52,11 @@ def document(
 
 def text(
     translator: deepl.Translator,
-    text,
     show_detected_source: bool = False,
     **kwargs,
 ):
     """Action function for the text command."""
-    output_list = translator.translate_text(text, **kwargs)
+    output_list = translator.translate_text(**kwargs)
     for output in output_list:
         if show_detected_source:
             print(f"Detected source language: {output.detected_source_lang}")

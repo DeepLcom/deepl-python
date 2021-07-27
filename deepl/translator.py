@@ -433,7 +433,8 @@ class Translator:
 
     def translate_text(
         self,
-        *text: Union[str, Iterable[str]],
+        text: Union[str, Iterable[str]],
+        *,
         source_lang: Optional[str] = None,
         target_lang: str,
         split_sentences: Union[str, SplitSentences] = SplitSentences.ALL,
@@ -447,7 +448,7 @@ class Translator:
     ) -> Union[TextResult, List[TextResult]]:
         """Translate text(s) into the target language.
 
-        :param text: Text to translate, may be repeated.
+        :param text: Text to translate.
         :type text: UTF-8 :class:`str`; string sequence (list, tuple, iterator,
             generator)
         :param source_lang: (Optional) Language code of input text, for example
@@ -478,29 +479,21 @@ class Translator:
         :return: List of TextResult objects containing results, unless input
             text was one string, then a single TextResult object is returned.
         """
-        multi_input = len(text) > 1 or any(
-            hasattr(text_param, "__iter__") and not isinstance(text_param, str)
-            for text_param in text
-        )
-        text_flattened = []
-        for text_param in text:
-            if isinstance(text_param, str):
-                if len(text_param) == 0:
-                    raise ValueError("text parameters must not be empty")
-                text_flattened.append(text_param)
-            elif hasattr(text_param, "__iter__"):
-                text_flattened.extend(text_param)
-            else:
-                raise TypeError(
-                    "text parameters must be a string or an iterable of strings"
-                )
-        if not text_flattened:
-            raise TypeError("text parameter is required")
+        if isinstance(text, str):
+            if len(text) == 0:
+                raise ValueError("text must not be empty")
+            multi_input = False
+        elif hasattr(text, "__iter__"):
+            multi_input = True
+        else:
+            raise TypeError(
+                "text parameter must be a string or an iterable of strings"
+            )
 
         request_data = self._check_language_and_formality(
             source_lang, target_lang, formality
         )
-        request_data["text"] = text_flattened
+        request_data["text"] = text
 
         if str(split_sentences) != str(SplitSentences.DEFAULT):
             request_data["split_sentences"] = str(split_sentences)

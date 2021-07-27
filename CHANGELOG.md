@@ -7,6 +7,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Changed
 * Improve exception hierarchy.
 * Translator() server_url argument works with and without trailing slash.
+* Translator.translate_text() accepts a single text argument, which may be a list or other iterable.
 ### Deprecated
 ### Removed
 ### Fixed
