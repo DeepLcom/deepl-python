@@ -24,6 +24,7 @@ from typing import (
     Tuple,
     Union,
 )
+import urllib.parse
 
 
 class TextResult:
@@ -303,7 +304,7 @@ class Translator:
         if data is None:
             data = {}
         data["auth_key"] = self._auth_key
-        url = self._server_url + url
+        url = urllib.parse.urljoin(self._server_url, url)
 
         util.log_info("Request to DeepL API", method=method, url=url)
         util.log_debug("Request details", data=data)
@@ -367,7 +368,7 @@ class Translator:
     def _request_languages(self, target: bool) -> List[Language]:
         """Internal function to make a /languages request and cache the result."""
         data = {"type": "target"} if target else {}
-        status, content, json = self._api_call("/v2/languages", data=data)
+        status, content, json = self._api_call("v2/languages", data=data)
 
         self._raise_for_status(status, content, json)
 
@@ -525,7 +526,7 @@ class Translator:
             request_data["ignore_tags"] = join_tags(ignore_tags)
 
         status, content, json = self._api_call(
-            "/v2/translate", data=request_data
+            "v2/translate", data=request_data
         )
 
         self._raise_for_status(status, content, json)
@@ -657,7 +658,7 @@ class Translator:
 
         files = {"file": input_document}
         status, content, json = self._api_call(
-            "/v2/document", data=request_data, files=files
+            "v2/document", data=request_data, files=files
         )
         self._raise_for_status(status, content, json)
 
@@ -674,7 +675,7 @@ class Translator:
         """
 
         data = {"document_key": handle.document_key}
-        url = f"/v2/document/{handle.document_id}"
+        url = f"v2/document/{handle.document_id}"
 
         status, content, json = self._api_call(url, data=data)
 
@@ -708,7 +709,7 @@ class Translator:
         """
 
         data = {"document_key": handle.document_key}
-        url = f"/v2/document/{handle.document_id}/result"
+        url = f"v2/document/{handle.document_id}/result"
 
         status_code, response, json = self._api_call(
             url, data=data, stream=True
@@ -743,7 +744,7 @@ class Translator:
 
     def get_usage(self) -> Usage:
         """Requests the current API usage."""
-        status, content, json = self._api_call("/v2/usage")
+        status, content, json = self._api_call("v2/usage")
 
         self._raise_for_status(status, content, json)
 
