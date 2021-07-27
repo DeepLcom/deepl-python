@@ -29,12 +29,12 @@ import deepl
 translator = deepl.Translator("YOUR_AUTH_KEY")
 
 # Translate text into a target language, in this case, French
-result = translator.translate_text("Hello, world!", "FR")
+result = translator.translate_text("Hello, world!", target_lang="FR")
 print(result)  # "Bonjour, le monde !"
 # Note: printing or converting the result to a string uses the output text
 
 # Translate multiple texts into British English
-result = translator.translate_text(["お元気ですか？", "¿Cómo estás?"], "EN-GB")
+result = translator.translate_text(["お元気ですか？", "¿Cómo estás?"], target_lang="EN-GB")
 print(result[0].text)  # "How are you?"
 print(result[0].detected_source_lang)  # "JA"
 print(result[1].text)  # "How are you?"
@@ -44,7 +44,7 @@ print(result[1].detected_source_lang)  # "ES"
 translator.translate_document_from_filepath(
     "Instruction Manual.docx",
     "Bedienungsanleitlung.docx",
-    "DE",
+    target_lang="DE",
     formality="more"
 )
 
