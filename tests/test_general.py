@@ -5,7 +5,7 @@ import pytest
 
 
 def test_version():
-    assert "0.1.0" == deepl.__version__
+    assert "0.2.0" == deepl.__version__
 
 
 @pytest.mark.parametrize(
