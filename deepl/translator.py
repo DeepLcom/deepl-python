@@ -385,6 +385,15 @@ class Translator:
         self, source_lang: Optional[str], target_lang: str
     ):
         """Internal function to check given languages match available languages."""
+        if target_lang == "EN":
+            raise DeepLException(
+                'target_lang="EN" is deprecated, please use "EN-GB" or "EN-US" instead.'
+            )
+        elif target_lang == "PT":
+            raise DeepLException(
+                'target_lang="PT" is deprecated, please use "PT-PT" or "PT-BR" instead.'
+            )
+
         if self._skip_language_check:
             return
 
