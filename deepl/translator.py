@@ -557,9 +557,9 @@ class Translator:
         :raises DocumentTranslationException: If an error occurs during translation,
             The exception includes information about the document request.
         """
-        try:
-            with open(input_path, "rb") as in_file:
-                with open(output_path, "wb") as out_file:
+        with open(input_path, "rb") as in_file:
+            with open(output_path, "wb") as out_file:
+                try:
                     self.translate_document(
                         in_file,
                         out_file,
@@ -567,9 +567,10 @@ class Translator:
                         source_lang=source_lang,
                         formality=formality,
                     )
-        except Exception as e:
-            os.unlink(output_path)
-            raise e
+                except Exception as e:
+                    out_file.close()
+                    os.unlink(output_path)
+                    raise e
 
     def translate_document(
         self,
