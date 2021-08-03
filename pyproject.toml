@@ -45,6 +45,7 @@ pytest = "^6.2.3"
 pydantic = "^1.8.1"
 coverage = "^5.5"
 tox = "^3.23.1"
+flake8 = "^3.9.2"
 
 [tool.poetry.scripts]
 deepl = "deepl.__main__:main"

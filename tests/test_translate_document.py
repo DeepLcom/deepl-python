@@ -2,10 +2,11 @@
 # Use of this source code is governed by an MIT
 # license that can be found in the LICENSE file.
 
-from .conftest import *
+from .conftest import example_text, needs_mock_server, needs_real_server
 import deepl
 import io
 import pathlib
+import pytest
 import time
 
 default_lang_args = {"target_lang": "DE", "source_lang": "EN"}

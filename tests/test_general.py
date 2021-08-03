@@ -2,7 +2,7 @@
 # Use of this source code is governed by an MIT
 # license that can be found in the LICENSE file.
 
-from .conftest import *
+from .conftest import example_text, needs_mock_server, needs_mock_proxy_server
 import deepl
 import pathlib
 import pytest
@@ -17,7 +17,8 @@ def test_version():
     [k for k in example_text.keys()],
 )
 def test_example_translation(lang, translator):
-    """Tests translations of pre-prepared example texts to ensure translation is working.
+    """Tests translations of pre-prepared example texts to ensure translation
+    is working.
 
     The texts are translations of "proton beam"."""
 

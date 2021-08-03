@@ -42,8 +42,8 @@ def action_languages(translator: deepl.Translator, glossary: bool):
         for language in target_languages:
             if language.supports_formality:
                 print(f"{language.code}: {language.name} (supports formality)")
-            else:
-                print(f"{language.code}: {language.name}")
+        else:
+            print(f"{language.code}: {language.name}")
 
 
 def action_document(
@@ -206,8 +206,9 @@ def get_parser(prog_name):
         "--proxy-url",
         default=None,
         metavar="URL",
-        help=f"proxy server URL to use for all connections; the {env_proxy_url} "
-        f"environment variable may be used as secondary fallback",
+        help="proxy server URL to use for all connections; the "
+        f"{env_proxy_url} environment variable may be used as secondary "
+        "fallback",
     )
 
     # Note: add_subparsers param 'required' is not available in py36
@@ -255,7 +256,8 @@ def get_parser(prog_name):
         type=str,
         choices=[enum.value for enum in deepl.SplitSentences],
         default=deepl.SplitSentences.DEFAULT.value,
-        help="control sentence splitting before translation, see API for information",
+        help="control sentence splitting before translation, see API for "
+        "information",
     )
     parser_text.add_argument(
         "--preserve-formatting",
@@ -399,9 +401,9 @@ def get_parser(prog_name):
         "--file",
         type=str,
         help="file to read glossary entries from. File must be in "
-        "tab-separated values (TSV) format: one entry-pair per line, each line "
-        "contains the source entry, a tab, then the target entry. Empty lines "
-        "are ignored.",
+        "tab-separated values (TSV) format: one entry-pair per line, each "
+        "line contains the source entry, a tab, then the target entry. Empty "
+        "lines are ignored.",
     )
 
     parser_glossary_list = glossary_subparsers.add_parser(
@@ -409,6 +411,7 @@ def get_parser(prog_name):
         help="list available glossaries",
         description="list available glossaries",
     )
+    _ = parser_glossary_list  # Suppress unused variable warning
 
     parser_glossary_get = glossary_subparsers.add_parser(
         "get",
@@ -459,7 +462,7 @@ def main(args=None, prog_name=None):
 
     if args.command is None:
         # Support for Python 3.6 - subcommands cannot be required
-        sys.stderr.write(f"Error: command is required\n")
+        sys.stderr.write("Error: command is required\n")
         parser.print_help(sys.stderr)
         sys.exit(1)
 
@@ -500,7 +503,7 @@ def main(args=None, prog_name=None):
         elif args.command == "glossary":
             if args.subcommand is None:
                 # Support for Python 3.6 - subcommands cannot be required
-                sys.stderr.write(f"Error: glossary subcommand is required\n")
+                sys.stderr.write("Error: glossary subcommand is required\n")
                 parser_glossary.print_help(sys.stderr)
                 sys.exit(1)
 

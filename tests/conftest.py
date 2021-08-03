@@ -120,7 +120,8 @@ def server(config):
                 )
 
         def expect_proxy(self, value: bool = True):
-            """Instructs the mock server to only accept requests via the proxy."""
+            """Instructs the mock server to only accept requests via the
+            proxy."""
             if config.mock_server_port is not None:
                 self.headers["mock-server-session-expect-proxy"] = (
                     "1" if value else "0"
@@ -150,7 +151,8 @@ def _make_translator(server, auth_key=None, proxy=None):
 
 @pytest.fixture
 def translator(server):
-    """Returns a deepl.Translator to use in all tests taking a parameter 'translator'."""
+    """Returns a deepl.Translator to use in all tests taking a parameter
+    'translator'."""
     return _make_translator(server)
 
 
@@ -326,8 +328,8 @@ needs_mock_server = pytest.mark.skipif(
     Config().mock_server_port is None,
     reason="this test requires a mock server",
 )
-# Decorate test functions with "@needs_mock_proxy_server" to skip them if a real
-#  server is used or mock proxy server is not configured
+# Decorate test functions with "@needs_mock_proxy_server" to skip them if a
+#  real server is used or mock proxy server is not configured
 needs_mock_proxy_server = pytest.mark.skipif(
     Config().mock_proxy_server_port is None
     or Config().mock_server_port is None,

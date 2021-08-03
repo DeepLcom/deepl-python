@@ -2,8 +2,7 @@
 # Use of this source code is governed by an MIT
 # license that can be found in the LICENSE file.
 
-from .conftest import *
-import datetime
+from .conftest import needs_real_server
 import deepl
 import pytest
 

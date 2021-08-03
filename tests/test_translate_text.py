@@ -2,8 +2,9 @@
 # Use of this source code is governed by an MIT
 # license that can be found in the LICENSE file.
 
-from .conftest import *
+from .conftest import example_text, needs_mock_server, needs_real_server
 import deepl
+import pytest
 import re
 import time
 
@@ -78,13 +79,13 @@ def test_target_lang(translator):
     )
 
     target_languages = translator.get_target_languages()
-    target_language_en = next(
+    target_language_de = next(
         language for language in target_languages if language.code == "DE"
     )
     check_result(
         translator.translate_text(
             example_text["EN"],
-            target_lang=target_language_en,
+            target_lang=target_language_de,
         )
     )
 
@@ -189,38 +190,38 @@ class TestSplitSentences:
         If the implementation is easy to explain, it may be a good idea."""
 
     def test_split_sentences_enum_off(self, translator):
-        result = translator.translate_text(
+        translator.translate_text(
             self.text,
             target_lang="DE",
             split_sentences=deepl.SplitSentences.OFF,
         )
 
     def test_split_sentences_enum_all(self, translator):
-        result = translator.translate_text(
+        translator.translate_text(
             self.text,
             target_lang="DE",
             split_sentences=deepl.SplitSentences.ALL,
         )
 
     def test_split_sentences_enum_no_newlines(self, translator):
-        result = translator.translate_text(
+        translator.translate_text(
             self.text,
             target_lang="DE",
             split_sentences=deepl.SplitSentences.NO_NEWLINES,
         )
 
     def test_split_sentences_str_0(self, translator):
-        result = translator.translate_text(
+        translator.translate_text(
             self.text, target_lang="DE", split_sentences="0"
         )
 
     def test_split_sentences_str_1(self, translator):
-        result = translator.translate_text(
+        translator.translate_text(
             self.text, target_lang="DE", split_sentences="1"
         )
 
     def test_split_sentences_str_no_newlines(self, translator):
-        result = translator.translate_text(
+        translator.translate_text(
             self.text, target_lang="DE", split_sentences="nonewlines"
         )
 
@@ -234,7 +235,9 @@ def test_tag_handling_specify_tags(translator):
     </meta>
     <content>
         <par>
-        <span>This is a sentence split</span><span>across two &lt;span&gt; tags that should be treated as one.</span>
+        <span>This is a sentence split</span>
+        <span>across two &lt;span&gt; tags that should be treated as one.
+        </span>
         </par>
         <par>Here is a sentence. Followed by a second one.</par>
         <raw>This sentence will not be translated.</raw>
@@ -266,7 +269,7 @@ def test_invalid_url(server):
 
 def test_empty_auth_key(server):
     with pytest.raises(ValueError, match=r"auth_key must not be empty"):
-        translator = deepl.Translator("", server_url=server.server_url)
+        deepl.Translator("", server_url=server.server_url)
 
 
 def test_invalid_auth_key(server):

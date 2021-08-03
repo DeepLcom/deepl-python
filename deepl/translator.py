@@ -227,7 +227,8 @@ class Usage:
 
         @property
         def valid(self) -> bool:
-            """True iff both the count and limit are set for this usage type."""
+            """True iff both the count and limit are set for this usage
+            type."""
             return self._count is not None and self._limit is not None
 
         @property
@@ -546,11 +547,13 @@ class Translator:
         """Internal function to check given languages are valid."""
         if target_lang == "EN":
             raise DeepLException(
-                'target_lang="EN" is deprecated, please use "EN-GB" or "EN-US" instead.'
+                'target_lang="EN" is deprecated, please use "EN-GB" or "EN-US"'
+                "instead."
             )
         elif target_lang == "PT":
             raise DeepLException(
-                'target_lang="PT" is deprecated, please use "PT-PT" or "PT-BR" instead.'
+                'target_lang="PT" is deprecated, please use "PT-PT" or "PT-BR"'
+                "instead."
             )
 
     def _check_language_and_formality(
@@ -758,17 +761,19 @@ class Translator:
 
         :param input_path: Path to document to be translated.
         :param output_path: Path to store translated document.
-        :param source_lang: (Optional) Language code of input document, for example "DE",
-            "EN", "FR". If omitted, DeepL will auto-detect the input language.
-        :param target_lang: Language code to translate document into, for example "DE",
-            "EN-US", "FR".
-        :param formality: (Optional) Desired formality for translation, as Formality
-            enum, "less" or "more".
+        :param source_lang: (Optional) Language code of input document, for
+            example "DE", "EN", "FR". If omitted, DeepL will auto-detect the
+            input language.
+        :param target_lang: Language code to translate document into, for
+            example "DE", "EN-US", "FR".
+        :param formality: (Optional) Desired formality for translation, as
+            Formality enum, "less" or "more".
         :param glossary: (Optional) glossary or glossary ID to use for
             translation. Must match specified source_lang and target_lang.
 
-        :raises DocumentTranslationException: If an error occurs during translation,
-            The exception includes information about the document request.
+        :raises DocumentTranslationException: If an error occurs during
+            translation. The exception includes information about the document
+            request.
         """
         with open(input_path, "rb") as in_file:
             with open(output_path, "wb") as out_file:
@@ -801,7 +806,8 @@ class Translator:
 
         :param input_document: Document to translate as a file-like object. It
             is recommended to open files in binary mode.
-        :param output_document: File-like object to receive translated document.
+        :param output_document: File-like object to receive translated
+            document.
         :param source_lang: (Optional) Language code of input document, for
             example "DE", "EN", "FR". If omitted, DeepL will auto-detect the
             input language.

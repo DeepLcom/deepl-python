@@ -124,8 +124,9 @@ class HttpClient:
                 )
 
             log_info(
-                f"Starting retry {backoff.get_num_retries() + 1} for request {method} {url} "
-                f"after sleeping for {backoff.get_time_until_deadline():.2f} seconds."
+                f"Starting retry {backoff.get_num_retries() + 1} for request "
+                f"{method} {url} after sleeping for "
+                f"{backoff.get_time_until_deadline():.2f} seconds."
             )
             backoff.sleep_until_deadline()
 

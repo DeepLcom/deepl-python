@@ -31,9 +31,13 @@ before_script:
 
 # stage: check ----------------------
 
-formatting:
+black:
   stage: check
   script: poetry run black --check .
+
+flake8:
+  stage: check
+  script: poetry run flake8 deepl tests
 
 # stage: build ----------------------
 
@@ -55,16 +59,6 @@ package:
     DEEPL_SERVER_URL:
       vault: jenkins/client_libraries/test_server_url@backend
       file: false
-
-#.use-mock-server-template: &use_mock_server_template
-#  variables:
-#    DEEPL_SERVER_URL: http://localhost:3000
-#    DEEPL_MOCK_SERVER_PORT: 3000
-#    DEEPL_PROXY_URL: http://localhost:3001
-#    DEEPL_MOCK_PROXY_SERVER_PORT: 3001
-#
-#  after_script:
-#    - docker stop deepl-mock
 
 test:
   <<: *use_test_server_template

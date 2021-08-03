@@ -3,11 +3,17 @@
 # license that can be found in the LICENSE file.
 
 from click.testing import CliRunner
-from .conftest import *
+from .conftest import example_text, needs_real_server
+
+# flake8: noqa: F401
 from deepl import __main__
+import deepl
 import pathlib
 import pytest
 import re
+
+
+main_function = deepl.__main__
 
 
 @pytest.fixture
@@ -20,13 +26,13 @@ def runner(server):
 
 
 def test_help(runner):
-    result = runner.invoke(deepl.__main__, "--help")
+    result = runner.invoke(main_function, "--help")
     assert result.exit_code == 0, f"exit: {result.exit_code}\n {result.output}"
     assert "usage" in result.output
 
 
 def test_version(runner):
-    result = runner.invoke(deepl.__main__, "--version")
+    result = runner.invoke(main_function, "--version")
     assert result.exit_code == 0, f"exit: {result.exit_code}\n {result.output}"
     assert "deepl-python v" in result.output
     version_regex = re.compile(r"deepl-python v\d+\.\d+\.\d+")
@@ -35,12 +41,12 @@ def test_version(runner):
 
 def test_verbose(runner):
     # verbose = info
-    result = runner.invoke(deepl.__main__, "--verbose usage")
+    result = runner.invoke(main_function, "--verbose usage")
     assert result.exit_code == 0, f"exit: {result.exit_code}\n {result.output}"
     assert "Request to DeepL API" in result.output
 
     # verbose = debug
-    result = runner.invoke(deepl.__main__, "-vv usage")
+    result = runner.invoke(main_function, "-vv usage")
     assert result.exit_code == 0, f"exit: {result.exit_code}\n {result.output}"
     assert "Request to DeepL API" in result.output
     assert "Request details" in result.output
@@ -48,26 +54,26 @@ def test_verbose(runner):
 
 def test_no_auth(runner):
     result = runner.invoke(
-        deepl.__main__, "usage", env={"DEEPL_AUTH_KEY": None}
+        main_function, "usage", env={"DEEPL_AUTH_KEY": None}
     )
     assert result.exit_code == 1, f"exit: {result.exit_code}\n {result.output}"
     assert "DEEPL_AUTH_KEY" in result.output
 
 
 def test_no_command(runner):
-    result = runner.invoke(deepl.__main__, "")
+    result = runner.invoke(main_function, "")
     assert result.exit_code == 1, f"exit: {result.exit_code}\n {result.output}"
     assert "command is required" in result.output
 
 
 def test_usage(runner):
-    result = runner.invoke(deepl.__main__, "usage")
+    result = runner.invoke(main_function, "usage")
     assert result.exit_code == 0, f"exit: {result.exit_code}\n {result.output}"
     assert "Usage this billing period" in result.output
 
 
 def test_languages(runner):
-    result = runner.invoke(deepl.__main__, "languages")
+    result = runner.invoke(main_function, "languages")
     assert result.exit_code == 0, f"exit: {result.exit_code}\n {result.output}"
     assert "Source languages" in result.output
     assert "Target languages" in result.output
@@ -82,7 +88,7 @@ def test_languages(runner):
 
 def test_text(runner):
     result = runner.invoke(
-        deepl.__main__, 'text --to DE "proton beam" --show-detected-source'
+        main_function, 'text --to DE "proton beam" --show-detected-source'
     )
     assert result.exit_code == 0, f"exit: {result.exit_code}\n {result.output}"
     assert example_text["DE"] in result.output
@@ -91,7 +97,7 @@ def test_text(runner):
 
 def test_text_stdin(runner):
     result = runner.invoke(
-        deepl.__main__,
+        main_function,
         "text --to DE --show-detected-source -",
         input=example_text["EN"],
     )
@@ -103,7 +109,7 @@ def test_text_stdin(runner):
 @needs_real_server
 def test_text_preserve_formatting(runner):
     result = runner.invoke(
-        deepl.__main__, 'text --to DE --preserve-formatting "proton beam"'
+        main_function, 'text --to DE --preserve-formatting "proton beam"'
     )
     assert result.exit_code == 0, f"exit: {result.exit_code}\n {result.output}"
     assert example_text["DE"].lower() in result.output
@@ -111,7 +117,7 @@ def test_text_preserve_formatting(runner):
 
 def test_text_split_sentences(runner):
     result = runner.invoke(
-        deepl.__main__,
+        main_function,
         '-vv text --to DE --split-sentences nonewlines "proton beam"',
     )
     assert result.exit_code == 0, f"exit: {result.exit_code}\n {result.output}"
@@ -124,8 +130,9 @@ def test_text_split_sentences(runner):
 
 def test_text_tags(runner):
     result = runner.invoke(
-        deepl.__main__,
-        '-vv text --to DE --tag-handling xml --splitting-tags split --ignore-tags a,b --ignore-tags c --ignore-tags d "proton beam"',
+        main_function,
+        "-vv text --to DE --tag-handling xml --splitting-tags split "
+        '--ignore-tags a,b --ignore-tags c --ignore-tags d "proton beam"',
     )
     assert result.exit_code == 0, f"exit: {result.exit_code}\n {result.output}"
     # Check ignore_tags parameter is sent in HTTP request
@@ -148,7 +155,7 @@ def test_document(runner, tmpdir):
     output_document = output_dir / "document.txt"
 
     result = runner.invoke(
-        deepl.__main__, f"-vv document --to DE {input_document} {output_dir}"
+        main_function, f"-vv document --to DE {input_document} {output_dir}"
     )
     assert result.exit_code == 0, f"exit: {result.exit_code}\n {result.output}"
     assert example_text["DE"] == output_document.read_text()
@@ -163,7 +170,7 @@ def test_document_occupied_output(runner, tmpdir):
     output_dir.touch()
 
     result = runner.invoke(
-        deepl.__main__, f"-vv document --to DE {input_document} {output_dir}"
+        main_function, f"-vv document --to DE {input_document} {output_dir}"
     )
     assert result.exit_code == 1, f"exit: {result.exit_code}\n {result.output}"
     assert "already exists" in result.output
@@ -176,14 +183,14 @@ def test_invalid_document(runner, tmpdir):
     input_document.write_text(example_text["EN"])
 
     result = runner.invoke(
-        deepl.__main__, f"-vv document --to DE {input_document} {output_dir}"
+        main_function, f"-vv document --to DE {input_document} {output_dir}"
     )
     assert result.exit_code == 1, f"exit: {result.exit_code}\n {result.output}"
     assert "Invalid file" in result.output or "file extension" in result.output
 
 
 def test_glossary_no_subcommand(runner):
-    result = runner.invoke(deepl.__main__, "glossary")
+    result = runner.invoke(main_function, "glossary")
     assert result.exit_code == 1, f"exit: {result.exit_code}\n {result.output}"
     assert "subcommand is required" in result.output
 
@@ -202,7 +209,7 @@ def test_glossary_create(
 
     try:
         result = runner.invoke(
-            deepl.__main__,
+            main_function,
             f'-vv glossary create --name "{name_cli}" --from DE --to EN '
             f"{entries_cli}",
         )
@@ -210,7 +217,7 @@ def test_glossary_create(
             result.exit_code == 0
         ), f"exit: {result.exit_code}\n {result.output}"
         result = runner.invoke(
-            deepl.__main__,
+            main_function,
             f'-vv glossary create --name "{name_stdin}" --from DE --to EN -',
             input=entries_tsv,
         )
@@ -218,7 +225,7 @@ def test_glossary_create(
             result.exit_code == 0
         ), f"exit: {result.exit_code}\n {result.output}"
         result = runner.invoke(
-            deepl.__main__,
+            main_function,
             f'-vv glossary create --name "{name_file}" --from DE --to EN '
             f"--file {file}",
         )
@@ -226,7 +233,7 @@ def test_glossary_create(
             result.exit_code == 0
         ), f"exit: {result.exit_code}\n {result.output}"
 
-        result = runner.invoke(deepl.__main__, f"-vv glossary list")
+        result = runner.invoke(main_function, "-vv glossary list")
         assert (
             result.exit_code == 0
         ), f"exit: {result.exit_code}\n {result.output}"
@@ -236,7 +243,7 @@ def test_glossary_create(
 
         # Cannot use --file option together with entries
         result = runner.invoke(
-            deepl.__main__,
+            main_function,
             f'-vv glossary create --name "{name_file}" --from DE --to EN '
             f"--file {file} {entries_cli}",
         )
@@ -255,9 +262,7 @@ def test_glossary_get(translator, runner, glossary_manager):
     with glossary_manager() as created_glossary:
         created_id = created_glossary.glossary_id
 
-        result = runner.invoke(
-            deepl.__main__, f"-vv glossary get {created_id}"
-        )
+        result = runner.invoke(main_function, f"-vv glossary get {created_id}")
         print(result.output)
         assert (
             result.exit_code == 0
@@ -272,7 +277,7 @@ def test_glossary_list(translator, runner, glossary_manager):
     ) as g2, glossary_manager(glossary_name_suffix="3") as g3:
         glossary_list = [g1, g2, g3]
 
-        result = runner.invoke(deepl.__main__, f"-vv glossary list")
+        result = runner.invoke(main_function, "-vv glossary list")
         assert (
             result.exit_code == 0
         ), f"exit: {result.exit_code}\n {result.output}"
@@ -284,9 +289,8 @@ def test_glossary_entries(translator, runner, glossary_manager):
     entries = {"Hallo": "Hello", "Maler": "Artist"}
     with glossary_manager(entries=entries) as created_glossary:
         created_id = created_glossary.glossary_id
-
         result = runner.invoke(
-            deepl.__main__, f"-vv glossary entries {created_id}"
+            main_function, f"-vv glossary entries {created_id}"
         )
         assert (
             result.exit_code == 0
@@ -298,7 +302,7 @@ def test_glossary_entries(translator, runner, glossary_manager):
 def test_glossary_delete(translator, runner, glossary_manager):
     with glossary_manager() as created_glossary:
         created_id = created_glossary.glossary_id
-        result = runner.invoke(deepl.__main__, f"glossary list")
+        result = runner.invoke(main_function, "glossary list")
         assert (
             result.exit_code == 0
         ), f"exit: {result.exit_code}\n {result.output}"
@@ -306,13 +310,13 @@ def test_glossary_delete(translator, runner, glossary_manager):
 
         # Remove the created glossary
         result = runner.invoke(
-            deepl.__main__, f'glossary delete "{created_id}"'
+            main_function, f'glossary delete "{created_id}"'
         )
         assert (
             result.exit_code == 0
         ), f"exit: {result.exit_code}\n {result.output}"
 
-        result = runner.invoke(deepl.__main__, f"glossary list")
+        result = runner.invoke(main_function, "glossary list")
         assert (
             result.exit_code == 0
         ), f"exit: {result.exit_code}\n {result.output}"
