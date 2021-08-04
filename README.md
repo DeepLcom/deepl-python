@@ -13,12 +13,15 @@ The DeepL Python library offers a convenient way for applications written in Pyt
 To use the DeepL Python Library, you'll need an API authentication key. To get a key, [please create an account here](https://www.deepl.com/pro?utm_source=github&utm_medium=github-python-readme#developer). You can translate up to 500,000 characters/month for free. 
 
 ## Installation
-To install dependencies with a source checkout, use poetry:
+The library can be installed from PyPI using pip:
+```shell
+pip install --upgrade deepl
+```
+
+If you need to modify this source code, install the dependencies using poetry:
 ```shell
 poetry install
 ```
-
-Note: later this package will be on PyPI, and then `pip install <name to be confirmed>` will be the preferred installation method.
 
 ### Requirements
 The library is tested with Python versions 3.6 to 3.9. 
