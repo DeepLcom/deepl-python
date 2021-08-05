@@ -30,7 +30,7 @@ fail_under = 70
 
 [tool.poetry.dependencies]
 python = ">=3.6.2,<4"
-requests = "^2"
+requests = "^2.18"
 
 [tool.poetry.dev-dependencies]
 black = "^21.4b2"
