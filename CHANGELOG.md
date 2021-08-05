@@ -5,16 +5,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [Unreleased]
+## [0.3.0] - 2021-08-05
 ### Added
 * Package uploaded to PyPI. Thanks to [Adrian Freund](mailto:mail@freundtech.com) for transferring the deepl package
   name.
-* Clarify minimum version of requests module to 2.18.  
-### Changed
-### Deprecated
-### Removed
-### Fixed
-### Security
+* Clarify minimum version of requests module to 2.18.
 
 
 ## [0.2.0] - 2021-07-28
