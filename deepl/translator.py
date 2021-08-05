@@ -268,7 +268,6 @@ class Translator:
     ):
         if not auth_key:
             raise ValueError("auth_key must not be empty")
-        self._auth_key = auth_key
 
         if server_url is None:
             server_url = (
@@ -279,7 +278,7 @@ class Translator:
 
         self._server_url = server_url
         self._client = http_client.HttpClient()
-        self.headers = {}
+        self.headers = {"Authorization": f"DeepL-Auth-Key {auth_key}"}
 
         self._skip_language_check = skip_language_check
         self._source_languages_cached = None
@@ -303,7 +302,6 @@ class Translator:
         """
         if data is None:
             data = {}
-        data["auth_key"] = self._auth_key
         url = urllib.parse.urljoin(self._server_url, url)
 
         util.log_info("Request to DeepL API", method=method, url=url)

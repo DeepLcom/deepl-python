@@ -109,27 +109,34 @@ def server(config):
     return Server()
 
 
+def _make_translator(server, auth_key=None):
+    """Returns a deepl.Translator for the specified server test fixture.
+    The server auth_key is used unless specifically overridden."""
+    if auth_key is None:
+        auth_key = server.auth_key
+    translator = deepl.Translator(auth_key, server_url=server.server_url)
+
+    # If the server test fixture has custom headers defined, update the
+    # translator headers and replace with the server headers dictionary.
+    # Note: changing the underlying object is necessary because some tests
+    # make changes to the headers during tests.
+    if server.headers:
+        server.headers.update(translator.headers)
+        translator.headers = server.headers
+    return translator
+
+
 @pytest.fixture
 def translator(server):
     """Returns a deepl.Translator to use in all tests taking a parameter 'translator'."""
-
-    result = deepl.Translator(server.auth_key, server_url=server.server_url)
-
-    if server.headers:
-        result.headers = server.headers
-    return result
+    return _make_translator(server)
 
 
 @pytest.fixture
 def translator_with_random_auth_key(server):
     """Returns a deepl.Translator with randomized authentication key,
     for use in mock-server tests."""
-
-    result = deepl.Translator(str(uuid.uuid1()), server_url=server.server_url)
-
-    if server.headers:
-        result.headers = server.headers
-    return result
+    return _make_translator(server, auth_key=str(uuid.uuid1()))
 
 
 # Decorate test functions with "@needs_mock_server" to skip them if a real

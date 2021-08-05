@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 ### Changed
+* All API calls use Authorization header instead of auth_key parameter.
 ### Deprecated
 ### Removed
 ### Fixed
