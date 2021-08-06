@@ -37,3 +37,9 @@ Version increased to avoid conflicts with old packages on PyPI.
 
 ## [0.1.0] - 2021-07-26
 Initial version.
+
+[Unreleased]: https://github.com/DeepLcom/deepl-python/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/DeepLcom/deepl-python/compare/v0.3.0...v0.4.0
+[0.3.0]: https://github.com/DeepLcom/deepl-python/compare/v0.2.0...v0.3.0
+[0.2.0]: https://github.com/DeepLcom/deepl-python/compare/v0.1.0...v0.2.0
+[0.1.0]: https://github.com/DeepLcom/deepl-python/releases/tag/v0.1.0
