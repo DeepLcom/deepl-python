@@ -5,7 +5,7 @@ line-length = 79
 name = "deepl"
 version = "0.4.0"
 description = "Python library for the DeepL API."
-authors = ["DeepL GmbH <support@deepl.com>"]
+authors = ["DeepL GmbH <python-api@deepl.com>"]
 license = "MIT"
 readme = "README.md"
 repository = "https://github.com/DeepLcom/deepl-python"
@@ -14,6 +14,12 @@ classifiers = [
     "Intended Audience :: Developers",
     "Operating System :: OS Independent",
     "Topic :: Software Development :: Libraries :: Python Modules",
+    # Note: although peotry automatically creates these Python version
+    # classifiers, the 3.6 one will be missing because we specify >=3.6.2
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
 ]
 include = [
     "CHANGELOG.md"
