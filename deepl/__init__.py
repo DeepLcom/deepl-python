@@ -1,6 +1,6 @@
 from .version import VERSION as __version__  # noqa
 
-__author__ = "DeepL GmbH <support@deepl.com>"
+__author__ = "DeepL GmbH <python-api@deepl.com>"
 
 from .exceptions import (  # noqa
     AuthorizationException,
