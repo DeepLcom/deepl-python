@@ -4,9 +4,13 @@
 [![Supported Python versions](https://img.shields.io/pypi/pyversions/deepl.svg)](https://pypi.org/project/deepl/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blueviolet.svg)](https://github.com/DeepLcom/deepl-python/blob/main/LICENSE)
 
-The [DeepL API](https://www.deepl.com/docs-api?utm_source=github&utm_medium=github-python-readme) is a language translation API that allows other computer programs to send texts and documents to DeepL's servers and receive high-quality translations. This opens a whole universe of opportunities for developers: any translation product you can imagine can now be built on top of DeepL's best-in-class translation technology.
+The [DeepL API](https://www.deepl.com/docs-api?utm_source=github&utm_medium=github-python-readme) is a language
+translation API that allows other computer programs to send texts and documents to DeepL's servers and receive
+high-quality translations. This opens a whole universe of opportunities for developers: any translation product you can
+imagine can now be built on top of DeepL's best-in-class translation technology.
 
-The DeepL Python library offers a convenient way for applications written in Python to interact with the DeepL API. All functions of the DeepL API are supported.
+The DeepL Python library offers a convenient way for applications written in Python to interact with the DeepL API. All
+functions of the DeepL API are supported.
 
 ## Getting an authentication key 
 
