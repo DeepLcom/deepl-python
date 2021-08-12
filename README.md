@@ -9,8 +9,10 @@ translation API that allows other computer programs to send texts and documents 
 high-quality translations. This opens a whole universe of opportunities for developers: any translation product you can
 imagine can now be built on top of DeepL's best-in-class translation technology.
 
-The DeepL Python library offers a convenient way for applications written in Python to interact with the DeepL API. All
-functions of the DeepL API are supported.
+The DeepL Python library offers a convenient way for applications written in Python to interact with the DeepL API. We
+intend to support all API functions with the library, though support for new features may be added to the library after
+they’re added to the API.
+
 
 ## Getting an authentication key 
 
