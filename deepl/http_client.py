@@ -134,6 +134,7 @@ class HttpClient:
                 with self._session.request(
                     method, url, data=data, timeout=timeout, **kwargs
                 ) as response:
+                    response.encoding = "UTF-8"
                     return response.status_code, response.text
 
         except (
