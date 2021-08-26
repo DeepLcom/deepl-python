@@ -57,11 +57,11 @@ class DocumentHandle:
         return f"Document ID: {self.document_id}, key: {self.document_key}"
 
     @property
-    def document_id(self):
+    def document_id(self) -> str:
         return self._document_id
 
     @property
-    def document_key(self):
+    def document_key(self) -> str:
         return self._document_key
 
 
@@ -89,15 +89,15 @@ class DocumentStatus:
         self._seconds_remaining = seconds_remaining
         self._billed_characters = billed_characters
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.status.value
 
     @property
-    def ok(self):
+    def ok(self) -> bool:
         return self._status != self.Status.ERROR
 
     @property
-    def done(self):
+    def done(self) -> bool:
         return self._status == self.Status.DONE
 
     @property
@@ -417,8 +417,8 @@ class Translator:
 
     def _check_language_and_formality(
         self,
-        source_lang: Optional[str],
-        target_lang: str,
+        source_lang: Union[str, Language, None],
+        target_lang: Union[str, Language],
         formality: Union[str, Formality],
     ) -> dict:
         # target_lang and source_lang are case insensitive
@@ -447,8 +447,8 @@ class Translator:
         self,
         text: Union[str, Iterable[str]],
         *,
-        source_lang: Optional[str] = None,
-        target_lang: str,
+        source_lang: Union[str, Language, None] = None,
+        target_lang: Union[str, Language],
         split_sentences: Union[str, SplitSentences] = SplitSentences.ALL,
         preserve_formatting: bool = False,
         formality: Union[str, Formality] = Formality.DEFAULT,
