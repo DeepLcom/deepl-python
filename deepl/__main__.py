@@ -9,7 +9,6 @@ import os
 import sys
 from typing import List
 
-
 # Program name for integration with click.testing
 name = "python -m deepl"
 
@@ -17,13 +16,13 @@ env_auth_key = "DEEPL_AUTH_KEY"
 env_server_url = "DEEPL_SERVER_URL"
 
 
-def usage(translator: deepl.Translator):
+def action_usage(translator: deepl.Translator):
     """Action function for the usage command."""
     usage_result = translator.get_usage()
     print(usage_result)
 
 
-def languages(translator: deepl.Translator):
+def action_languages(translator: deepl.Translator):
     """Action function for the languages command."""
     source_languages = translator.get_source_languages()
     target_languages = translator.get_target_languages()
@@ -38,7 +37,7 @@ def languages(translator: deepl.Translator):
         )
 
 
-def document(
+def action_document(
     translator: deepl.Translator, file: List[str], dest: str, **kwargs
 ):
     """Action function for the document command."""
@@ -54,7 +53,7 @@ def document(
         )
 
 
-def text(
+def action_text(
     translator: deepl.Translator,
     show_detected_source: bool = False,
     **kwargs,
@@ -112,18 +111,18 @@ def get_parser(prog_name):
         """Adds arguments shared between text and document commands to the
         subparser."""
         subparser.add_argument(
-            "--from",
-            "--source-lang",
-            dest="source_lang",
-            help="language of the text to be translated; if omitted, DeepL will "
-            "auto-detect the language",
-        )
-        subparser.add_argument(
             "--to",
             "--target-lang",
             dest="target_lang",
             required=True,
             help="language into which the text should be translated",
+        )
+        subparser.add_argument(
+            "--from",
+            "--source-lang",
+            dest="source_lang",
+            help="language of the text to be translated; if omitted, DeepL will "
+            "auto-detect the language",
         )
         subparser.add_argument(
             "--formality",
@@ -155,7 +154,8 @@ def get_parser(prog_name):
         nargs="+",
         type=str,
         help="text to be translated. Wrap text in quotes to prevent the shell "
-        'from splitting sentences into words. Use "-" to read from standard-input.',
+        'from splitting sentences into words. Alternatively, use "-" to read '
+        "from standard-input.",
     )
     parser_text.add_argument(
         "--show-detected-source",
@@ -166,8 +166,10 @@ def get_parser(prog_name):
     tag_handling_group = parser_text.add_argument_group(
         "tag-handling",
         description="Arguments controlling tag handling, for example XML. "
-        "The -tags arguments can have multiple tags specified, as comma-"
-        "separated lists or as repeated arguments.",
+        "The -tags arguments accept multiple arguments, as comma-"
+        "separated lists and as repeated arguments. For example, these are "
+        'equivalent: "--ignore-tags a --ignore-tags b,c" and "--ignore-tags '
+        'a,b,c".',
     )
     tag_handling_group.add_argument(
         "--tag-handling",
@@ -261,7 +263,7 @@ def main(args=None, prog_name=None):
         if auth_key is None:
             raise Exception(
                 f"Please provide authentication key via the {env_auth_key} "
-                "environment variable or --auth_key option"
+                "environment variable or --auth_key argument"
             )
 
         # Note: the get_languages() call to verify language codes is skipped
@@ -278,7 +280,8 @@ def main(args=None, prog_name=None):
         del args.verbose, args.server_url, args.auth_key
         args = vars(args)
         # Call action function corresponding to command with remaining args
-        globals()[args.pop("command")](translator, **args)
+        command = args.pop("command")
+        globals()[f"action_{command}"](translator, **args)
 
     except Exception as exception:
         sys.stderr.write(f"Error: {exception}\n")
@@ -286,4 +289,4 @@ def main(args=None, prog_name=None):
 
 
 if __name__ == "__main__":
-    main()
+    main(prog_name="deepl")
