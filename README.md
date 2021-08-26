@@ -18,6 +18,8 @@ they’re added to the API.
 
 To use the DeepL Python Library, you'll need an API authentication key. To get a key, [please create an account here](https://www.deepl.com/pro?utm_source=github&utm_medium=github-python-readme#developer). You can translate up to 500,000 characters/month for free. 
 
+After you have created an account, you can find your API authentication key on your [DeepL Pro Account](https://www.deepl.com/pro-account/?utm_source=github&utm_medium=github-python-readme).
+
 ## Installation
 The library can be installed from [PyPI](https://pypi.org/project/deepl/) using pip:
 ```shell
@@ -54,7 +56,7 @@ print(result[0].detected_source_lang)  # "JA"
 print(result[1].text)  # "How are you?"
 print(result[1].detected_source_lang)  # "ES"
 
-# Translating documents
+# Translate a formal document from English to German 
 translator.translate_document_from_filepath(
     "Instruction Manual.docx",
     "Bedienungsanleitlung.docx",
@@ -66,14 +68,20 @@ translator.translate_document_from_filepath(
 usage = translator.get_usage()
 if usage.character.limit_exceeded:
     print("Character limit exceeded.")
+else:
+    print(f"Character usage: {usage.character}")
 
 # Source and target languages
+print("Source languages:")
 for language in translator.get_source_languages():
     print(f"{language.code} ({language.name})")  # Example: "DE (German)"
 
-num_languages = sum([language.supports_formality
-                     for language in translator.get_target_languages()])
-print(f"{num_languages} target languages support formality parameter")
+print("Target languages:")
+for language in translator.get_target_languages():
+    if language.supports_formality:
+        print(f"{language.code} ({language.name}) supports formality")
+    else:
+        print(f"{language.code} ({language.name})")
 ```
 ### Logging
 Logging can be enabled to see the HTTP-requests sent and responses received by the library. Enable and control logging

@@ -44,6 +44,7 @@ class TextResult:
 
 class DocumentHandle:
     """Handle to an in-progress document translation.
+
     :param document_id: ID of associated document request.
     :param document_key: Key of associated document request.
     """
@@ -654,7 +655,7 @@ class Translator:
             example "DE", "EN-US", "FR".
         :param formality: (Optional) Desired formality for translation, as
             Formality enum, "less" or "more".
-        :return: DocumentHandle with ID & key identifying document.
+        :return: DocumentHandle with ID and key identifying document.
         """
 
         request_data = self._check_language_and_formality(
