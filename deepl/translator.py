@@ -438,7 +438,7 @@ class Translator:
         request_data = {"target_lang": target_lang}
         if source_lang is not None:
             request_data["source_lang"] = source_lang
-        if str(formality) != str(Formality.DEFAULT):
+        if str(formality).lower() != str(Formality.DEFAULT):
             request_data["formality"] = str(formality).lower()
         return request_data
 
