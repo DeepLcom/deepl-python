@@ -69,7 +69,6 @@ def test_translate_document_with_retry(
     translator,
     server,
     example_document_path,
-    example_document_translation,
     output_document_path,
     monkeypatch,
 ):
@@ -126,11 +125,6 @@ def test_document_failure(
     translator, server, example_document_path, output_document_path
 ):
     server.set_doc_failure(1)
-
-    import logging
-
-    logging.basicConfig()
-    logging.getLogger("deepl").setLevel(logging.DEBUG)
 
     # Ensure that the document ID and key are printed if an error occurs during
     # document translation
