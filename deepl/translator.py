@@ -299,6 +299,7 @@ class Translator:
         method: str = "POST",
         data: Optional[dict] = None,
         stream: bool = False,
+        headers: Optional[dict] = None,
         **kwargs,
     ) -> Tuple[int, Union[str, requests.Response], dict]:
         """
@@ -312,12 +313,18 @@ class Translator:
         util.log_info("Request to DeepL API", method=method, url=url)
         util.log_debug("Request details", data=data)
 
+        if headers is None:
+            headers = dict()
+        headers.update(
+            {k: v for k, v in self.headers.items() if k not in headers}
+        )
+
         status_code, content = self._client.request_with_backoff(
             method,
             url,
             data=data,
             stream=stream,
-            headers=self.headers,
+            headers=headers,
             **kwargs,
         )
 
