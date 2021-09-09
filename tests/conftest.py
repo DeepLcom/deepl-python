@@ -6,6 +6,7 @@ import deepl
 import os
 from pydantic import BaseSettings
 import pytest
+from typing import Optional
 import uuid
 
 
@@ -28,6 +29,9 @@ class Config(BaseSettings):
 
     class Config:
         env_prefix = "DEEPL_"
+
+
+glossary_name_prefix = "python-deepl-test-glossary: "
 
 
 @pytest.fixture
@@ -141,6 +145,38 @@ def translator_with_random_auth_key(server):
     """Returns a deepl.Translator with randomized authentication key,
     for use in mock-server tests."""
     return _make_translator(server, auth_key=str(uuid.uuid1()))
+
+
+def remove_test_glossaries(translator):
+    glossaries = translator.list_glossaries()
+    for glossary in glossaries:
+        if glossary.name.startswith(glossary_name_prefix):
+            translator.delete_glossary(glossary)
+
+
+@pytest.fixture
+def glossary_name(translator, request) -> str:
+    """Returns a suitable glossary name to be used in the test"""
+    # Remove all test glossaries from the server
+    remove_test_glossaries(translator)
+
+    test_name = request.node.name
+    return f"{glossary_name_prefix}{test_name}"
+
+
+def create_glossary(
+    translator,
+    glossary_name,
+    *,
+    source_lang="EN",
+    target_lang="DE",
+    entries: Optional[dict] = None,
+) -> deepl.GlossaryInfo:
+    if entries is None:
+        entries = {"Hallo": "Hello"}
+    return translator.create_glossary(
+        glossary_name, source_lang, target_lang, entries
+    )
 
 
 # Decorate test functions with "@needs_mock_server" to skip them if a real

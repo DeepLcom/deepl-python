@@ -48,3 +48,9 @@ class DocumentTranslationException(DeepLException):
 
     def __str__(self):
         return f"{super()}, document request: {self.document_request}"
+
+
+class GlossaryNotFoundException(DeepLException):
+    """The specified glossary was not found."""
+
+    pass

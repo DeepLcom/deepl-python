@@ -64,6 +64,25 @@ translator.translate_document_from_filepath(
     formality="more"
 )
 
+# Glossaries allow you to customize your translations
+glossary_en_to_de = translator.create_glossary(
+    "My glossary",
+    source_lang="EN",
+    target_lang="DE",
+    entries={"artist": "Maler", "prize": "Gewinn"},
+)
+
+with_glossary = translator.translate_text_with_glossary(
+    "The artist was awarded a prize.", glossary_en_to_de
+)
+print(with_glossary)  # "Der Maler wurde mit einem Gewinn ausgezeichnet."
+
+without_glossary = translator.translate_text(
+    "The artist was awarded a prize.", target_lang="DE"
+)
+print(without_glossary)  # "Der Künstler wurde mit einem Preis ausgezeichnet."
+
+
 # Check account usage
 usage = translator.get_usage()
 if usage.character.limit_exceeded:
@@ -115,6 +134,7 @@ Note that the `--auth-key` argument must appear *before* the command argument. T
 | document  | translate document(s)                                  |
 | usage     | print usage information for the current billing period |
 | languages | print available languages                              |
+| glossary  | create, list, and remove glossaries                    |
 
 For example, to translate text:
 ```shell

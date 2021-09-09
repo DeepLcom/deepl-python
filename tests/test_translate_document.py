@@ -69,6 +69,7 @@ def test_translate_document_with_retry(
     translator,
     server,
     example_document_path,
+    example_document_translation,
     output_document_path,
     monkeypatch,
 ):
@@ -81,6 +82,26 @@ def test_translate_document_with_retry(
         output_path=output_document_path,
         **default_lang_args,
     )
+    assert example_document_translation == output_document_path.read_text()
+
+
+@needs_mock_server
+def test_translate_document_with_waiting(
+    translator,
+    server,
+    example_document_path,
+    example_document_translation,
+    output_document_path,
+):
+    server.set_doc_queue_time(2000)
+    server.set_doc_translate_time(2000)
+
+    translator.translate_document_from_filepath(
+        example_document_path,
+        output_path=output_document_path,
+        **default_lang_args,
+    )
+    assert example_document_translation == output_document_path.read_text()
 
 
 @needs_mock_server

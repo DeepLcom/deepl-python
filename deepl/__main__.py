@@ -6,6 +6,7 @@ import argparse
 import deepl
 import logging
 import os
+import pathlib
 import sys
 from typing import List
 
@@ -66,6 +67,96 @@ def action_text(
         print(output.text)
 
 
+def action_glossary(
+    translator: deepl.Translator,
+    subcommand: str,
+    **kwargs,
+):
+    # Call action function corresponding to command with remaining args
+    globals()[f"action_glossary_{subcommand}"](translator, **kwargs)
+    pass
+
+
+def action_glossary_create(
+    translator: deepl.Translator, entry_list, file, **kwargs
+):
+    if file:
+        if entry_list:
+            raise deepl.DeepLException(
+                "The --file argument cannot be used together with "
+                "command-line entries"
+            )
+        file_contents = pathlib.Path(file).read_text("UTF-8")
+        entry_dict = deepl.convert_tsv_to_dict(file_contents)
+    elif entry_list and entry_list[0] == "-":
+        entry_dict = deepl.convert_tsv_to_dict(sys.stdin.read())
+    else:
+        entry_dict = deepl.convert_tsv_to_dict("\n".join(entry_list), "=")
+
+    glossary = translator.create_glossary(entries=entry_dict, **kwargs)
+    print(f"Created {glossary}")
+    print_glossaries([glossary])
+
+
+def print_glossaries(glossaries):
+    headers = [
+        "Glossary ID",
+        "Name",
+        "Ready",
+        "Source",
+        "Target",
+        "Count",
+        "Created",
+    ]
+    data = [
+        [
+            glossary.glossary_id,
+            glossary.name,
+            str(glossary.ready),
+            glossary.source_lang,
+            glossary.target_lang,
+            str(glossary.entry_count),
+            str(glossary.creation_time),
+        ]
+        for glossary in glossaries
+    ]
+    data.insert(0, headers)
+
+    col_max_widths = [
+        max(len(row[col_num]) for row in data)
+        for col_num in range(len(headers))
+    ]
+    for row in data:
+        print(
+            "\t".join(
+                [col.ljust(width) for col, width in zip(row, col_max_widths)]
+            )
+        )
+
+
+def action_glossary_list(translator: deepl.Translator):
+    glossaries = translator.list_glossaries()
+    print_glossaries(glossaries)
+
+
+def action_glossary_get(translator: deepl.Translator, **kwargs):
+    glossary = translator.get_glossary(**kwargs)
+    print_glossaries([glossary])
+
+
+def action_glossary_entries(translator: deepl.Translator, glossary_id):
+    glossary_entries = translator.get_glossary_entries(glossary=glossary_id)
+    print(deepl.convert_dict_to_tsv(glossary_entries))
+
+
+def action_glossary_delete(
+    translator: deepl.Translator, glossary_id_list: str
+):
+    for glossary_id in glossary_id_list:
+        translator.delete_glossary(glossary_id)
+        print(f"Glossary with ID {glossary_id} successfully deleted.")
+
+
 def get_parser(prog_name):
     """Constructs and returns the argument parser for all commands."""
     parser = argparse.ArgumentParser(
@@ -121,8 +212,9 @@ def get_parser(prog_name):
             "--from",
             "--source-lang",
             dest="source_lang",
-            help="language of the text to be translated; if omitted, DeepL will "
-            "auto-detect the language",
+            help="language of the text to be translated; unless using a "
+            "glossary, this argument is optional and if it is omitted DeepL "
+            "will auto-detect the source language.",
         )
         subparser.add_argument(
             "--formality",
@@ -161,6 +253,12 @@ def get_parser(prog_name):
         "--show-detected-source",
         action="store_true",
         help="print detected source language for each text",
+    )
+    parser_text.add_argument(
+        "--glossary-id",
+        dest="glossary",
+        type=str,
+        help="ID of glossary to use for translation",
     )
 
     tag_handling_group = parser_text.add_argument_group(
@@ -233,11 +331,110 @@ def get_parser(prog_name):
         "languages", help=languages_help_str, description=languages_help_str
     )
 
-    return parser
+    # create the parser for the "glossary" command
+    parser_glossary = subparsers.add_parser(
+        "glossary",
+        help="create, list, and remove glossaries",
+        description="manage glossaries using subcommands",
+    )
+
+    # Note: add_subparsers param 'required' is not available in py36
+    glossary_subparsers = parser_glossary.add_subparsers(
+        metavar="subcommand", dest="subcommand"
+    )
+    parser_glossary_create = glossary_subparsers.add_parser(
+        "create",
+        help="create a new glossary",
+        description="create a new glossary using entries specified in "
+        "a TSV file, standard-input, or provided via command-line",
+    )
+    parser_glossary_create.add_argument(
+        "--name", required=True, help="name to be associated with glossary."
+    )
+    parser_glossary_create.add_argument(
+        "--from",
+        "--source-lang",
+        dest="source_lang",
+        required=True,
+        help="language in which source entries of the glossary are specified.",
+    )
+    parser_glossary_create.add_argument(
+        "--to",
+        "--target-lang",
+        dest="target_lang",
+        required=True,
+        help="language in which target entries of the glossary are specified.",
+    )
+    parser_glossary_create.add_argument(
+        "entry_list",
+        nargs="*",
+        type=str,
+        metavar="SOURCE=TARGET",
+        help="one or more entries to add to glossary, may be repeated. "
+        'Alternatively, use "-" to read entries from standard-input in TSV '
+        "format (see --file argument). These arguments cannot be used "
+        "together with the --file argument.",
+    )
+    parser_glossary_create.add_argument(
+        "--file",
+        type=str,
+        help="file to read glossary entries from. File must be in "
+        "tab-separated values (TSV) format: one entry-pair per line, each line "
+        "contains the source entry, a tab, then the target entry. Empty lines "
+        "are ignored.",
+    )
+
+    parser_glossary_list = glossary_subparsers.add_parser(
+        "list",
+        help="list available glossaries",
+        description="list available glossaries",
+    )
+
+    parser_glossary_get = glossary_subparsers.add_parser(
+        "get",
+        help="print details about one glossary",
+        description="print details about one glossary",
+    )
+    parser_glossary_get.add_argument(
+        "glossary_id",
+        metavar="id",
+        type=str,
+        help="ID of glossary to retrieve",
+    )
+
+    parser_glossary_entries = glossary_subparsers.add_parser(
+        "entries",
+        help="get entries contained in a glossary",
+        description="get entries contained in a glossary, and print them to "
+        "standard-output in tab-separated values (TSV) format: one entry-pair "
+        "per line, each line contains the source entry, a tab, then the "
+        "target entry.",
+    )
+    parser_glossary_entries.add_argument(
+        "glossary_id",
+        metavar="id",
+        type=str,
+        help="ID of glossary to retrieve",
+    )
+
+    parser_glossary_delete = glossary_subparsers.add_parser(
+        "delete",
+        help="delete one or more glossaries",
+        description="delete one or more glossaries",
+    )
+    parser_glossary_delete.add_argument(
+        "glossary_id_list",
+        metavar="id",
+        nargs="+",
+        type=str,
+        help="ID of glossary to delete",
+    )
+
+    return parser, parser_glossary
 
 
 def main(args=None, prog_name=None):
-    parser = get_parser(prog_name)
+    parser, parser_glossary = get_parser(prog_name)
     args = parser.parse_args(args)
 
     if args.command is None:
@@ -275,6 +472,13 @@ def main(args=None, prog_name=None):
         if args.command == "text":
             if len(args.text) == 1 and args.text[0] == "-":
                 args.text = [sys.stdin.read()]
+
+        elif args.command == "glossary":
+            if args.subcommand is None:
+                # Support for Python 3.6 - subcommands cannot be required
+                sys.stderr.write(f"Error: glossary subcommand is required\n")
+                parser_glossary.print_help(sys.stderr)
+                sys.exit(1)
 
         # Remove global args so they are not unrecognised in action functions
         del args.verbose, args.server_url, args.auth_key

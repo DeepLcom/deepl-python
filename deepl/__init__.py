@@ -11,6 +11,7 @@ from .exceptions import (  # noqa
     ConnectionException,
     DeepLException,
     DocumentTranslationException,
+    GlossaryNotFoundException,
     TooManyRequestsException,
     QuotaExceededException,
 )
@@ -21,9 +22,16 @@ from .translator import (  # noqa
     DocumentHandle,
     DocumentStatus,
     Formality,
+    GlossaryInfo,
     Language,
     SplitSentences,
     TextResult,
     Translator,
     Usage,
+)
+
+from .util import (  # noqa
+    convert_tsv_to_dict,
+    convert_dict_to_tsv,
+    validate_glossary_term,
 )

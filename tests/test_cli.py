@@ -175,3 +175,103 @@ def test_invalid_document(runner, tmpdir):
     )
     assert result.exit_code == 1, f"exit: {result.exit_code}\n {result.output}"
     assert "Invalid file" in result.output
+
+
+def test_glossary_no_subcommand(runner):
+    result = runner.invoke(deepl.__main__, "glossary")
+    assert result.exit_code == 1, f"exit: {result.exit_code}\n {result.output}"
+    assert "subcommand is required" in result.output
+
+
+def test_glossary_create(runner, glossary_name, tmpdir):
+    name_cli = f"{glossary_name}-cli"
+    name_stdin = f"{glossary_name}-stdin"
+    name_file = f"{glossary_name}-file"
+    entries = {"Hallo": "Hello", "Maler": "Artist"}
+    entries_tsv = deepl.convert_dict_to_tsv(entries)
+    entries_cli = "\n".join(f"{s}={t}" for s, t in entries.items())
+    file = tmpdir / "glossary_entries"
+    file.write(entries_tsv)
+
+    result = runner.invoke(
+        deepl.__main__,
+        f'-vv glossary create --name "{name_cli}" --from DE --to EN '
+        f"{entries_cli}",
+    )
+    assert result.exit_code == 0, f"exit: {result.exit_code}\n {result.output}"
+    result = runner.invoke(
+        deepl.__main__,
+        f'-vv glossary create --name "{name_stdin}" --from DE --to EN -',
+        input=entries_tsv,
+    )
+    assert result.exit_code == 0, f"exit: {result.exit_code}\n {result.output}"
+    result = runner.invoke(
+        deepl.__main__,
+        f'-vv glossary create --name "{name_file}" --from DE --to EN '
+        f"--file {file}",
+    )
+    assert result.exit_code == 0, f"exit: {result.exit_code}\n {result.output}"
+
+    result = runner.invoke(deepl.__main__, f"-vv glossary list")
+    assert result.exit_code == 0, f"exit: {result.exit_code}\n {result.output}"
+    assert name_cli in result.output
+    assert name_stdin in result.output
+    assert name_file in result.output
+
+    # Cannot use --file option together with entries
+    result = runner.invoke(
+        deepl.__main__,
+        f'-vv glossary create --name "{name_file}" --from DE --to EN '
+        f"--file {file} {entries_cli}",
+    )
+    assert result.exit_code == 1, f"exit: {result.exit_code}\n {result.output}"
+    assert "--file argument" in result.output
+
+
+def test_glossary_get(translator, runner, glossary_name):
+    created_id = create_glossary(translator, glossary_name).glossary_id
+
+    result = runner.invoke(deepl.__main__, f"-vv glossary get {created_id}")
+    print(result.output)
+    assert result.exit_code == 0, f"exit: {result.exit_code}\n {result.output}"
+    assert glossary_name in result.output
+
+
+def test_glossary_list(translator, runner, glossary_name):
+    suffix_list = ["1", "2", "3"]
+    for suffix in suffix_list:
+        create_glossary(translator, glossary_name + suffix)
+
+    result = runner.invoke(deepl.__main__, f"-vv glossary list")
+    assert result.exit_code == 0, f"exit: {result.exit_code}\n {result.output}"
+    for suffix in suffix_list:
+        assert f"{glossary_name}{suffix}" in result.output
+
+
+def test_glossary_entries(translator, runner, glossary_name):
+    entries = {"Hallo": "Hello", "Maler": "Artist"}
+    created_id = create_glossary(
+        translator, glossary_name, entries=entries
+    ).glossary_id
+
+    result = runner.invoke(
+        deepl.__main__, f"-vv glossary entries {created_id}"
+    )
+    assert result.exit_code == 0, f"exit: {result.exit_code}\n {result.output}"
+    for source, target in entries.items():
+        assert f"{source}\t{target}" in result.output
+
+
+def test_glossary_delete(translator, runner, glossary_name):
+    created_id = create_glossary(translator, glossary_name).glossary_id
+    result = runner.invoke(deepl.__main__, f"glossary list")
+    assert result.exit_code == 0, f"exit: {result.exit_code}\n {result.output}"
+    assert created_id in result.output
+
+    # Remove the created glossary
+    result = runner.invoke(deepl.__main__, f'glossary delete "{created_id}"')
+    assert result.exit_code == 0, f"exit: {result.exit_code}\n {result.output}"
+
+    result = runner.invoke(deepl.__main__, f"glossary list")
+    assert result.exit_code == 0, f"exit: {result.exit_code}\n {result.output}"
+    assert created_id not in result.output

@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 * Add security policy.
+* Add support for glossary API functions.
 ### Changed
 ### Deprecated
 ### Removed
@@ -57,7 +58,7 @@ Version increased to avoid conflicts with old packages on PyPI.
 Initial version.
 
 
-[Unreleased]: https://github.com/DeepLcom/deepl-python/compare/v1.0.1...HEAD
+[1.1.0]: https://github.com/DeepLcom/deepl-python/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/DeepLcom/deepl-python/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/DeepLcom/deepl-python/compare/v0.4.1...v1.0.0
 [0.4.1]: https://github.com/DeepLcom/deepl-python/compare/v0.4.0...v0.4.1

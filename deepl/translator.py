@@ -4,12 +4,14 @@
 
 from . import http_client, util
 from .exceptions import (
+    GlossaryNotFoundException,
     QuotaExceededException,
     TooManyRequestsException,
     DeepLException,
     AuthorizationException,
     DocumentTranslationException,
 )
+import datetime
 from enum import Enum
 import http
 import http.client
@@ -21,6 +23,7 @@ import time
 from typing import (
     Any,
     BinaryIO,
+    Dict,
     Iterable,
     List,
     Optional,
@@ -111,6 +114,83 @@ class DocumentStatus:
     @property
     def billed_characters(self) -> Optional[int]:
         return self._billed_characters
+
+
+class GlossaryInfo:
+    """Information about a glossary, excluding the entry list.
+
+    :param glossary_id: Unique ID assigned to the glossary.
+    :param name: User-defined name assigned to the glossary.
+    :param ready: True iff the glossary may be used for translations.
+    :param source_lang: Source language code of the glossary.
+    :param target_lang: Target language code of the glossary.
+    :param creation_time: Timestamp when the glossary was created.
+    :param entry_count: The number of entries contained in the glossary.
+    """
+
+    def __init__(
+        self,
+        glossary_id: str,
+        name: str,
+        ready: bool,
+        source_lang: str,
+        target_lang: str,
+        creation_time: datetime.datetime,
+        entry_count: int,
+    ):
+        self._glossary_id = glossary_id
+        self._name = name
+        self._ready = ready
+        self._source_lang = source_lang
+        self._target_lang = target_lang
+        self._creation_time = creation_time
+        self._entry_count = entry_count
+
+    def __str__(self) -> str:
+        return f'Glossary "{self.name}" ({self.glossary_id})'
+
+    @staticmethod
+    def from_json(json) -> "GlossaryInfo":
+        """Create GlossaryInfo from the given API JSON object."""
+        return GlossaryInfo(
+            json["glossary_id"],
+            json["name"],
+            bool(json["ready"]),
+            str(json["source_lang"]).upper(),
+            str(json["target_lang"]).upper(),
+            datetime.datetime.strptime(
+                json["creation_time"], "%Y-%m-%dT%H:%M:%S.%f%z"
+            ),
+            int(json["entry_count"]),
+        )
+
+    @property
+    def glossary_id(self) -> str:
+        return self._glossary_id
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+    @property
+    def ready(self) -> bool:
+        return self._ready
+
+    @property
+    def source_lang(self) -> str:
+        return self._source_lang
+
+    @property
+    def target_lang(self) -> str:
+        return self._target_lang
+
+    @property
+    def creation_time(self) -> datetime.datetime:
+        return self._creation_time
+
+    @property
+    def entry_count(self) -> int:
+        return self._entry_count
 
 
 class Usage:
@@ -212,6 +292,26 @@ class Language:
     def __str__(self):
         return self.code
 
+    @staticmethod
+    def remove_regional_variant(language: Union[str]) -> str:
+        """Removes the regional variant from a language, e.g. EN-US gives EN"""
+        return str(language).upper()[0:2]
+
+    @staticmethod
+    def check_supported_glossary_languages(source_lang: str, target_lang: str):
+        if f"{source_lang}>{target_lang}" not in [
+            "DE>EN",
+            "EN>DE",
+            "EN>ES",
+            "EN>FR",
+            "ES>EN",
+            "FR>EN",
+        ]:
+            raise DeepLException(
+                "Invalid source or target language, glossaries are supported "
+                "for the following language pairs: EN<->DE, EN<->FR, EN<->ES"
+            )
+
 
 class Formality(Enum):
     """Options for formality parameter."""
@@ -255,6 +355,9 @@ class Translator:
         for testing purposes.
     :param skip_language_check: (Optional) Set to True to override automatic
         request of available languages.
+
+    All functions may raise DeepLException or a subclass if a connection error
+    occurs.
     """
 
     _DEEPL_SERVER_URL = "https://api.deepl.com"
@@ -341,12 +444,18 @@ class Translator:
         return status_code, content, json
 
     def _raise_for_status(
-        self, status_code: int, content: str, json: Optional[dict]
+        self,
+        status_code: int,
+        content: str,
+        json: Optional[dict],
+        glossary: bool = False,
     ):
+        message = ""
         if json is not None and "message" in json:
-            message = ", message: " + json["message"]
-        else:
-            message = ""
+            message += ", message: " + json["message"]
+        if json is not None and "detail" in json:
+            message += ", detail: " + json["detail"]
+
         if 200 <= status_code < 400:
             return
         elif status_code == http.HTTPStatus.FORBIDDEN:
@@ -358,6 +467,8 @@ class Translator:
                 "Quota for this billing period has been exceeded."
             )
         elif status_code == http.HTTPStatus.NOT_FOUND:
+            if glossary:
+                raise GlossaryNotFoundException("Glossary not found.")
             raise DeepLException(f"Not found, check server_url{message}")
         elif status_code == http.HTTPStatus.BAD_REQUEST:
             raise DeepLException(f"Bad request{message}")
@@ -427,11 +538,29 @@ class Translator:
         source_lang: Union[str, Language, None],
         target_lang: Union[str, Language],
         formality: Union[str, Formality],
+        glossary: Union[str, GlossaryInfo, None] = None,
     ) -> dict:
         # target_lang and source_lang are case insensitive
         target_lang = str(target_lang).upper()
         if source_lang is not None:
             source_lang = str(source_lang).upper()
+
+        if glossary is not None and source_lang is None:
+            raise ValueError("source_lang is required if using a glossary")
+
+        if isinstance(glossary, GlossaryInfo):
+            if (
+                Language.remove_regional_variant(target_lang)
+                != glossary.target_lang
+                or source_lang != glossary.source_lang
+            ):
+                raise ValueError(
+                    "source_lang and target_lang must match glossary"
+                )
+        elif glossary is not None:
+            Language.check_supported_glossary_languages(
+                source_lang, Language.remove_regional_variant(target_lang)
+            )
 
         self._check_valid_languages(source_lang, target_lang)
 
@@ -440,6 +569,10 @@ class Translator:
             request_data["source_lang"] = source_lang
         if str(formality).lower() != str(Formality.DEFAULT):
             request_data["formality"] = str(formality).lower()
+        if isinstance(glossary, GlossaryInfo):
+            request_data["glossary_id"] = glossary.glossary_id
+        elif glossary is not None:
+            request_data["glossary_id"] = glossary
         return request_data
 
     def close(self):
@@ -459,6 +592,7 @@ class Translator:
         split_sentences: Union[str, SplitSentences] = SplitSentences.ALL,
         preserve_formatting: bool = False,
         formality: Union[str, Formality] = Formality.DEFAULT,
+        glossary: Union[str, GlossaryInfo, None] = None,
         tag_handling: Optional[str] = None,
         outline_detection: bool = True,
         non_splitting_tags: Union[str, List[str], None] = None,
@@ -472,7 +606,7 @@ class Translator:
             generator)
         :param source_lang: (Optional) Language code of input text, for example
             "DE", "EN", "FR". If omitted, DeepL will auto-detect the input
-            language.
+            language. If a glossary is used, source_lang must be specified.
         :param target_lang: language code to translate text into, for example
             "DE", "EN-US", "FR".
         :param split_sentences: (Optional) Controls how the translation engine
@@ -483,6 +617,8 @@ class Translator:
             instead leave the formatting unchanged.
         :param formality: (Optional) Desired formality for translation, as
             Formality enum, "less" or "more".
+        :param glossary: (Optional) glossary or glossary ID to use for
+            translation. Must match specified source_lang and target_lang.
         :param tag_handling: (Optional) Type of tags to parse before
             translation, only "xml" is currently available.
         :param outline_detection: (Optional) Set to False to disable automatic
@@ -510,7 +646,10 @@ class Translator:
             )
 
         request_data = self._check_language_and_formality(
-            source_lang, target_lang, formality
+            source_lang,
+            target_lang,
+            formality,
+            glossary,
         )
         request_data["text"] = text
 
@@ -551,6 +690,42 @@ class Translator:
             output.append(TextResult(text, detected_source_lang=lang))
 
         return output if multi_input else output[0]
+
+    def translate_text_with_glossary(
+        self,
+        text: Union[str, Iterable[str]],
+        glossary: GlossaryInfo,
+        target_lang: Union[str, Language, None] = None,
+        **kwargs,
+    ) -> Union[TextResult, List[TextResult]]:
+        """Translate text(s) using given glossary. The source and target
+        languages are assumed to match the glossary languages.
+
+        Note that if the glossary target language is English (EN), the text
+        will be translated into British English (EN-GB). To instead translate
+        into American English specify target_lang="EN-US".
+
+        :param text: Text to translate.
+        :type text: UTF-8 :class:`str`; string sequence (list, tuple, iterator,
+            generator)
+        :param glossary: glossary to use for translation.
+        :param target_lang: override target language of glossary.
+        :return: List of TextResult objects containing results, unless input
+            text was one string, then a single TextResult object is returned.
+        """
+
+        if target_lang is None:
+            target_lang = glossary.target_lang
+            if target_lang == "EN":
+                target_lang = "EN-GB"
+
+        return self.translate_text(
+            text,
+            source_lang=glossary.source_lang,
+            target_lang=target_lang,
+            glossary=glossary,
+            **kwargs,
+        )
 
     def translate_document_from_filepath(
         self,
@@ -762,3 +937,119 @@ class Translator:
         self._raise_for_status(status, content, json)
 
         return Usage(json)
+
+    def create_glossary(
+        self,
+        name: str,
+        source_lang: Union[str, Language],
+        target_lang: Union[str, Language],
+        entries: Dict[str, str],
+    ) -> GlossaryInfo:
+        """Creates a glossary with given name for the source and target
+        languages, containing the entries in dictionary. The glossary may be
+        used in the translate_text functions.
+
+        Only the following language pairs are supported: EN<->DE, EN<->FR, and
+        EN<->ES. A glossary with target language EN may be used to translate
+        texts into both EN-US and EN-GB.
+
+        :param name: user-defined name to attach to glossary.
+        :param source_lang: Language of source terms.
+        :param target_lang: Language of target terms.
+        :param entries: dictionary of terms to insert in glossary, with the
+            keys and values representing source and target terms respectively.
+        :return: GlossaryInfo containing information about created glossary.
+
+        :raises ValueError: If the glossary name is empty, or entries are
+            empty or invalid.
+        :raises DeepLException: If source and target language pair are not
+            supported for glossaries.
+        """
+        # glossaries are only supported for base language types
+        target_lang = Language.remove_regional_variant(target_lang)
+        source_lang = Language.remove_regional_variant(source_lang)
+        Language.check_supported_glossary_languages(source_lang, target_lang)
+
+        if not name:
+            raise ValueError("glossary name must not be empty")
+        if not entries:
+            raise ValueError("glossary entries must not be empty")
+
+        request_data = {
+            "name": name,
+            "source_lang": source_lang,
+            "target_lang": target_lang,
+            "entries_format": "tsv",
+            "entries": util.convert_dict_to_tsv(entries),
+        }
+
+        status, content, json = self._api_call(
+            "v2/glossaries", data=request_data
+        )
+        self._raise_for_status(status, content, json, glossary=True)
+        return GlossaryInfo.from_json(json)
+
+    def get_glossary(self, glossary_id: str) -> GlossaryInfo:
+        """Retrieves GlossaryInfo for the glossary with specified ID.
+
+        :param glossary_id: ID of glossary to retrieve.
+        :return: GlossaryInfo with information about specified glossary.
+        :raises GlossaryNotFoundException: If no glossary with given ID is
+            found.
+        """
+        status, content, json = self._api_call(
+            f"v2/glossaries/{glossary_id}", method="GET"
+        )
+        self._raise_for_status(status, content, json, glossary=True)
+        return GlossaryInfo.from_json(json)
+
+    def list_glossaries(self) -> list[GlossaryInfo]:
+        """Retrieves GlossaryInfo for all available glossaries.
+
+        :return: list of GlossaryInfo for all available glossaries.
+        """
+        status, content, json = self._api_call("v2/glossaries", method="GET")
+        self._raise_for_status(status, content, json, glossary=True)
+        return [
+            GlossaryInfo.from_json(glossary) for glossary in json["glossaries"]
+        ]
+
+    def get_glossary_entries(self, glossary: Union[str, GlossaryInfo]) -> dict:
+        """Retrieves the entries of the specified glossary and returns them as
+        a dictionary.
+
+        :param glossary: GlossaryInfo or ID of glossary to retrieve.
+        :return: dictionary of glossary entries.
+        :raises GlossaryNotFoundException: If no glossary with given ID is
+            found.
+        """
+        if isinstance(glossary, GlossaryInfo):
+            glossary_id = glossary.glossary_id
+        else:
+            glossary_id = glossary
+
+        status, content, json = self._api_call(
+            f"v2/glossaries/{glossary_id}/entries",
+            method="GET",
+            headers={"Accept": "text/tab-separated-values"},
+        )
+        self._raise_for_status(status, content, json, glossary=True)
+        return util.convert_tsv_to_dict(content)
+
+    def delete_glossary(self, glossary: Union[str, GlossaryInfo]) -> None:
+        """Deletes specified glossary.
+
+        :param glossary: GlossaryInfo or ID of glossary to delete.
+        :raises GlossaryNotFoundException: If no glossary with given ID is
+            found.
+        """
+        if isinstance(glossary, GlossaryInfo):
+            glossary_id = glossary.glossary_id
+        else:
+            glossary_id = glossary
+
+        status, content, json = self._api_call(
+            f"v2/glossaries/{glossary_id}",
+            method="DELETE",
+        )
+        self._raise_for_status(status, content, json, glossary=True)
