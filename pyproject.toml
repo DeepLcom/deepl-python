@@ -3,7 +3,7 @@ line-length = 79
 
 [tool.poetry]
 name = "deepl"
-version = "1.0.1"
+version = "1.1.0"
 description = "Python library for the DeepL API."
 authors = ["DeepL GmbH <python-api@deepl.com>"]
 license = "MIT"
@@ -11,7 +11,7 @@ readme = "README.md"
 repository = "https://github.com/DeepLcom/deepl-python"
 documentation = "https://www.deepl.com/docs-api/"
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
     "Operating System :: OS Independent",
     "Topic :: Software Development :: Libraries :: Python Modules",
