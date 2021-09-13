@@ -460,21 +460,22 @@ class Translator:
             return
         elif status_code == http.HTTPStatus.FORBIDDEN:
             raise AuthorizationException(
-                "Authorization failure, check auth_key"
+                f"Authorization failure, check auth_key{message}"
             )
         elif status_code == self._HTTP_STATUS_QUOTA_EXCEEDED:
             raise QuotaExceededException(
-                "Quota for this billing period has been exceeded."
+                f"Quota for this billing period has been exceeded{message}"
             )
         elif status_code == http.HTTPStatus.NOT_FOUND:
             if glossary:
-                raise GlossaryNotFoundException("Glossary not found.")
+                raise GlossaryNotFoundException(f"Glossary not found{message}")
             raise DeepLException(f"Not found, check server_url{message}")
         elif status_code == http.HTTPStatus.BAD_REQUEST:
             raise DeepLException(f"Bad request{message}")
         elif status_code == http.HTTPStatus.TOO_MANY_REQUESTS:
             raise TooManyRequestsException(
-                "Too many requests, DeepL servers are currently experiencing high load"
+                "Too many requests, DeepL servers are currently experiencing "
+                f"high load{message}"
             )
         else:
             status_name = (
@@ -483,7 +484,8 @@ class Translator:
                 else "Unknown"
             )
             raise DeepLException(
-                f"Unexpected status code: {status_code} {status_name}, content: {content}."
+                f"Unexpected status code: {status_code} {status_name}, "
+                f"content: {content}."
             )
 
     def _request_languages(self, target: bool) -> List[Language]:
