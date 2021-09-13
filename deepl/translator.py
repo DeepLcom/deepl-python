@@ -439,7 +439,7 @@ class Translator:
                 pass
 
         util.log_info("DeepL API response", url=url, status_code=status_code)
-        util.log_debug("Response details", content=content, json=json)
+        util.log_debug("Response details", content=content)
 
         return status_code, content, json
 
