@@ -1005,7 +1005,7 @@ class Translator:
         self._raise_for_status(status, content, json, glossary=True)
         return GlossaryInfo.from_json(json)
 
-    def list_glossaries(self) -> list[GlossaryInfo]:
+    def list_glossaries(self) -> List[GlossaryInfo]:
         """Retrieves GlossaryInfo for all available glossaries.
 
         :return: list of GlossaryInfo for all available glossaries.
