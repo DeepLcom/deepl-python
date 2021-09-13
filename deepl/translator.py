@@ -152,6 +152,11 @@ class GlossaryInfo:
     @staticmethod
     def from_json(json) -> "GlossaryInfo":
         """Create GlossaryInfo from the given API JSON object."""
+        # Workaround for bug in Python 3.6
+        creation_time = json["creation_time"]
+        if ":" == creation_time[-3:-2]:
+            creation_time = creation_time[:-3] + creation_time[-2:]
+
         return GlossaryInfo(
             json["glossary_id"],
             json["name"],
@@ -159,7 +164,7 @@ class GlossaryInfo:
             str(json["source_lang"]).upper(),
             str(json["target_lang"]).upper(),
             datetime.datetime.strptime(
-                json["creation_time"], "%Y-%m-%dT%H:%M:%S.%f%z"
+                creation_time, "%Y-%m-%dT%H:%M:%S.%f%z"
             ),
             int(json["entry_count"]),
         )

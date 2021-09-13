@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 ### Fixed
 * Fix typing.List issue on Python 3.6.
+* Add workaround for datetime.strptime bug in Python 3.6. 
 ### Security
 
 
