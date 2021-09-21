@@ -139,18 +139,16 @@ class HttpClient:
 
         except requests.exceptions.ConnectionError as e:
             message = f"Connection failed: {e}"
-            should_retry = True
+            raise ConnectionException(message, should_retry=True) from e
         except requests.exceptions.Timeout as e:
             message = f"Request timed out: {e}"
-            should_retry = True
+            raise ConnectionException(message, should_retry=True) from e
         except requests.exceptions.RequestException as e:
             message = f"Request failed: {e}"
-            should_retry = False
+            raise ConnectionException(message, should_retry=False) from e
         except Exception as e:
             message = f"Unexpected request failure: {e}"
-            should_retry = False
-
-        raise ConnectionException(message, should_retry=should_retry)
+            raise ConnectionException(message, should_retry=False) from e
 
     def _should_retry(self, response, exception, num_retries):
         if num_retries >= max_network_retries:
