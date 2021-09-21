@@ -162,11 +162,13 @@ def test_invalid_document(translator, tmpdir):
     tmpdir = pathlib.Path(tmpdir)
     output_dir = tmpdir / "output"
     output_dir.mkdir()
-    input_document = tmpdir / "document.xyz"
+    input_document = tmpdir / "document.invalid"
     input_document.write_text(example_text["EN"])
-    output_document = output_dir / "document.xyz"
+    output_document = output_dir / "document.invalid"
 
-    with pytest.raises(deepl.DeepLException, match="Invalid file"):
+    with pytest.raises(
+        deepl.DeepLException, match="(Invalid file)|(file extension)"
+    ):
         translator.translate_document_from_filepath(
             input_document, output_path=output_document, **default_lang_args
         )

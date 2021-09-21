@@ -167,14 +167,14 @@ def test_document_occupied_output(runner, tmpdir):
 def test_invalid_document(runner, tmpdir):
     tmpdir = pathlib.Path(tmpdir)
     output_dir = tmpdir / "output"
-    input_document = tmpdir / "document.xyz"
+    input_document = tmpdir / "document.invalid"
     input_document.write_text(example_text["EN"])
 
     result = runner.invoke(
         deepl.__main__, f"-vv document --to DE {input_document} {output_dir}"
     )
     assert result.exit_code == 1, f"exit: {result.exit_code}\n {result.output}"
-    assert "Invalid file" in result.output
+    assert "Invalid file" in result.output or "file extension" in result.output
 
 
 def test_glossary_no_subcommand(runner):
