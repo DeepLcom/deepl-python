@@ -137,14 +137,17 @@ class HttpClient:
                     response.encoding = "UTF-8"
                     return response.status_code, response.text
 
-        except (
-            requests.exceptions.Timeout,
-            requests.exceptions.ConnectionError,
-        ):
-            message = "Connection failed or request timed out."
+        except requests.exceptions.ConnectionError as e:
+            message = f"Connection failed: {e}"
             should_retry = True
-        except (requests.exceptions.RequestException, Exception) as e:
-            message = f"Unexpected connection error: {e}"
+        except requests.exceptions.Timeout as e:
+            message = f"Request timed out: {e}"
+            should_retry = True
+        except requests.exceptions.RequestException as e:
+            message = f"Request failed: {e}"
+            should_retry = False
+        except Exception as e:
+            message = f"Unexpected request failure: {e}"
             should_retry = False
 
         raise ConnectionException(message, should_retry=should_retry)
