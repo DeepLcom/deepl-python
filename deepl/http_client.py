@@ -131,11 +131,14 @@ class HttpClient:
                 return response.status_code, response
 
             else:
-                with self._session.request(
+                response = self._session.request(
                     method, url, data=data, timeout=timeout, **kwargs
-                ) as response:
+                )
+                try:
                     response.encoding = "UTF-8"
                     return response.status_code, response.text
+                finally:
+                    response.close()
 
         except requests.exceptions.ConnectionError as e:
             message = f"Connection failed: {e}"

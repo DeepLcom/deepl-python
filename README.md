@@ -34,7 +34,7 @@ poetry install
 ### Requirements
 The library is tested with Python versions 3.6 to 3.9. 
 
-The `requests` module is used to perform HTTP requests; the minimum is version 2.18.
+The `requests` module is used to perform HTTP requests; the minimum is version 2.0.
 
 ## Usage
 
