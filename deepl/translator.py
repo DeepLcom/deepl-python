@@ -302,21 +302,6 @@ class Language:
         """Removes the regional variant from a language, e.g. EN-US gives EN"""
         return str(language).upper()[0:2]
 
-    @staticmethod
-    def check_supported_glossary_languages(source_lang: str, target_lang: str):
-        if f"{source_lang}>{target_lang}" not in [
-            "DE>EN",
-            "EN>DE",
-            "EN>ES",
-            "EN>FR",
-            "ES>EN",
-            "FR>EN",
-        ]:
-            raise DeepLException(
-                "Invalid source or target language, glossaries are supported "
-                "for the following language pairs: EN<->DE, EN<->FR, EN<->ES"
-            )
-
 
 class GlossaryLanguagePair:
     """Information about a pair of languages supported for DeepL glossaries.
@@ -380,8 +365,9 @@ class Translator:
     :param auth_key: Authentication key as found in your DeepL API account.
     :param server_url: (Optional) Base URL of DeepL API, can be overridden e.g.
         for testing purposes.
-    :param skip_language_check: (Optional) Set to True to override automatic
-        request of available languages.
+    :param skip_language_check: Deprecated, and now has no effect as the
+        corresponding internal functionality has been removed. This parameter
+        will be removed in a future version.
 
     All functions may raise DeepLException or a subclass if a connection error
     occurs.
@@ -414,10 +400,6 @@ class Translator:
         self._server_url = server_url
         self._client = http_client.HttpClient()
         self.headers = {"Authorization": f"DeepL-Auth-Key {auth_key}"}
-
-        self._skip_language_check = skip_language_check
-        self._source_languages_cached = None
-        self._target_languages_cached = None
 
     def __del__(self):
         self.close()
@@ -515,26 +497,10 @@ class Translator:
                 f"content: {content}."
             )
 
-    def _request_languages(self, target: bool) -> List[Language]:
-        """Internal function to make a /languages request and cache the result."""
-        data = {"type": "target"} if target else {}
-        status, content, json = self._api_call("v2/languages", data=data)
-
-        self._raise_for_status(status, content, json)
-
-        return [
-            Language(
-                language["language"],
-                language["name"],
-                language.get("supports_formality", None),
-            )
-            for language in json
-        ]
-
     def _check_valid_languages(
         self, source_lang: Optional[str], target_lang: str
     ):
-        """Internal function to check given languages match available languages."""
+        """Internal function to check given languages are valid."""
         if target_lang == "EN":
             raise DeepLException(
                 'target_lang="EN" is deprecated, please use "EN-GB" or "EN-US" instead.'
@@ -542,24 +508,6 @@ class Translator:
         elif target_lang == "PT":
             raise DeepLException(
                 'target_lang="PT" is deprecated, please use "PT-PT" or "PT-BR" instead.'
-            )
-
-        if self._skip_language_check:
-            return
-
-        if source_lang is not None and not any(
-            source_lang == lang.code for lang in self.get_source_languages()
-        ):
-            raise DeepLException(
-                f"source_lang ({source_lang}) must be one of the supported "
-                "language codes, or None for auto-detection"
-            )
-
-        if not any(
-            target_lang == lang.code for lang in self.get_target_languages()
-        ):
-            raise DeepLException(
-                f"target_lang ({target_lang}) must be one of the supported language codes"
             )
 
     def _check_language_and_formality(
@@ -586,10 +534,6 @@ class Translator:
                 raise ValueError(
                     "source_lang and target_lang must match glossary"
                 )
-        elif glossary is not None:
-            Language.check_supported_glossary_languages(
-                source_lang, Language.remove_regional_variant(target_lang)
-            )
 
         self._check_valid_languages(source_lang, target_lang)
 
@@ -944,20 +888,42 @@ class Translator:
             return response
 
     def get_source_languages(self, skip_cache=False) -> List[Language]:
-        """Request the list of available source languages."""
-        if self._source_languages_cached is None or skip_cache:
-            self._source_languages_cached = self._request_languages(
-                target=False
+        """Request the list of available source languages.
+
+        :param skip_cache: Deprecated, and now has no effect as the
+            corresponding internal functionality has been removed. This
+            parameter will be removed in a future version.
+        :return: List of supported source languages.
+        """
+        status, content, json = self._api_call("v2/languages")
+        self._raise_for_status(status, content, json)
+        return [
+            Language(
+                language["language"],
+                language["name"],
             )
-        return self._source_languages_cached
+            for language in json
+        ]
 
     def get_target_languages(self, skip_cache=False) -> List[Language]:
-        """Request the list of available target languages."""
-        if self._target_languages_cached is None or skip_cache:
-            self._target_languages_cached = self._request_languages(
-                target=True
+        """Request the list of available target languages.
+
+        :param skip_cache: Deprecated, and now has no effect as the
+            corresponding internal functionality has been removed. This
+            parameter will be removed in a future version.
+        :return: List of supported target languages.
+        """
+        data = {"type": "target"}
+        status, content, json = self._api_call("v2/languages", data=data)
+        self._raise_for_status(status, content, json)
+        return [
+            Language(
+                language["language"],
+                language["name"],
+                language.get("supports_formality", None),
             )
-        return self._target_languages_cached
+            for language in json
+        ]
 
     def get_glossary_languages(self) -> List[GlossaryLanguagePair]:
         """Request the list of language pairs supported for glossaries."""
@@ -1013,7 +979,6 @@ class Translator:
         # glossaries are only supported for base language types
         target_lang = Language.remove_regional_variant(target_lang)
         source_lang = Language.remove_regional_variant(source_lang)
-        Language.check_supported_glossary_languages(source_lang, target_lang)
 
         if not name:
             raise ValueError("glossary name must not be empty")

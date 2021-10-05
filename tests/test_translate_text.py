@@ -97,13 +97,13 @@ def test_target_lang(translator):
 def test_invalid_language(translator):
     with pytest.raises(
         deepl.DeepLException,
-        match="target_lang.*must be one of the supported language codes",
+        match="target_lang.*not supported",
     ):
         translator.translate_text(example_text["EN"], target_lang="XX")
 
     with pytest.raises(
         deepl.DeepLException,
-        match="source_lang.*must be one of the supported language codes",
+        match="source_lang.*not supported",
     ):
         translator.translate_text(
             example_text["EN"], source_lang="XX", target_lang="DE"

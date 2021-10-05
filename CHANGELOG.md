@@ -9,7 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 * Add `Translator.get_glossary_languages()` to query language pairs supported for glossaries. 
 ### Changed
+* Internal language caching and client-side checking of language codes are removed. 
 ### Deprecated
+* Some optional arguments related to language caching are now deprecated, and will be removed in a future version:
+  * `Translator()`: the `skip_language_check` argument 
+  * `Translator.get_source_languages()` and `Translator.get_target_languages()`: the `skip_cache` argument 
 ### Removed
 ### Fixed
 * Fix HTTP request retries for document uploads.
