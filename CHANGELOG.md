@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+* Add `Translator.get_glossary_languages()` to query language pairs supported for glossaries. 
 ### Changed
 ### Deprecated
 ### Removed

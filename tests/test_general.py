@@ -60,6 +60,14 @@ def test_language(translator):
         assert target_language.supports_formality is not None
 
 
+def test_glossary_languages(translator):
+    glossary_languages = translator.get_glossary_languages()
+    assert len(glossary_languages) > 0
+    for language_pair in glossary_languages:
+        assert len(language_pair.source_lang) > 0
+        assert len(language_pair.target_lang) > 0
+
+
 def test_server_url_selected_based_on_auth_key(server):
     translator_normal = deepl.Translator("ABCD")
     translator_free = deepl.Translator("ABCD:fx")

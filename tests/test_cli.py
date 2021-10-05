@@ -74,6 +74,11 @@ def test_languages(runner):
     assert "DE: German" in result.output
     assert "EN: English" in result.output
 
+    result = runner.invoke(deepl.__main__, "languages --glossary")
+    assert result.exit_code == 0, f"exit: {result.exit_code}\n {result.output}"
+    assert "supported for glossaries" in result.output
+    assert "de, en" in result.output
+
 
 def test_text(runner):
     result = runner.invoke(

@@ -23,19 +23,26 @@ def action_usage(translator: deepl.Translator):
     print(usage_result)
 
 
-def action_languages(translator: deepl.Translator):
+def action_languages(translator: deepl.Translator, glossary: bool):
     """Action function for the languages command."""
-    source_languages = translator.get_source_languages()
-    target_languages = translator.get_target_languages()
+    if glossary:
+        glossary_languages = translator.get_glossary_languages()
+        print("Language pairs supported for glossaries: (source, target)")
+        for language_pair in glossary_languages:
+            print(f"{language_pair.source_lang}, {language_pair.target_lang}")
+    else:
+        source_languages = translator.get_source_languages()
+        target_languages = translator.get_target_languages()
 
-    print("Source languages available:")
-    for language in source_languages:
-        print(f"{language.code}: {language.name}")
-    print("Target languages available:")
-    for language in target_languages:
-        print(
-            f"{language.code}: {language.name}{' (supports formality)' if language.supports_formality else ''}"
-        )
+        print("Source languages available:")
+        for language in source_languages:
+            print(f"{language.code}: {language.name}")
+        print("Target languages available:")
+        for language in target_languages:
+            if language.supports_formality:
+                print(f"{language.code}: {language.name} (supports formality)")
+            else:
+                print(f"{language.code}: {language.name}")
 
 
 def action_document(
@@ -327,8 +334,13 @@ def get_parser(prog_name):
 
     # create the parser for the "languages" command
     languages_help_str = "print available languages"
-    subparsers.add_parser(
+    parser_languages = subparsers.add_parser(
         "languages", help=languages_help_str, description=languages_help_str
+    )
+    parser_languages.add_argument(
+        "--glossary",
+        help="list language pairs supported for glossaries.",
+        action="store_true",
     )
 
     # create the parser for the "glossary" command

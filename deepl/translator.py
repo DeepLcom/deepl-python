@@ -318,6 +318,28 @@ class Language:
             )
 
 
+class GlossaryLanguagePair:
+    """Information about a pair of languages supported for DeepL glossaries.
+
+    :param source_lang: The code of the source language.
+    :param target_lang: The code of the target language.
+    """
+
+    def __init__(self, source_lang: str, target_lang: str):
+        self._source_lang = source_lang
+        self._target_lang = target_lang
+
+    @property
+    def source_lang(self) -> str:
+        """Returns the code of the source language."""
+        return self._source_lang
+
+    @property
+    def target_lang(self) -> str:
+        """Returns the code of the target language."""
+        return self._target_lang
+
+
 class Formality(Enum):
     """Options for formality parameter."""
 
@@ -937,6 +959,21 @@ class Translator:
             )
         return self._target_languages_cached
 
+    def get_glossary_languages(self) -> List[GlossaryLanguagePair]:
+        """Request the list of language pairs supported for glossaries."""
+        status, content, json = self._api_call(
+            "v2/glossary-language-pairs", method="GET"
+        )
+
+        self._raise_for_status(status, content, json)
+
+        return [
+            GlossaryLanguagePair(
+                language_pair["source_lang"], language_pair["target_lang"]
+            )
+            for language_pair in json["supported_languages"]
+        ]
+
     def get_usage(self) -> Usage:
         """Requests the current API usage."""
         status, content, json = self._api_call("v2/usage")
@@ -956,9 +993,10 @@ class Translator:
         languages, containing the entries in dictionary. The glossary may be
         used in the translate_text functions.
 
-        Only the following language pairs are supported: EN<->DE, EN<->FR, and
-        EN<->ES. A glossary with target language EN may be used to translate
-        texts into both EN-US and EN-GB.
+        Only certain language pairs are supported, currently the following:
+        EN<->DE, EN<->FR, and EN<->ES. The available language pairs can be
+        queried using get_glossary_languages(). A glossary with target language
+        EN may be used to translate texts into both EN-US and EN-GB.
 
         :param name: user-defined name to attach to glossary.
         :param source_lang: Language of source terms.
