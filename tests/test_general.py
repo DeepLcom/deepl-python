@@ -36,7 +36,7 @@ def test_invalid_authkey(server):
 
 def test_invalid_server_url(server):
     translator = deepl.Translator("invalid", server_url="http:/api.deepl.com")
-    with pytest.raises(deepl.exceptions.ConnectionException):
+    with pytest.raises(deepl.exceptions.DeepLException):
         translator.get_usage()
 
 

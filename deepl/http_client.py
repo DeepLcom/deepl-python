@@ -3,7 +3,7 @@
 # license that can be found in the LICENSE file.
 
 from . import version
-from .exceptions import ConnectionException
+from .exceptions import ConnectionException, DeepLException
 import http
 import random
 import requests
@@ -67,17 +67,32 @@ class HttpClient:
         self._session.close()
 
     def request_with_backoff(
-        self, method: str, url: str, data: Optional[dict], **kwargs
+        self,
+        method: str,
+        url: str,
+        data: Optional[dict],
+        stream: bool = False,
+        **kwargs,
     ) -> Tuple[int, Union[str, requests.Response]]:
         """Makes API request, retrying if necessary, and returns response.
 
         Return and exceptions are the same as function request()."""
         backoff = _BackoffTimer()
+
+        try:
+            request = requests.Request(
+                method, url, data=data, **kwargs
+            ).prepare()
+        except Exception as e:
+            raise DeepLException(
+                f"Error occurred while preparing request: {e}"
+            ) from e
+
         while True:
             response: Optional[Tuple[int, Union[str, requests.Response]]]
             try:
-                response = self.request(
-                    method, url, data, timeout=backoff.get_timeout(), **kwargs
+                response = self._internal_request(
+                    request, stream=stream, timeout=backoff.get_timeout()
                 )
                 exception = None
             except Exception as e:
@@ -108,7 +123,6 @@ class HttpClient:
         method: str,
         url: str,
         data: Optional[dict],
-        timeout: float,
         stream: bool = False,
         **kwargs,
     ) -> Tuple[int, Union[str, requests.Response]]:
@@ -118,22 +132,31 @@ class HttpClient:
         stream is False) or response (if stream is True).
 
         If no response is received will raise ConnectionException."""
-        try:
-            if stream:
-                response = self._session.request(
-                    method,
-                    url,
-                    data=data,
-                    timeout=timeout,
-                    stream=True,
-                    **kwargs,
-                )
-                return response.status_code, response
 
+        try:
+            request = requests.Request(
+                method, url, data=data, **kwargs
+            ).prepare()
+        except Exception as e:
+            raise DeepLException(
+                f"Error occurred while preparing request: {e}"
+            ) from e
+        return self._internal_request(request, stream, stream=stream)
+
+    def _internal_request(
+        self,
+        request: requests.PreparedRequest,
+        stream: bool,
+        timeout: float = min_connection_timeout,
+        **kwargs,
+    ) -> Tuple[int, Union[str, requests.Response]]:
+        try:
+            response = self._session.send(
+                request, stream=stream, timeout=timeout, **kwargs
+            )
+            if stream:
+                return response.status_code, response
             else:
-                response = self._session.request(
-                    method, url, data=data, timeout=timeout, **kwargs
-                )
                 try:
                     response.encoding = "UTF-8"
                     return response.status_code, response.text
