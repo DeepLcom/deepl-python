@@ -180,6 +180,32 @@ def test_translate_document_low_level(
     assert output_document_path.read_text() == example_document_translation
 
 
+def test_translate_document_string(translator, server):
+    input_string = example_text["EN"]
+    handle = translator.translate_document_upload(
+        input_string,
+        source_lang="EN",
+        target_lang="DE",
+        filename="test.txt",
+    )
+
+    status = translator.translate_document_get_status(handle)
+    while status.ok and not status.done:
+        status = translator.translate_document_get_status(handle)
+        time.sleep(status.seconds_remaining or 1)
+
+    assert status.ok
+    response = translator.translate_document_download(handle)
+    try:
+        output = bytes()
+        for chunk in response.iter_content(chunk_size=128):
+            output += chunk
+        output_string = output.decode()
+        assert output_string == example_text["DE"]
+    finally:
+        response.close()
+
+
 @needs_mock_server
 def test_translate_document_request_fields(
     translator, example_document_path, server, output_document_path

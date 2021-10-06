@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Deprecated
 ### Removed
 ### Fixed
+* Add optional filename argument to `translate_document_upload()` to fix uploading file content as string or bytes.
 ### Security
 
 

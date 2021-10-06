@@ -847,6 +847,7 @@ class Translator:
         target_lang: str,
         formality: Union[str, Formality] = Formality.DEFAULT,
         glossary: Union[str, GlossaryInfo, None] = None,
+        filename: Optional[str] = None,
     ) -> DocumentHandle:
         """Upload document to be translated and return handle associated with
         request.
@@ -862,6 +863,8 @@ class Translator:
             Formality enum, "less" or "more".
         :param glossary: (Optional) glossary or glossary ID to use for
             translation. Must match specified source_lang and target_lang.
+        :param filename: (Optional) Filename including extension, only required
+            if uploading string or bytes containing file content.
         :return: DocumentHandle with ID and key identifying document.
         """
 
@@ -869,7 +872,15 @@ class Translator:
             source_lang, target_lang, formality, glossary
         )
 
-        files = {"file": input_document}
+        if isinstance(input_document, (str, bytes)):
+            if filename is None:
+                raise ValueError(
+                    "filename is required if uploading file content as string "
+                    "or bytes"
+                )
+            files = {"file": (filename, input_document)}
+        else:
+            files = {"file": input_document}
         status, content, json = self._api_call(
             "v2/document", data=request_data, files=files
         )
