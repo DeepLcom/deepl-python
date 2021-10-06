@@ -7,7 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
-* Add `Translator.get_glossary_languages()` to query language pairs supported for glossaries. 
+* Add `Translator.get_glossary_languages()` to query language pairs supported for glossaries.
+* Add constants for all supported languages codes, for example: `Language.GERMAN`.
 ### Changed
 * Internal language caching and client-side checking of language codes are removed. 
 ### Deprecated

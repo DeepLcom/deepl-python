@@ -302,6 +302,35 @@ class Language:
         """Removes the regional variant from a language, e.g. EN-US gives EN"""
         return str(language).upper()[0:2]
 
+    BULGARIAN = "bg"
+    CZECH = "cs"
+    DANISH = "da"
+    GERMAN = "de"
+    GREEK = "el"
+    ENGLISH = "en"  # Only usable as a source language
+    ENGLISH_BRITISH = "en-GB"  # Only usable as a target language
+    ENGLISH_AMERICAN = "en-US"  # Only usable as a target language
+    SPANISH = "es"
+    ESTONIAN = "et"
+    FINNISH = "fi"
+    FRENCH = "fr"
+    HUNGARIAN = "hu"
+    ITALIAN = "it"
+    JAPANESE = "ja"
+    LITHUANIAN = "lt"
+    LATVIAN = "lv"
+    DUTCH = "nl"
+    POLISH = "pl"
+    PORTUGUESE = "pt"  # Only usable as a source language
+    PORTUGUESE_BRAZILIAN = "pt-BR"  # Only usable as a target language
+    PORTUGUESE_EUROPEAN = "pt-PT"  # Only usable as a target language
+    ROMANIAN = "ro"
+    RUSSIAN = "ru"
+    SLOVAK = "sk"
+    SLOVENIAN = "sl"
+    SWEDISH = "sv"
+    CHINESE = "zh"
+
 
 class GlossaryLanguagePair:
     """Information about a pair of languages supported for DeepL glossaries.

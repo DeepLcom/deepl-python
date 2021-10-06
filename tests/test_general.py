@@ -28,6 +28,15 @@ def test_example_translation(lang, translator):
     assert "proton" in result_text
 
 
+def test_translate_with_enums(translator):
+    result = translator.translate_text(
+        example_text["EN"],
+        source_lang=deepl.Language.ENGLISH,
+        target_lang=deepl.Language.GERMAN,
+    )
+    assert example_text["DE"] == result.text
+
+
 def test_invalid_authkey(server):
     translator = deepl.Translator("invalid", server_url=server.server_url)
     with pytest.raises(deepl.exceptions.AuthorizationException):
