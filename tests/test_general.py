@@ -9,7 +9,7 @@ import pytest
 
 
 def test_version():
-    assert "1.1.3" == deepl.__version__
+    assert "1.2.0" == deepl.__version__
 
 
 @pytest.mark.parametrize(

@@ -5,7 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [Unreleased]
+## [1.2.0] - 2021-10-07
 ### Added
 * Add `Translator.get_glossary_languages()` to query language pairs supported for glossaries.
 * Add constants for all supported languages codes, for example: `Language.GERMAN`.
@@ -15,10 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Some optional arguments related to language caching are now deprecated, and will be removed in a future version:
   * `Translator()`: the `skip_language_check` argument 
   * `Translator.get_source_languages()` and `Translator.get_target_languages()`: the `skip_cache` argument 
-### Removed
 ### Fixed
 * Fix HTTP request retries for document uploads.
-### Security
 
 
 ## [1.1.3] - 2021-09-27
@@ -87,7 +85,7 @@ Version increased to avoid conflicts with old packages on PyPI.
 Initial version.
 
 
-[Unreleased]: https://github.com/DeepLcom/deepl-python/compare/v1.1.3...HEAD 
+[1.2.0]: https://github.com/DeepLcom/deepl-python/compare/v1.1.3...v1.2.0 
 [1.1.3]: https://github.com/DeepLcom/deepl-python/compare/v1.1.2...v1.1.3
 [1.1.2]: https://github.com/DeepLcom/deepl-python/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/DeepLcom/deepl-python/compare/v1.1.0...v1.1.1
