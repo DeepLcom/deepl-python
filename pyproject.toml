@@ -18,6 +18,7 @@ classifiers = [
     # Note: although poetry automatically creates the Python version trove
     # classifiers, the 3.6 one will be missing because we specify >=3.6.2
     "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.10",
 ]
 include = [
     "CHANGELOG.md",

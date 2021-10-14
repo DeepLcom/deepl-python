@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+* Add support for Python 3.10.
 ### Changed
 ### Deprecated
 ### Removed
