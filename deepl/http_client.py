@@ -71,6 +71,7 @@ class HttpClient:
         method: str,
         url: str,
         data: Optional[dict],
+        headers: dict,
         stream: bool = False,
         **kwargs,
     ) -> Tuple[int, Union[str, requests.Response]]:
@@ -80,8 +81,9 @@ class HttpClient:
         backoff = _BackoffTimer()
 
         try:
+            headers.setdefault("User-Agent", user_agent)
             request = requests.Request(
-                method, url, data=data, **kwargs
+                method, url, data=data, headers=headers, **kwargs
             ).prepare()
         except Exception as e:
             raise DeepLException(
@@ -123,6 +125,7 @@ class HttpClient:
         method: str,
         url: str,
         data: Optional[dict],
+        headers: dict,
         stream: bool = False,
         **kwargs,
     ) -> Tuple[int, Union[str, requests.Response]]:
@@ -134,8 +137,9 @@ class HttpClient:
         If no response is received will raise ConnectionException."""
 
         try:
+            headers.setdefault("User-Agent", user_agent)
             request = requests.Request(
-                method, url, data=data, **kwargs
+                method, url, data=data, headers=headers, **kwargs
             ).prepare()
         except Exception as e:
             raise DeepLException(
