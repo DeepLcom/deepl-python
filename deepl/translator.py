@@ -152,10 +152,12 @@ class GlossaryInfo:
     @staticmethod
     def from_json(json) -> "GlossaryInfo":
         """Create GlossaryInfo from the given API JSON object."""
-        # Workaround for bug in Python 3.6
+        # Workaround for bugs in strptime() in Python 3.6
         creation_time = json["creation_time"]
         if ":" == creation_time[-3:-2]:
             creation_time = creation_time[:-3] + creation_time[-2:]
+        if "Z" == creation_time[-1:]:
+            creation_time = creation_time[:-1] + "+0000"
 
         return GlossaryInfo(
             json["glossary_id"],
