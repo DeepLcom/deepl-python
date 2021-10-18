@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 ### Fixed
 * Fix bug that caused User-Agent header to be omitted from HTTP requests. 
+* Fix glossary name prefix used in unit-tests to match git repository name. 
 ### Security
 
 

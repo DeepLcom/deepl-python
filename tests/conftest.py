@@ -31,7 +31,7 @@ class Config(BaseSettings):
         env_prefix = "DEEPL_"
 
 
-glossary_name_prefix = "python-deepl-test-glossary: "
+glossary_name_prefix = "deepl-python-test-glossary: "
 
 
 @pytest.fixture
