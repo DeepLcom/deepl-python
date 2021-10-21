@@ -62,7 +62,7 @@ print(result[1].detected_source_lang)  # "ES"
 # Translate a formal document from English to German 
 translator.translate_document_from_filepath(
     "Instruction Manual.docx",
-    "Bedienungsanleitlung.docx",
+    "Bedienungsanleitung.docx",
     target_lang="DE",
     formality="more"
 )
