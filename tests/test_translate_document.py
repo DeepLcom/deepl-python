@@ -11,42 +11,6 @@ import time
 default_lang_args = {"target_lang": "DE", "source_lang": "EN"}
 
 
-@pytest.fixture
-def example_document_path(tmpdir):
-    tmpdir = pathlib.Path(tmpdir)
-    path = tmpdir / "input" / "example_document.txt"
-    path.parent.mkdir()
-    path.write_text(example_text["EN"])
-    return path
-
-
-@pytest.fixture
-def example_document_translation():
-    return example_text["DE"]
-
-
-@pytest.fixture
-def example_large_document_path(tmpdir):
-    tmpdir = pathlib.Path(tmpdir)
-    path = tmpdir / "input" / "example_document.txt"
-    path.parent.mkdir()
-    path.write_text((example_text["EN"] + "\n") * 1000)
-    return path
-
-
-@pytest.fixture
-def example_large_document_translation():
-    return (example_text["DE"] + "\n") * 1000
-
-
-@pytest.fixture
-def output_document_path(tmpdir):
-    tmpdir = pathlib.Path(tmpdir)
-    path = tmpdir / "output" / "example_document.txt"
-    path.parent.mkdir()
-    return path
-
-
 def test_translate_document_from_filepath(
     translator,
     example_document_path,

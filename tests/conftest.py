@@ -4,6 +4,7 @@
 
 import deepl
 import os
+import pathlib
 from pydantic import BaseSettings
 import pytest
 from typing import Optional
@@ -162,6 +163,42 @@ def glossary_name(translator, request) -> str:
 
     test_name = request.node.name
     return f"{glossary_name_prefix}{test_name}"
+
+
+@pytest.fixture
+def example_document_path(tmpdir):
+    tmpdir = pathlib.Path(tmpdir)
+    path = tmpdir / "input" / "example_document.txt"
+    path.parent.mkdir()
+    path.write_text(example_text["EN"])
+    return path
+
+
+@pytest.fixture
+def example_document_translation():
+    return example_text["DE"]
+
+
+@pytest.fixture
+def example_large_document_path(tmpdir):
+    tmpdir = pathlib.Path(tmpdir)
+    path = tmpdir / "input" / "example_document.txt"
+    path.parent.mkdir()
+    path.write_text((example_text["EN"] + "\n") * 1000)
+    return path
+
+
+@pytest.fixture
+def example_large_document_translation():
+    return (example_text["DE"] + "\n") * 1000
+
+
+@pytest.fixture
+def output_document_path(tmpdir):
+    tmpdir = pathlib.Path(tmpdir)
+    path = tmpdir / "output" / "example_document.txt"
+    path.parent.mkdir()
+    return path
 
 
 def create_glossary(

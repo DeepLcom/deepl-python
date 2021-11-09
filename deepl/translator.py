@@ -739,6 +739,7 @@ class Translator:
         source_lang: Optional[str] = None,
         target_lang: str,
         formality: Union[str, Formality] = Formality.DEFAULT,
+        glossary: Union[str, GlossaryInfo, None] = None,
     ) -> None:
         """Upload document at given input path, translate it into the target
         language, and download result to given output path.
@@ -751,6 +752,8 @@ class Translator:
             "EN-US", "FR".
         :param formality: (Optional) Desired formality for translation, as Formality
             enum, "less" or "more".
+        :param glossary: (Optional) glossary or glossary ID to use for
+            translation. Must match specified source_lang and target_lang.
 
         :raises DocumentTranslationException: If an error occurs during translation,
             The exception includes information about the document request.
@@ -764,6 +767,7 @@ class Translator:
                         target_lang=target_lang,
                         source_lang=source_lang,
                         formality=formality,
+                        glossary=glossary,
                     )
                 except Exception as e:
                     out_file.close()
@@ -778,6 +782,7 @@ class Translator:
         source_lang: Optional[str] = None,
         target_lang: str,
         formality: Union[str, Formality] = Formality.DEFAULT,
+        glossary: Union[str, GlossaryInfo, None] = None,
     ) -> None:
         """Upload document, translate it into the target language, and download
         result.
@@ -792,6 +797,8 @@ class Translator:
             example "DE", "EN-US", "FR".
         :param formality: (Optional) Desired formality for translation, as
             Formality enum, "less" or "more".
+        :param glossary: (Optional) glossary or glossary ID to use for
+            translation. Must match specified source_lang and target_lang.
 
         :raises DocumentTranslationException: If an error occurs during
             translation, the exception includes the document handle.
@@ -802,6 +809,7 @@ class Translator:
             target_lang=target_lang,
             source_lang=source_lang,
             formality=formality,
+            glossary=glossary,
         )
 
         try:
@@ -828,6 +836,7 @@ class Translator:
         source_lang: Optional[str] = None,
         target_lang: str,
         formality: Union[str, Formality] = Formality.DEFAULT,
+        glossary: Union[str, GlossaryInfo, None] = None,
     ) -> DocumentHandle:
         """Upload document to be translated and return handle associated with
         request.
@@ -841,11 +850,13 @@ class Translator:
             example "DE", "EN-US", "FR".
         :param formality: (Optional) Desired formality for translation, as
             Formality enum, "less" or "more".
+        :param glossary: (Optional) glossary or glossary ID to use for
+            translation. Must match specified source_lang and target_lang.
         :return: DocumentHandle with ID and key identifying document.
         """
 
         request_data = self._check_language_and_formality(
-            source_lang, target_lang, formality
+            source_lang, target_lang, formality, glossary
         )
 
         files = {"file": input_document}

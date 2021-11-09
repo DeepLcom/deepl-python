@@ -181,6 +181,33 @@ def test_glossary_translate_text_basic(translator, glossary_name):
     assert [r.text for r in result] == texts_en
 
 
+def test_glossary_translate_document(
+    translator,
+    glossary_name,
+    example_document_path,
+    output_document_path,
+):
+    input_text = "artist\nprize"
+    expected_output_text = "Maler\nGewinn"
+
+    glossary = create_glossary(
+        translator,
+        glossary_name,
+        entries={"artist": "Maler", "prize": "Gewinn"},
+        source_lang="EN",
+        target_lang="DE",
+    )
+    example_document_path.write_text(input_text)
+    translator.translate_document_from_filepath(
+        example_document_path,
+        output_path=output_document_path,
+        source_lang="EN",
+        target_lang="DE",
+        glossary=glossary,
+    )
+    assert expected_output_text == output_document_path.read_text()
+
+
 def test_glossary_translate_text_invalid(translator, glossary_name):
     glossary_ende = create_glossary(
         translator, f"{glossary_name}_ende", source_lang="EN", target_lang="DE"
