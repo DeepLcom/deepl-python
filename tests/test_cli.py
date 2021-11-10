@@ -188,7 +188,9 @@ def test_glossary_no_subcommand(runner):
     assert "subcommand is required" in result.output
 
 
-def test_glossary_create(runner, glossary_name, tmpdir):
+def test_glossary_create(
+    runner, glossary_name, tmpdir, cleanup_matching_glossaries
+):
     name_cli = f"{glossary_name}-cli"
     name_stdin = f"{glossary_name}-stdin"
     name_file = f"{glossary_name}-file"
@@ -198,85 +200,120 @@ def test_glossary_create(runner, glossary_name, tmpdir):
     file = tmpdir / "glossary_entries"
     file.write(entries_tsv)
 
-    result = runner.invoke(
-        deepl.__main__,
-        f'-vv glossary create --name "{name_cli}" --from DE --to EN '
-        f"{entries_cli}",
-    )
-    assert result.exit_code == 0, f"exit: {result.exit_code}\n {result.output}"
-    result = runner.invoke(
-        deepl.__main__,
-        f'-vv glossary create --name "{name_stdin}" --from DE --to EN -',
-        input=entries_tsv,
-    )
-    assert result.exit_code == 0, f"exit: {result.exit_code}\n {result.output}"
-    result = runner.invoke(
-        deepl.__main__,
-        f'-vv glossary create --name "{name_file}" --from DE --to EN '
-        f"--file {file}",
-    )
-    assert result.exit_code == 0, f"exit: {result.exit_code}\n {result.output}"
+    try:
+        result = runner.invoke(
+            deepl.__main__,
+            f'-vv glossary create --name "{name_cli}" --from DE --to EN '
+            f"{entries_cli}",
+        )
+        assert (
+            result.exit_code == 0
+        ), f"exit: {result.exit_code}\n {result.output}"
+        result = runner.invoke(
+            deepl.__main__,
+            f'-vv glossary create --name "{name_stdin}" --from DE --to EN -',
+            input=entries_tsv,
+        )
+        assert (
+            result.exit_code == 0
+        ), f"exit: {result.exit_code}\n {result.output}"
+        result = runner.invoke(
+            deepl.__main__,
+            f'-vv glossary create --name "{name_file}" --from DE --to EN '
+            f"--file {file}",
+        )
+        assert (
+            result.exit_code == 0
+        ), f"exit: {result.exit_code}\n {result.output}"
 
-    result = runner.invoke(deepl.__main__, f"-vv glossary list")
-    assert result.exit_code == 0, f"exit: {result.exit_code}\n {result.output}"
-    assert name_cli in result.output
-    assert name_stdin in result.output
-    assert name_file in result.output
+        result = runner.invoke(deepl.__main__, f"-vv glossary list")
+        assert (
+            result.exit_code == 0
+        ), f"exit: {result.exit_code}\n {result.output}"
+        assert name_cli in result.output
+        assert name_stdin in result.output
+        assert name_file in result.output
 
-    # Cannot use --file option together with entries
-    result = runner.invoke(
-        deepl.__main__,
-        f'-vv glossary create --name "{name_file}" --from DE --to EN '
-        f"--file {file} {entries_cli}",
-    )
-    assert result.exit_code == 1, f"exit: {result.exit_code}\n {result.output}"
-    assert "--file argument" in result.output
+        # Cannot use --file option together with entries
+        result = runner.invoke(
+            deepl.__main__,
+            f'-vv glossary create --name "{name_file}" --from DE --to EN '
+            f"--file {file} {entries_cli}",
+        )
+        assert (
+            result.exit_code == 1
+        ), f"exit: {result.exit_code}\n {result.output}"
+        assert "--file argument" in result.output
 
-
-def test_glossary_get(translator, runner, glossary_name):
-    created_id = create_glossary(translator, glossary_name).glossary_id
-
-    result = runner.invoke(deepl.__main__, f"-vv glossary get {created_id}")
-    print(result.output)
-    assert result.exit_code == 0, f"exit: {result.exit_code}\n {result.output}"
-    assert glossary_name in result.output
-
-
-def test_glossary_list(translator, runner, glossary_name):
-    suffix_list = ["1", "2", "3"]
-    for suffix in suffix_list:
-        create_glossary(translator, glossary_name + suffix)
-
-    result = runner.invoke(deepl.__main__, f"-vv glossary list")
-    assert result.exit_code == 0, f"exit: {result.exit_code}\n {result.output}"
-    for suffix in suffix_list:
-        assert f"{glossary_name}{suffix}" in result.output
+    finally:
+        cleanup_matching_glossaries(
+            lambda glossary: glossary.name in [name_file, name_cli, name_stdin]
+        )
 
 
-def test_glossary_entries(translator, runner, glossary_name):
+def test_glossary_get(translator, runner, glossary_manager):
+    with glossary_manager() as created_glossary:
+        created_id = created_glossary.glossary_id
+
+        result = runner.invoke(
+            deepl.__main__, f"-vv glossary get {created_id}"
+        )
+        print(result.output)
+        assert (
+            result.exit_code == 0
+        ), f"exit: {result.exit_code}\n {result.output}"
+        assert created_id in result.output
+        assert created_glossary.name in result.output
+
+
+def test_glossary_list(translator, runner, glossary_manager):
+    with glossary_manager(glossary_name_suffix="1") as g1, glossary_manager(
+        glossary_name_suffix="2"
+    ) as g2, glossary_manager(glossary_name_suffix="3") as g3:
+        glossary_list = [g1, g2, g3]
+
+        result = runner.invoke(deepl.__main__, f"-vv glossary list")
+        assert (
+            result.exit_code == 0
+        ), f"exit: {result.exit_code}\n {result.output}"
+        for glossary in glossary_list:
+            assert glossary.name in result.output
+
+
+def test_glossary_entries(translator, runner, glossary_manager):
     entries = {"Hallo": "Hello", "Maler": "Artist"}
-    created_id = create_glossary(
-        translator, glossary_name, entries=entries
-    ).glossary_id
+    with glossary_manager(entries=entries) as created_glossary:
+        created_id = created_glossary.glossary_id
 
-    result = runner.invoke(
-        deepl.__main__, f"-vv glossary entries {created_id}"
-    )
-    assert result.exit_code == 0, f"exit: {result.exit_code}\n {result.output}"
-    for source, target in entries.items():
-        assert f"{source}\t{target}" in result.output
+        result = runner.invoke(
+            deepl.__main__, f"-vv glossary entries {created_id}"
+        )
+        assert (
+            result.exit_code == 0
+        ), f"exit: {result.exit_code}\n {result.output}"
+        for source, target in entries.items():
+            assert f"{source}\t{target}" in result.output
 
 
-def test_glossary_delete(translator, runner, glossary_name):
-    created_id = create_glossary(translator, glossary_name).glossary_id
-    result = runner.invoke(deepl.__main__, f"glossary list")
-    assert result.exit_code == 0, f"exit: {result.exit_code}\n {result.output}"
-    assert created_id in result.output
+def test_glossary_delete(translator, runner, glossary_manager):
+    with glossary_manager() as created_glossary:
+        created_id = created_glossary.glossary_id
+        result = runner.invoke(deepl.__main__, f"glossary list")
+        assert (
+            result.exit_code == 0
+        ), f"exit: {result.exit_code}\n {result.output}"
+        assert created_id in result.output
 
-    # Remove the created glossary
-    result = runner.invoke(deepl.__main__, f'glossary delete "{created_id}"')
-    assert result.exit_code == 0, f"exit: {result.exit_code}\n {result.output}"
+        # Remove the created glossary
+        result = runner.invoke(
+            deepl.__main__, f'glossary delete "{created_id}"'
+        )
+        assert (
+            result.exit_code == 0
+        ), f"exit: {result.exit_code}\n {result.output}"
 
-    result = runner.invoke(deepl.__main__, f"glossary list")
-    assert result.exit_code == 0, f"exit: {result.exit_code}\n {result.output}"
-    assert created_id not in result.output
+        result = runner.invoke(deepl.__main__, f"glossary list")
+        assert (
+            result.exit_code == 0
+        ), f"exit: {result.exit_code}\n {result.output}"
+        assert created_id not in result.output

@@ -7,7 +7,8 @@ import os
 import pathlib
 from pydantic import BaseSettings
 import pytest
-from typing import Optional
+from typing import Callable, Optional
+from typing_extensions import Protocol
 import uuid
 
 
@@ -30,9 +31,6 @@ class Config(BaseSettings):
 
     class Config:
         env_prefix = "DEEPL_"
-
-
-glossary_name_prefix = "deepl-python-test-glossary: "
 
 
 @pytest.fixture
@@ -148,21 +146,118 @@ def translator_with_random_auth_key(server):
     return _make_translator(server, auth_key=str(uuid.uuid1()))
 
 
-def remove_test_glossaries(translator):
-    glossaries = translator.list_glossaries()
-    for glossary in glossaries:
-        if glossary.name.startswith(glossary_name_prefix):
-            translator.delete_glossary(glossary)
+@pytest.fixture
+def cleanup_matching_glossaries(translator):
+    """
+    Fixture function to remove all glossaries from the server matching the
+    given predicate. Can be used, for example, to remove all glossaries with a
+    matching name.
+
+    Usage example:
+        def test_example(cleanup_matching_glossaries):
+            ...
+            cleanup_matching_glossaries(
+                lambda glossary: glossary.name.startswith("test ")
+            )
+    """
+
+    def do_cleanup(predicate: Callable[[deepl.GlossaryInfo], bool]):
+        glossaries = translator.list_glossaries()
+        for glossary in glossaries:
+            if predicate(glossary):
+                try:
+                    translator.delete_glossary(glossary)
+                except deepl.DeepLException:
+                    pass
+
+    return do_cleanup
+
+
+class ManagedGlossary:
+    """
+    Utility content-manager class to create a test glossary and ensure its
+    deletion at the end of a test.
+    """
+
+    def __init__(
+        self,
+        translator: deepl.Translator,
+        glossary_name: str,
+        source_lang,
+        target_lang,
+        entries: dict,
+    ):
+        self._translator = translator
+        self._created_glossary = translator.create_glossary(
+            glossary_name, source_lang, target_lang, entries
+        )
+
+    def __enter__(self) -> deepl.GlossaryInfo:
+        return self._created_glossary
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        try:
+            self._translator.delete_glossary(
+                self._created_glossary.glossary_id
+            )
+        except deepl.DeepLException:
+            pass
+
+
+class CreateManagedGlossaryFunc(Protocol):
+    """Helper class for type hints."""
+
+    def __call__(
+        self,
+        source_lang: str = "EN",
+        target_lang: str = "DE",
+        entries: Optional[dict] = None,
+        glossary_name_suffix: str = "",
+    ) -> ManagedGlossary:
+        pass
 
 
 @pytest.fixture
-def glossary_name(translator, request) -> str:
-    """Returns a suitable glossary name to be used in the test"""
-    # Remove all test glossaries from the server
-    remove_test_glossaries(translator)
+def glossary_manager(translator, glossary_name) -> CreateManagedGlossaryFunc:
+    """
+    Fixture function that may be used to create context-managed test
+    glossaries, named using the current test. May be called multiple times in
+    a test to create multiple glossaries, ideally with a different suffix for
+    each glossary.
 
+    Usage example:
+        def test_example(glossary_manager):
+            with glossary_manager(
+                entries={"a": "b"}, glossary_name_suffix="1"
+            ) as glossary1:
+                ...
+    """
+
+    def create_managed_glossary(
+        source_lang: str = "EN",
+        target_lang: str = "DE",
+        entries: Optional[dict] = None,
+        glossary_name_suffix: str = "",
+    ):
+        if not entries:
+            entries = {"Hello": "Hallo"}
+        return ManagedGlossary(
+            translator,
+            f"{glossary_name}{glossary_name_suffix}",
+            source_lang,
+            target_lang,
+            entries,
+        )
+
+    return create_managed_glossary
+
+
+@pytest.fixture
+def glossary_name(request) -> str:
+    """Returns a suitable glossary name to be used in the test"""
     test_name = request.node.name
-    return f"{glossary_name_prefix}{test_name}"
+    new_uuid = str(uuid.uuid1())
+    return f"deepl-python-test-glossary: {test_name} {new_uuid}"
 
 
 @pytest.fixture
@@ -199,21 +294,6 @@ def output_document_path(tmpdir):
     path = tmpdir / "output" / "example_document.txt"
     path.parent.mkdir()
     return path
-
-
-def create_glossary(
-    translator,
-    glossary_name,
-    *,
-    source_lang="EN",
-    target_lang="DE",
-    entries: Optional[dict] = None,
-) -> deepl.GlossaryInfo:
-    if entries is None:
-        entries = {"Hallo": "Hello"}
-    return translator.create_glossary(
-        glossary_name, source_lang, target_lang, entries
-    )
 
 
 # Decorate test functions with "@needs_mock_server" to skip them if a real

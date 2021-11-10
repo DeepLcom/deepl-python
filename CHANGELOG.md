@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Deprecated
 ### Removed
 ### Fixed
+* Fix issues with parallelized tests by changing how test glossaries are created and deleted.
 ### Security
 
 
