@@ -15,6 +15,8 @@ import uuid
 # Set environment variables to change this configuration.
 # Example: export DEEPL_SERVER_URL=http://localhost:3000/
 #          export DEEPL_MOCK_SERVER_PORT=3000
+#          export DEEPL_PROXY_URL=http://localhost:3001/
+#          export DEEPL_MOCK_PROXY_SERVER_PORT=3001
 #
 # supported use cases:
 #  - using real API
@@ -28,6 +30,8 @@ class Config(BaseSettings):
     auth_key: str = None
     server_url: str = None
     mock_server_port: int = None
+    proxy_url: str = None
+    mock_proxy_server_port: int = None
 
     class Config:
         env_prefix = "DEEPL_"
@@ -49,9 +53,11 @@ def server(config):
                 uu = str(uuid.uuid1())
                 session_uuid = f"{os.getenv('PYTEST_CURRENT_TEST')}/{uu}"
                 self.headers["mock-server-session"] = session_uuid
+                self.proxy = config.proxy_url
             else:
                 self.auth_key = config.auth_key
                 self.server_url = config.server_url
+                self.proxy = config.proxy_url
 
         def no_response(self, count):
             """Instructs the mock server to ignore N requests from this
@@ -113,15 +119,24 @@ def server(config):
                     milliseconds
                 )
 
+        def expect_proxy(self, value: bool = True):
+            """Instructs the mock server to only accept requests via the proxy."""
+            if config.mock_server_port is not None:
+                self.headers["mock-server-session-expect-proxy"] = (
+                    "1" if value else "0"
+                )
+
     return Server()
 
 
-def _make_translator(server, auth_key=None):
+def _make_translator(server, auth_key=None, proxy=None):
     """Returns a deepl.Translator for the specified server test fixture.
     The server auth_key is used unless specifically overridden."""
     if auth_key is None:
         auth_key = server.auth_key
-    translator = deepl.Translator(auth_key, server_url=server.server_url)
+    translator = deepl.Translator(
+        auth_key, server_url=server.server_url, proxy=proxy
+    )
 
     # If the server test fixture has custom headers defined, update the
     # translator headers and replace with the server headers dictionary.
@@ -144,6 +159,15 @@ def translator_with_random_auth_key(server):
     """Returns a deepl.Translator with randomized authentication key,
     for use in mock-server tests."""
     return _make_translator(server, auth_key=str(uuid.uuid1()))
+
+
+@pytest.fixture
+def translator_with_random_auth_key_and_proxy(server):
+    """Returns a deepl.Translator with randomized authentication key,
+    for use in mock-server tests."""
+    return _make_translator(
+        server, auth_key=str(uuid.uuid1()), proxy=server.proxy
+    )
 
 
 @pytest.fixture
@@ -301,6 +325,13 @@ def output_document_path(tmpdir):
 needs_mock_server = pytest.mark.skipif(
     Config().mock_server_port is None,
     reason="this test requires a mock server",
+)
+# Decorate test functions with "@needs_mock_proxy_server" to skip them if a real
+#  server is used or mock proxy server is not configured
+needs_mock_proxy_server = pytest.mark.skipif(
+    Config().mock_proxy_server_port is None
+    or Config().mock_server_port is None,
+    reason="this test requires a mock proxy server",
 )
 # Decorate test functions with "@needs_real_server" to skip them if a mock
 #  server is used

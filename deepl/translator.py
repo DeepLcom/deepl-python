@@ -396,6 +396,10 @@ class Translator:
     :param auth_key: Authentication key as found in your DeepL API account.
     :param server_url: (Optional) Base URL of DeepL API, can be overridden e.g.
         for testing purposes.
+    :param proxy: (Optional) Proxy server URL string or dictionary containing
+        URL strings for the 'http' and 'https' keys. This is passed to the
+        underlying requests session, see the requests proxy documentation for
+        more information.
     :param skip_language_check: Deprecated, and now has no effect as the
         corresponding internal functionality has been removed. This parameter
         will be removed in a future version.
@@ -416,6 +420,7 @@ class Translator:
         auth_key: str,
         *,
         server_url: Optional[str] = None,
+        proxy: Union[Dict, str, None] = None,
         skip_language_check: bool = False,
     ):
         if not auth_key:
@@ -429,7 +434,7 @@ class Translator:
             )
 
         self._server_url = server_url
-        self._client = http_client.HttpClient()
+        self._client = http_client.HttpClient(proxy)
         self.headers = {"Authorization": f"DeepL-Auth-Key {auth_key}"}
 
     def __del__(self):

@@ -84,6 +84,20 @@ def test_server_url_selected_based_on_auth_key(server):
     assert translator_free.server_url == "https://api-free.deepl.com"
 
 
+@needs_mock_proxy_server
+def test_proxy_usage(
+    server,
+    translator_with_random_auth_key,
+    translator_with_random_auth_key_and_proxy,
+):
+    server.expect_proxy()
+
+    translator_with_random_auth_key_and_proxy.get_usage()
+
+    with pytest.raises(deepl.DeepLException):
+        translator_with_random_auth_key.get_usage()
+
+
 @needs_mock_server
 def test_usage_no_response(translator, server, monkeypatch):
     server.no_response(2)

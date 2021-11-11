@@ -8,7 +8,7 @@ import http
 import random
 import requests
 import time
-from typing import Optional, Tuple, Union
+from typing import Dict, Optional, Tuple, Union
 from .util import log_info
 
 
@@ -58,8 +58,17 @@ class _BackoffTimer:
 
 
 class HttpClient:
-    def __init__(self):
+    def __init__(self, proxy: Union[Dict, str, None] = None):
         self._session = requests.Session()
+        if proxy:
+            if isinstance(proxy, str):
+                proxy = {"http": proxy, "https": proxy}
+            if not isinstance(proxy, dict):
+                raise ValueError(
+                    "proxy may be specified as a URL string or dictionary "
+                    "containing URL strings for the http and https keys."
+                )
+            self._session.proxies.update(proxy)
         self._session.headers = {"User-Agent": user_agent}
         pass
 

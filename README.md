@@ -105,7 +105,14 @@ for language in translator.get_target_languages():
     else:
         print(f"{language.code} ({language.name})")
 ```
-### Logging
+
+### Exceptions
+All module functions may raise `deepl.DeepLException` or one of its subclasses.
+If invalid arguments are provided, they may raise the standard exceptions `ValueError` and `TypeError`. 
+
+### Configuration
+
+#### Logging
 Logging can be enabled to see the HTTP-requests sent and responses received by the library. Enable and control logging
 using Python's logging module, for example:
 ```python
@@ -114,9 +121,16 @@ logging.basicConfig()
 logging.getLogger('deepl').setLevel(logging.DEBUG)
 ```
 
-### Exceptions
-All module functions may raise `deepl.DeepLException` or one of its subclasses.
-If invalid arguments are provided, they may raise the standard exceptions `ValueError` and `TypeError`. 
+#### Proxy configuration
+You can configure a proxy by specifying the `proxy` argument when creating a `deepl.Translator`:
+```python
+proxy = "http://user:pass@10.10.1.10:3128"
+translator = deepl.Translator(..., proxy=proxy)
+```
+
+The proxy argument is passed to the underlying `requests` session,
+[see the documentation here](https://docs.python-requests.org/en/latest/user/advanced/#proxies); a dictionary of schemes
+to proxy URLs is also accepted.
 
 ## Command Line Interface
 The library can be run on the command line supporting all API functions. Use the `--help` option for 

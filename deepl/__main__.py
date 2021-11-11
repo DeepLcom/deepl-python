@@ -15,6 +15,7 @@ name = "python -m deepl"
 
 env_auth_key = "DEEPL_AUTH_KEY"
 env_server_url = "DEEPL_SERVER_URL"
+env_proxy_url = "DEEPL_PROXY_URL"
 
 
 def action_usage(translator: deepl.Translator):
@@ -199,6 +200,13 @@ def get_parser(prog_name):
         default=None,
         metavar="URL",
         help=f"alternative server URL for testing; the {env_server_url} "
+        f"environment variable may be used as secondary fallback",
+    )
+    parser.add_argument(
+        "--proxy-url",
+        default=None,
+        metavar="URL",
+        help=f"proxy server URL to use for all connections; the {env_proxy_url} "
         f"environment variable may be used as secondary fallback",
     )
 
@@ -467,6 +475,7 @@ def main(args=None, prog_name=None):
 
     server_url = args.server_url or os.getenv(env_server_url)
     auth_key = args.auth_key or os.getenv(env_auth_key)
+    proxy_url = args.proxy_url or os.getenv(env_proxy_url)
 
     try:
         if auth_key is None:
@@ -478,7 +487,10 @@ def main(args=None, prog_name=None):
         # Note: the get_languages() call to verify language codes is skipped
         #       because the CLI makes one API call per execution.
         translator = deepl.Translator(
-            auth_key=auth_key, server_url=server_url, skip_language_check=True
+            auth_key=auth_key,
+            server_url=server_url,
+            proxy=proxy_url,
+            skip_language_check=True,
         )
 
         if args.command == "text":
@@ -493,7 +505,7 @@ def main(args=None, prog_name=None):
                 sys.exit(1)
 
         # Remove global args so they are not unrecognised in action functions
-        del args.verbose, args.server_url, args.auth_key
+        del args.verbose, args.server_url, args.auth_key, args.proxy_url
         args = vars(args)
         # Call action function corresponding to command with remaining args
         command = args.pop("command")
