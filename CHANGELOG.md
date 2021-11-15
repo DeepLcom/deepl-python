@@ -5,16 +5,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [Unreleased]
+## [1.3.0] - 2021-11-15
 ### Added
 * Add glossary support for document translation.
 * Add proxy support.
-### Changed
-### Deprecated
-### Removed
 ### Fixed
 * Fix issues with parallelized tests by changing how test glossaries are created and deleted.
-### Security
 
 
 ## [1.2.1] - 2021-10-19
@@ -106,7 +102,7 @@ Version increased to avoid conflicts with old packages on PyPI.
 Initial version.
 
 
-[Unreleased]: https://github.com/DeepLcom/deepl-python/compare/v1.2.1...HEAD
+[1.3.0]: https://github.com/DeepLcom/deepl-python/compare/v1.2.1...v1.3.0
 [1.2.1]: https://github.com/DeepLcom/deepl-python/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/DeepLcom/deepl-python/compare/v1.1.3...v1.2.0
 [1.1.3]: https://github.com/DeepLcom/deepl-python/compare/v1.1.2...v1.1.3
