@@ -820,7 +820,12 @@ class Translator:
         try:
             status = self.translate_document_get_status(handle)
             while status.ok and not status.done:
-                secs = (status.seconds_remaining or 0) / 2 + 1
+                secs = (status.seconds_remaining or 0) / 2.0 + 1.0
+                secs = max(1.0, min(secs, 60.0))
+                util.log_info(
+                    f"Rechecking document translation status "
+                    f"after sleeping for {secs:.3f} seconds."
+                )
                 time.sleep(secs)
                 status = self.translate_document_get_status(handle)
 
