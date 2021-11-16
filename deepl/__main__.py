@@ -238,6 +238,12 @@ def get_parser(prog_name):
             default=deepl.Formality.DEFAULT.value,
             help="desired formality for translation",
         )
+        subparser.add_argument(
+            "--glossary-id",
+            dest="glossary",
+            type=str,
+            help="ID of glossary to use for translation",
+        )
 
     # create the parser for the "text" command
     parser_text = subparsers.add_parser(
@@ -268,12 +274,6 @@ def get_parser(prog_name):
         "--show-detected-source",
         action="store_true",
         help="print detected source language for each text",
-    )
-    parser_text.add_argument(
-        "--glossary-id",
-        dest="glossary",
-        type=str,
-        help="ID of glossary to use for translation",
     )
 
     tag_handling_group = parser_text.add_argument_group(
