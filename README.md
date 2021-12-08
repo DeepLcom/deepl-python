@@ -146,14 +146,14 @@ The library can be run on the command line supporting all API functions. Use the
 usage information:
 
 ```shell
-python3 -m deepl --help
+deepl --help
 ```
 
 The CLI requires your DeepL authentication key specified either as the `DEEPL_AUTH_KEY` environment variable, or using
 the `--auth-key` option, for example:
 
 ```shell
-python3 -m deepl --auth-key=YOUR_AUTH_KEY usage
+deepl --auth-key=YOUR_AUTH_KEY usage
 ```
 
 Note that the `--auth-key` argument must appear *before* the command argument. The recognized commands are:
@@ -169,7 +169,7 @@ Note that the `--auth-key` argument must appear *before* the command argument. T
 For example, to translate text:
 
 ```shell
-python3 -m deepl --auth-key=YOUR_AUTH_KEY text --to=DE "Text to be translated."
+deepl --auth-key=YOUR_AUTH_KEY text --to=DE "Text to be translated."
 ```
 
 Wrap text arguments in quotes to prevent the shell from splitting sentences into words.
