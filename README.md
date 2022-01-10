@@ -159,7 +159,14 @@ python3 -m deepl --auth-key=YOUR_AUTH_KEY text --to=DE "Text to be translated."
 ```
 Wrap text arguments in quotes to prevent the shell from splitting sentences into words.
 
+## Issues
+
+If you experience problems using the library, or would like to request a new feature, please open an
+[issue](https://www.github.com/DeepLcom/deepl-python/issues). 
+
 ## Development
+
+We are currently unable to accept Pull Requests. If you would like to suggest changes, please open an issue instead.
 
 ### Tests 
 
@@ -172,7 +179,3 @@ only with the DeepL API or the mock-server and will be otherwise skipped.  The t
 trigger server errors and test the client error-handling. To execute the tests using deepl-mock, run it in another
 terminal while executing the tests. Execute the tests using `pytest` with the `DEEPL_MOCK_SERVER_PORT` and
 `DEEPL_SERVER_URL` environment variables defined referring to the mock-server.
-
-### Issues
-If you experience problems using the library, or would like to request a new feature, please create an
-[issue](https://www.github.com/DeepLcom/deepl-python/issues). 
