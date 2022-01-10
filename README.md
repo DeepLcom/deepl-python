@@ -160,9 +160,18 @@ python3 -m deepl --auth-key=YOUR_AUTH_KEY text --to=DE "Text to be translated."
 Wrap text arguments in quotes to prevent the shell from splitting sentences into words.
 
 ## Development
-The test suite depends on [deepl-mock](https://www.github.com/DeepLcom/deepl-mock). Run it in another terminal while executing the tests, using port 3000. Set the mock-server listening port using the environment variable `DEEPL_MOCK_SERVER_PORT`. 
 
-Execute the tests using `tox`.
+### Tests 
+
+Execute the tests using `pytest`. The tests communicate with the DeepL API using the auth key defined by the
+`DEEPL_AUTH_KEY` environment variable.
+
+The test suite may instead be configured to communicate with the mock-server provided by
+[deepl-mock](https://www.github.com/DeepLcom/deepl-mock). Although most test cases work for either, some test cases work
+only with the DeepL API or the mock-server and will be otherwise skipped.  The test cases that require the mock-server
+trigger server errors and test the client error-handling. To execute the tests using deepl-mock, run it in another
+terminal while executing the tests. Execute the tests using `pytest` with the `DEEPL_MOCK_SERVER_PORT` and
+`DEEPL_SERVER_URL` environment variables defined referring to the mock-server.
 
 ### Issues
 If you experience problems using the library, or would like to request a new feature, please create an
