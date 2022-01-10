@@ -91,7 +91,7 @@ usage = translator.get_usage()
 if usage.character.limit_exceeded:
     print("Character limit exceeded.")
 else:
-    print(f"Character usage: {usage.character}")
+    print(f"Character usage: {usage.character.count} of {usage.character.limit}")
 
 # Source and target languages
 print("Source languages:")
