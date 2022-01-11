@@ -1,10 +1,10 @@
-# Copyright 2021 DeepL GmbH (https://www.deepl.com)
+# Copyright 2022 DeepL SE (https://www.deepl.com)
 # Use of this source code is governed by an MIT
 # license that can be found in the LICENSE file.
 
 from .version import VERSION as __version__  # noqa
 
-__author__ = "DeepL GmbH <python-api@deepl.com>"
+__author__ = "DeepL SE <python-api@deepl.com>"
 
 from .exceptions import (  # noqa
     AuthorizationException,
