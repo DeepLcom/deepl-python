@@ -10,6 +10,7 @@ from .exceptions import (  # noqa
     AuthorizationException,
     ConnectionException,
     DeepLException,
+    DocumentNotReadyException,
     DocumentTranslationException,
     GlossaryNotFoundException,
     TooManyRequestsException,

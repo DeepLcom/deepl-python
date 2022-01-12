@@ -54,3 +54,9 @@ class GlossaryNotFoundException(DeepLException):
     """The specified glossary was not found."""
 
     pass
+
+
+class DocumentNotReadyException(DeepLException):
+    """The translation of the specified document is not yet complete."""
+
+    pass

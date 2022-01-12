@@ -4,6 +4,7 @@
 
 from . import http_client, util
 from .exceptions import (
+    DocumentNotReadyException,
     GlossaryNotFoundException,
     QuotaExceededException,
     TooManyRequestsException,
@@ -494,6 +495,7 @@ class Translator:
         content: str,
         json: Optional[dict],
         glossary: bool = False,
+        downloading_document: bool = False,
     ):
         message = ""
         if json is not None and "message" in json:
@@ -522,6 +524,11 @@ class Translator:
                 "Too many requests, DeepL servers are currently experiencing "
                 f"high load{message}"
             )
+        elif status_code == http.HTTPStatus.SERVICE_UNAVAILABLE:
+            if downloading_document:
+                raise DocumentNotReadyException(f"Document not ready{message}")
+            else:
+                raise DeepLException(f"Service unavailable{message}")
         else:
             status_name = (
                 http.client.responses[status_code]
@@ -939,9 +946,9 @@ class Translator:
             url, data=data, stream=True
         )
 
-        if status_code == http.HTTPStatus.SERVICE_UNAVAILABLE:
-            raise DeepLException("Document not ready for download")
-        self._raise_for_status(status_code, "<file>", json)
+        self._raise_for_status(
+            status_code, "<file>", json, downloading_document=True
+        )
 
         if output_file:
             for chunk in response.iter_content(chunk_size=chunk_size):

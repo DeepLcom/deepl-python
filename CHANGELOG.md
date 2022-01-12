@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Add `--glossary-id` argument for CLI document command.
 ### Changed
 * Improve README.
+* Raise `DocumentNotReadyException` when attempting to download a document before it has been translated. Previously the
+  base class `DeepLException` was thrown.
 ### Deprecated
 ### Removed
 ### Fixed
