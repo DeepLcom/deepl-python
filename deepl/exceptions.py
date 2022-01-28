@@ -47,7 +47,9 @@ class DocumentTranslationException(DeepLException):
         self.document_request = document_request
 
     def __str__(self):
-        return f"{super()}, document request: {self.document_request}"
+        return (
+            f"{super().__str__()}, document request: {self.document_request}"
+        )
 
 
 class GlossaryNotFoundException(DeepLException):
