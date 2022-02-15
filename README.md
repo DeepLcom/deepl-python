@@ -60,12 +60,25 @@ print(result[1].text)  # "How are you?"
 print(result[1].detected_source_lang)  # "ES"
 
 # Translate a formal document from English to German 
-translator.translate_document_from_filepath(
-    "Instruction Manual.docx",
-    "Bedienungsanleitung.docx",
-    target_lang="DE",
-    formality="more"
-)
+try:
+    translator.translate_document_from_filepath(
+        "Instruction Manual.docx",
+        "Bedienungsanleitung.docx",
+        target_lang="DE",
+        formality="more"
+    )
+except deepl.DocumentTranslationException as error:
+    # If an error occurs during translate_document_from_filepath() or
+    # translate_document() and after the document was already uploaded, a 
+    # DocumentTranslationException is raised. The document_handle property
+    # contains the document handle to later retrieve the document or contact
+    # DeepL support.
+    doc_id = error.document_handle.id
+    doc_key = error.document_handle.key
+    print(f"Error after uploading document ${error}, id: ${doc_id} key: ${doc_key}")
+except deepl.DeepLException as error:
+    # Errors during upload raise a DeepLException
+    print(error)
 
 # Glossaries allow you to customize your translations
 glossary_en_to_de = translator.create_glossary(
@@ -108,7 +121,7 @@ for language in translator.get_target_languages():
 
 ### Exceptions
 All module functions may raise `deepl.DeepLException` or one of its subclasses.
-If invalid arguments are provided, they may raise the standard exceptions `ValueError` and `TypeError`. 
+If invalid arguments are provided, they may raise the standard exceptions `ValueError` and `TypeError`.
 
 ### Configuration
 
