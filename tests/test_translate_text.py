@@ -184,6 +184,17 @@ def test_formality(translator):
         )
 
 
+def test_preserve_formatting(translator):
+    # Note: this test may use the mock server that will not translate the text,
+    # therefore we do not check the translated result.
+    _ = translator.translate_text(
+        example_text["EN"], target_lang="DE", preserve_formatting=True
+    )
+    _ = translator.translate_text(
+        example_text["EN"], target_lang="DE", preserve_formatting=False
+    )
+
+
 def test_split_sentences_basic(translator):
     text = """If the implementation is hard to explain, it's a bad idea.
         If the implementation is easy to explain, it may be a good idea."""
