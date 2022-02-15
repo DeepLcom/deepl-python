@@ -147,6 +147,14 @@ def test_text_tags(runner):
     ), f"output:\n{result.output}"
 
 
+def test_text_html_tag_handling(runner):
+    result = runner.invoke(
+        main_function,
+        '-vv text --to DE --tag-handling html "<html><p>Test</p></html>"',
+    )
+    assert result.exit_code == 0, f"exit: {result.exit_code}\n {result.output}"
+
+
 def test_document(runner, tmpdir):
     tmpdir = pathlib.Path(tmpdir)
     output_dir = tmpdir / "output"

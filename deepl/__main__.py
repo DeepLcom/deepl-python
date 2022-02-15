@@ -289,7 +289,7 @@ def get_parser(prog_name):
     tag_handling_group.add_argument(
         "--tag-handling",
         type=str,
-        choices=["xml"],
+        choices=["xml", "html"],
         default=None,
         help="activate processing of formatting tags, for example 'xml'",
     )

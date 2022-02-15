@@ -259,6 +259,25 @@ def test_tag_handling_specify_tags(translator):
     assert re.compile("<title>.*Der Titel.*</title>").search(result.text)
 
 
+@needs_real_server
+def test_tag_handling_html(translator):
+    text = """
+<!DOCTYPE html>
+<html>
+   <body>
+       <h1>My First Heading</h1>
+       <p translate="no">My first paragraph.</p>
+   </body>
+</html>
+"""
+
+    result = translator.translate_text(
+        text, target_lang="DE", tag_handling="html"
+    )
+    assert "<h1>Meine erste Überschrift</h1>" in result.text
+    assert '<p translate="no">My first paragraph.</p>' in result.text
+
+
 def test_invalid_url(server):
     translator = deepl.Translator(
         server.auth_key, server_url="https://example.com"

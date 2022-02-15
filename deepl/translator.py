@@ -639,17 +639,19 @@ class Translator:
         :param glossary: (Optional) glossary or glossary ID to use for
             translation. Must match specified source_lang and target_lang.
         :param tag_handling: (Optional) Type of tags to parse before
-            translation, only "xml" is currently available.
+            translation, only "xml" and "html" are currently available.
         :param outline_detection: (Optional) Set to False to disable automatic
             tag detection.
-        :param non_splitting_tags: (Optional) Tags that should not split a
+        :param non_splitting_tags: (Optional) XML tags that should not split a
             sentence.
-        :type non_splitting_tags: List of tags or comma-separated-list of tags.
-        :param splitting_tags: (Optional) Tags that should split a sentence.
-        :type splitting_tags: List of tags or comma-separated-list of tags.
-        :param ignore_tags: (Optional) Tags containing text that should not be
-            translated.
-        :type ignore_tags: List of tags or comma-separated-list of tags.
+        :type non_splitting_tags: List of XML tags or comma-separated-list of
+            tags.
+        :param splitting_tags: (Optional) XML tags that should split a
+            sentence.
+        :type splitting_tags: List of XML tags or comma-separated-list of tags.
+        :param ignore_tags: (Optional) XML tags containing text that should not
+            be translated.
+        :type ignore_tags: List of XML tags or comma-separated-list of tags.
         :return: List of TextResult objects containing results, unless input
             text was one string, then a single TextResult object is returned.
         """
