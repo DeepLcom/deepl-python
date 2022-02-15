@@ -65,6 +65,19 @@ def test_glossary_create_invalid(
         )
 
 
+def test_glossary_create_large(translator, glossary_manager):
+    source_lang = "EN"
+    target_lang = "DE"
+    entries = {f"Source-${i}": f"Target-${i}" for i in range(10000)}
+    with glossary_manager(
+        source_lang=source_lang, target_lang=target_lang, entries=entries
+    ) as created_glossary:
+        assert created_glossary.entry_count == len(entries)
+
+        retrieved_entries = translator.get_glossary_entries(created_glossary)
+        assert entries == retrieved_entries
+
+
 def test_glossary_get(translator, glossary_manager):
     source_lang = "EN"
     target_lang = "DE"
