@@ -141,46 +141,63 @@ def test_translate_with_retries(translator, server):
     assert time_after - time_before > 1.0
 
 
-@needs_real_server
-def test_formality(translator):
+def test_formality(translator, server):
+    input_text = "How are you?"
+    informal = "Wie geht es dir?"
+    formal = "Wie geht es Ihnen?"
+
     result = translator.translate_text(
-        "How are you?", target_lang="DE", formality=deepl.Formality.LESS
+        input_text, target_lang="DE", formality=deepl.Formality.LESS
     )
-    assert "Wie geht es dir?" == result.text
+    if not server.is_mock_server:
+        assert informal == result.text
     result = translator.translate_text(
-        "How are you?", target_lang="DE", formality=deepl.Formality.DEFAULT
+        input_text, target_lang="DE", formality=deepl.Formality.DEFAULT
     )
-    assert "Wie geht es Ihnen?" == result.text
+    if not server.is_mock_server:
+        assert formal == result.text
     result = translator.translate_text(
-        "How are you?", target_lang="DE", formality=deepl.Formality.MORE
+        input_text, target_lang="DE", formality=deepl.Formality.MORE
     )
-    assert "Wie geht es Ihnen?" == result.text
+    if not server.is_mock_server:
+        assert formal == result.text
 
     # Specifying formality as string is also permitted
     result = translator.translate_text(
-        "How are you?", target_lang="DE", formality="less"
+        input_text, target_lang="DE", formality="less"
     )
-    assert "Wie geht es dir?" == result.text
+    if not server.is_mock_server:
+        assert informal == result.text
 
     result = translator.translate_text(
-        "How are you?", target_lang="DE", formality="default"
+        input_text, target_lang="DE", formality="default"
     )
-    assert "Wie geht es Ihnen?" == result.text
+    if not server.is_mock_server:
+        assert formal == result.text
 
     result = translator.translate_text(
-        "How are you?", target_lang="DE", formality="more"
+        input_text, target_lang="DE", formality="more"
     )
-    assert "Wie geht es Ihnen?" == result.text
+    if not server.is_mock_server:
+        assert formal == result.text
 
     # formality parameter is case-insensitive
     result = translator.translate_text(
-        "How are you?", target_lang="DE", formality="Less"
+        input_text, target_lang="DE", formality="Less"
     )
-    assert "Wie geht es dir?" == result.text
+    if not server.is_mock_server:
+        assert informal == result.text
 
     with pytest.raises(deepl.DeepLException, match=r".*formality.*"):
-        result = translator.translate_text(
-            "How are you?", target_lang="DE", formality="invalid"
+        _ = translator.translate_text(
+            input_text, target_lang="DE", formality="invalid"
+        )
+
+    with pytest.raises(
+        deepl.DeepLException, match=r".*formality.*target_lang.*"
+    ):
+        _ = translator.translate_text(
+            "Test", target_lang="EN-US", formality="more"
         )
 
 
@@ -217,6 +234,11 @@ def test_split_sentences_basic(translator):
     _ = translator.translate_text(
         text, target_lang="DE", split_sentences="nonewlines"
     )
+
+    with pytest.raises(deepl.DeepLException, match=r".*split_sentences.*"):
+        _ = translator.translate_text(
+            text, target_lang="DE", split_sentences="invalid"
+        )
 
 
 def test_tag_handling_basic(translator):

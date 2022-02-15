@@ -47,7 +47,8 @@ def server(config):
     class Server:
         def __init__(self):
             self.headers = {}
-            if config.mock_server_port is not None:
+            self.is_mock_server = config.mock_server_port is not None
+            if self.is_mock_server:
                 self.server_url = config.server_url
                 self.auth_key = "mock_server"
                 uu = str(uuid.uuid1())
@@ -62,7 +63,7 @@ def server(config):
         def no_response(self, count):
             """Instructs the mock server to ignore N requests from this
             session, giving no response."""
-            if config.mock_server_port is not None:
+            if self.is_mock_server:
                 self.headers["mock-server-session-no-response-count"] = str(
                     count
                 )
@@ -70,13 +71,13 @@ def server(config):
         def respond_with_429(self, count):
             """Instructs the mock server to reject N /translate requests from
             this session with 429 status codes."""
-            if config.mock_server_port is not None:
+            if self.is_mock_server:
                 self.headers["mock-server-session-429-count"] = str(count)
 
         def init_character_limit(self, count):
             """Instructs the mock server to initialize user accounts created by
             this session with given character limit."""
-            if config.mock_server_port is not None:
+            if self.is_mock_server:
                 self.headers["mock-server-session-init-character-limit"] = str(
                     count
                 )
@@ -84,7 +85,7 @@ def server(config):
         def init_document_limit(self, count):
             """Instructs the mock server to initialize user accounts created by
             this session with given document limit."""
-            if config.mock_server_port is not None:
+            if self.is_mock_server:
                 self.headers["mock-server-session-init-document-limit"] = str(
                     count
                 )
@@ -92,7 +93,7 @@ def server(config):
         def init_team_document_limit(self, count):
             """Instructs the mock server to initialize user accounts created by
             this session with given team document limit."""
-            if config.mock_server_port is not None:
+            if self.is_mock_server:
                 self.headers[
                     "mock-server-session-init-team-document-limit"
                 ] = str(count)
@@ -100,13 +101,13 @@ def server(config):
         def set_doc_failure(self, count):
             """Instructs the mock server to fail during translation of N
             documents during this session."""
-            if config.mock_server_port is not None:
+            if self.is_mock_server:
                 self.headers["mock-server-session-doc-failure"] = str(count)
 
         def set_doc_queue_time(self, milliseconds):
             """Instructs the mock server to queue documents for specified time
             before translation."""
-            if config.mock_server_port is not None:
+            if self.is_mock_server:
                 self.headers["mock-server-session-doc-queue-time"] = str(
                     milliseconds
                 )
@@ -114,7 +115,7 @@ def server(config):
         def set_doc_translate_time(self, milliseconds):
             """Instructs the mock server to translate documents within
             specified time."""
-            if config.mock_server_port is not None:
+            if self.is_mock_server:
                 self.headers["mock-server-session-doc-translate-time"] = str(
                     milliseconds
                 )
@@ -122,7 +123,7 @@ def server(config):
         def expect_proxy(self, value: bool = True):
             """Instructs the mock server to only accept requests via the
             proxy."""
-            if config.mock_server_port is not None:
+            if self.is_mock_server:
                 self.headers["mock-server-session-expect-proxy"] = (
                     "1" if value else "0"
                 )
