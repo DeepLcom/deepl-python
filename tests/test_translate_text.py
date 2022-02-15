@@ -184,46 +184,28 @@ def test_formality(translator):
         )
 
 
-@needs_real_server
-class TestSplitSentences:
+def test_split_sentences_basic(translator):
     text = """If the implementation is hard to explain, it's a bad idea.
         If the implementation is easy to explain, it may be a good idea."""
 
-    def test_split_sentences_enum_off(self, translator):
-        translator.translate_text(
-            self.text,
-            target_lang="DE",
-            split_sentences=deepl.SplitSentences.OFF,
-        )
-
-    def test_split_sentences_enum_all(self, translator):
-        translator.translate_text(
-            self.text,
-            target_lang="DE",
-            split_sentences=deepl.SplitSentences.ALL,
-        )
-
-    def test_split_sentences_enum_no_newlines(self, translator):
-        translator.translate_text(
-            self.text,
-            target_lang="DE",
-            split_sentences=deepl.SplitSentences.NO_NEWLINES,
-        )
-
-    def test_split_sentences_str_0(self, translator):
-        translator.translate_text(
-            self.text, target_lang="DE", split_sentences="0"
-        )
-
-    def test_split_sentences_str_1(self, translator):
-        translator.translate_text(
-            self.text, target_lang="DE", split_sentences="1"
-        )
-
-    def test_split_sentences_str_no_newlines(self, translator):
-        translator.translate_text(
-            self.text, target_lang="DE", split_sentences="nonewlines"
-        )
+    # Note: this test may use the mock server that will not translate the text,
+    # therefore we do not check the translated result.
+    _ = translator.translate_text(
+        text, target_lang="DE", split_sentences=deepl.SplitSentences.OFF
+    )
+    _ = translator.translate_text(
+        text, target_lang="DE", split_sentences=deepl.SplitSentences.ALL
+    )
+    _ = translator.translate_text(
+        text,
+        target_lang="DE",
+        split_sentences=deepl.SplitSentences.NO_NEWLINES,
+    )
+    _ = translator.translate_text(text, target_lang="DE", split_sentences="0")
+    _ = translator.translate_text(text, target_lang="DE", split_sentences="1")
+    _ = translator.translate_text(
+        text, target_lang="DE", split_sentences="nonewlines"
+    )
 
 
 def test_tag_handling_basic(translator):
