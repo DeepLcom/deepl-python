@@ -226,8 +226,23 @@ class TestSplitSentences:
         )
 
 
+def test_tag_handling_basic(translator):
+    text = """
+<!DOCTYPE html>
+<html>
+   <body>
+       <p>This is an example sentence.</p>
+   </body>
+</html>
+"""
+    # Note: this test may use the mock server that will not translate the text,
+    # therefore we do not check the translated result.
+    _ = translator.translate_text(text, target_lang="DE", tag_handling="xml")
+    _ = translator.translate_text(text, target_lang="DE", tag_handling="html")
+
+
 @needs_real_server
-def test_tag_handling_specify_tags(translator):
+def test_tag_handling_xml(translator):
     text = """
 <document>
     <meta>
