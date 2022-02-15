@@ -1,6 +1,7 @@
 # Copyright 2022 DeepL SE (https://www.deepl.com)
 # Use of this source code is governed by an MIT
 # license that can be found in the LICENSE file.
+import re
 
 from .conftest import example_text, needs_mock_server, needs_real_server
 import deepl
@@ -112,15 +113,20 @@ def test_document_failure(
 ):
     server.set_doc_failure(1)
 
-    # Ensure that the document ID and key are printed if an error occurs during
-    # document translation
     with pytest.raises(
         deepl.exceptions.DocumentTranslationException,
-        match="ID: [0-9A-F]{32}, key: [0-9A-F]{64}",
-    ):
+    ) as exc_info:
         translator.translate_document_from_filepath(
             example_document_path, output_document_path, target_lang="DE"
         )
+
+    # Ensure that document translation error contains document handle
+    exception = exc_info.value
+    assert exception.document_handle is not None
+    match = re.compile("ID: [0-9A-F]{32}, key: [0-9A-F]{64}")
+    assert match.search(str(exception)) is not None
+    # document_request is a deprecated alias for document_handle
+    assert exception.document_request is not None
 
 
 def test_invalid_document(translator, tmpdir):
