@@ -101,7 +101,13 @@ def test_glossary_get(translator, glossary_manager):
 def test_glossary_get_entries(translator, glossary_manager):
     source_lang = "EN"
     target_lang = "DE"
-    entries = {"Apple": "Apfel", "Banana": "Banane"}
+    entries = {
+        "Apple": "Apfel",
+        "Banana": "Banane",
+        "A%=&": "B&=%",
+        "\u0394\u3041": "\u6DF1",
+        "\U0001FAA8": "\U0001FAB5",
+    }
     with glossary_manager(
         source_lang=source_lang, target_lang=target_lang, entries=entries
     ) as created_glossary:
