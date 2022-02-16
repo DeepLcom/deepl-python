@@ -186,6 +186,8 @@ We are currently unable to accept Pull Requests. If you would like to suggest ch
 Execute the tests using `pytest`. The tests communicate with the DeepL API using the auth key defined by the
 `DEEPL_AUTH_KEY` environment variable.
 
+Be aware that the tests make DeepL API requests that contribute toward your API usage.
+
 The test suite may instead be configured to communicate with the mock-server provided by
 [deepl-mock](https://www.github.com/DeepLcom/deepl-mock). Although most test cases work for either, some test cases work
 only with the DeepL API or the mock-server and will be otherwise skipped.  The test cases that require the mock-server
