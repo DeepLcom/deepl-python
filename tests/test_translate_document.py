@@ -71,7 +71,7 @@ def test_translate_document_with_waiting(
 
 
 @needs_mock_server
-def test_translate_document(
+def test_translate_large_document(
     translator, example_large_document_path, example_large_document_translation
 ):
     with io.BytesIO() as output_file:
@@ -107,12 +107,11 @@ def test_translate_document_formality(
     assert "Wie geht es dir?" == output_document_path.read_text()
 
 
-@needs_mock_server
-def test_document_failure(
-    translator, server, example_document_path, output_document_path
+def test_document_failure_during_translation(
+    translator, example_document_path, output_document_path
 ):
-    server.set_doc_failure(1)
-
+    # Translating text from DE to DE will trigger error
+    example_document_path.write_text(example_text["DE"])
     with pytest.raises(
         deepl.exceptions.DocumentTranslationException,
     ) as exc_info:
@@ -122,6 +121,7 @@ def test_document_failure(
 
     # Ensure that document translation error contains document handle
     exception = exc_info.value
+    assert "Source and target language" in str(exception)
     assert exception.document_handle is not None
     match = re.compile("ID: [0-9A-F]{32}, key: [0-9A-F]{64}")
     assert match.search(str(exception)) is not None

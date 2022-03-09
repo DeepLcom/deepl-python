@@ -77,6 +77,8 @@ class DocumentStatus:
         completes in seconds, or None if unknown.
     :param billed_characters: Number of characters billed for this document, or
         None if unknown or before translation is complete.
+    :param error_message: A short description of the error, or None if no error
+        has occurred.
     """
 
     class Status(Enum):
@@ -87,11 +89,16 @@ class DocumentStatus:
         ERROR = "error"
 
     def __init__(
-        self, status: Status, seconds_remaining=None, billed_characters=None
+        self,
+        status: Status,
+        seconds_remaining=None,
+        billed_characters=None,
+        error_message=None,
     ):
         self._status = self.Status(status)
         self._seconds_remaining = seconds_remaining
         self._billed_characters = billed_characters
+        self._error_message = error_message
 
     def __str__(self) -> str:
         return self.status.value
@@ -115,6 +122,10 @@ class DocumentStatus:
     @property
     def billed_characters(self) -> Optional[int]:
         return self._billed_characters
+
+    @property
+    def error_message(self) -> Optional[int]:
+        return self._error_message
 
 
 class GlossaryInfo:
@@ -850,8 +861,10 @@ class Translator:
             raise DocumentTranslationException(str(e), handle) from e
 
         if not status.ok:
+            error_message = status.error_message or "unknown error"
             raise DocumentTranslationException(
-                "Error occurred while translating document", handle
+                f"Error occurred while translating document: {error_message}",
+                handle,
             )
 
     def translate_document_upload(
@@ -923,7 +936,10 @@ class Translator:
         status = json["status"]
         seconds_remaining = json.get("seconds_remaining", None)
         billed_characters = json.get("billed_characters", None)
-        return DocumentStatus(status, seconds_remaining, billed_characters)
+        error_message = json.get("error_message", None)
+        return DocumentStatus(
+            status, seconds_remaining, billed_characters, error_message
+        )
 
     def translate_document_download(
         self,
