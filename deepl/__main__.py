@@ -42,8 +42,8 @@ def action_languages(translator: deepl.Translator, glossary: bool):
         for language in target_languages:
             if language.supports_formality:
                 print(f"{language.code}: {language.name} (supports formality)")
-        else:
-            print(f"{language.code}: {language.name}")
+            else:
+                print(f"{language.code}: {language.name}")
 
 
 def action_document(
