@@ -802,6 +802,7 @@ class Translator:
         target_lang: str,
         formality: Union[str, Formality] = Formality.DEFAULT,
         glossary: Union[str, GlossaryInfo, None] = None,
+        filename: Optional[str] = None,
     ) -> None:
         """Upload document, translate it into the target language, and download
         result.
@@ -819,6 +820,8 @@ class Translator:
             Formality enum, "less" or "more".
         :param glossary: (Optional) glossary or glossary ID to use for
             translation. Must match specified source_lang and target_lang.
+        :param filename: (Optional) Filename including extension, only required
+            if uploading string or bytes containing file content.
 
         :raises DocumentTranslationException: If an error occurs during
             translation, the exception includes the document handle.
@@ -830,6 +833,7 @@ class Translator:
             source_lang=source_lang,
             formality=formality,
             glossary=glossary,
+            filename=filename,
         )
 
         try:
