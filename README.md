@@ -40,12 +40,14 @@ The `requests` module is used to perform HTTP requests; the minimum is version 2
 
 ```python
 import deepl
-import os
 
 # Create a Translator object providing your DeepL API authentication key.
-# To avoid writing your key in source code, you can set it in an environment
-# variable DEEPL_AUTH_KEY, then read the variable in your Python code:
-translator = deepl.Translator(os.getenv("DEEPL_AUTH_KEY"))
+# Be careful not to expose your key, for example when sharing source code.
+auth_key = "f63c02c5-f056-..."  # Replace with your key
+translator = deepl.Translator(auth_key)
+# This example is for demonstration purposes only. In production code, the
+# authentication key should not be hard-coded, but instead fetched from a
+# configuration file or environment variable.
 
 # Translate text into a target language, in this case, French
 result = translator.translate_text("Hello, world!", target_lang="FR")
