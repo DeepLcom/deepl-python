@@ -259,3 +259,9 @@ def test_glossary_translate_text_invalid(translator, glossary_manager):
                 target_lang="EN",
                 glossary=glossary_deen.glossary_id,
             )
+
+        with pytest.raises(ValueError, match="GlossaryInfo"):
+            translator.translate_text_with_glossary(
+                text,
+                glossary=glossary_deen.glossary_id,
+            )

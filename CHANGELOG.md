@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 * Add `error_message` property to `DocumentStatus`, describing the error in case of document translation failure.
 ### Changed
+* Improve error message if `translate_text_with_glossary` is called without an instance of `GlossaryInfo`.
 ### Deprecated
 ### Removed
 ### Fixed

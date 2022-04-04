@@ -741,10 +741,21 @@ class Translator:
         :type text: UTF-8 :class:`str`; string sequence (list, tuple, iterator,
             generator)
         :param glossary: glossary to use for translation.
+        :type glossary: :class:`GlossaryInfo`.
         :param target_lang: override target language of glossary.
         :return: List of TextResult objects containing results, unless input
             text was one string, then a single TextResult object is returned.
         """
+
+        if not isinstance(glossary, GlossaryInfo):
+            msg = (
+                "This function expects the glossary parameter to be an "
+                "instance of GlossaryInfo. Use get_glossary() to obtain a "
+                "GlossaryInfo using the glossary ID of an existing "
+                "glossary. Alternatively, use translate_text() and "
+                "specify the glossary ID using the glossary parameter. "
+            )
+            raise ValueError(msg)
 
         if target_lang is None:
             target_lang = glossary.target_lang
