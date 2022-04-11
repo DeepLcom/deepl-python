@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Add `error_message` property to `DocumentStatus`, describing the error in case of document translation failure.
 ### Changed
 * Improve error message if `translate_text_with_glossary` is called without an instance of `GlossaryInfo`.
+* `translate_document` and `translate_document_from_filepath` return final `DocumentStatus`, allowing the number of
+  billed characters to be queried.
 ### Deprecated
 ### Removed
 ### Fixed

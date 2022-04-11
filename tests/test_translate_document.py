@@ -19,12 +19,15 @@ def test_translate_document_from_filepath(
     example_document_translation,
     output_document_path,
 ):
-    translator.translate_document_from_filepath(
+    status = translator.translate_document_from_filepath(
         example_document_path,
         output_path=output_document_path,
         **default_lang_args,
     )
     assert example_document_translation == output_document_path.read_text()
+    assert status.billed_characters == len(example_text["EN"])
+    assert status.status == deepl.DocumentStatus.Status.DONE
+    assert status.done
 
     # Note: cases with invalid file paths are not tested, because standard
     #     library functions are used.

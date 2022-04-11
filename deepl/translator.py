@@ -779,7 +779,7 @@ class Translator:
         target_lang: str,
         formality: Union[str, Formality] = Formality.DEFAULT,
         glossary: Union[str, GlossaryInfo, None] = None,
-    ) -> None:
+    ) -> DocumentStatus:
         """Upload document at given input path, translate it into the target
         language, and download result to given output path.
 
@@ -794,6 +794,8 @@ class Translator:
             Formality enum, "less" or "more".
         :param glossary: (Optional) glossary or glossary ID to use for
             translation. Must match specified source_lang and target_lang.
+        :return: DocumentStatus when document translation completed, this
+            allows the number of billed characters to be queried.
 
         :raises DocumentTranslationException: If an error occurs during
             translation. The exception includes information about the document
@@ -802,7 +804,7 @@ class Translator:
         with open(input_path, "rb") as in_file:
             with open(output_path, "wb") as out_file:
                 try:
-                    self.translate_document(
+                    return self.translate_document(
                         in_file,
                         out_file,
                         target_lang=target_lang,
@@ -824,7 +826,7 @@ class Translator:
         target_lang: str,
         formality: Union[str, Formality] = Formality.DEFAULT,
         glossary: Union[str, GlossaryInfo, None] = None,
-    ) -> None:
+    ) -> DocumentStatus:
         """Upload document, translate it into the target language, and download
         result.
 
@@ -841,6 +843,8 @@ class Translator:
             Formality enum, "less" or "more".
         :param glossary: (Optional) glossary or glossary ID to use for
             translation. Must match specified source_lang and target_lang.
+        :return: DocumentStatus when document translation completed, this
+            allows the number of billed characters to be queried.
 
         :raises DocumentTranslationException: If an error occurs during
             translation, the exception includes the document handle.
@@ -877,6 +881,7 @@ class Translator:
                 f"Error occurred while translating document: {error_message}",
                 handle,
             )
+        return status
 
     def translate_document_upload(
         self,
