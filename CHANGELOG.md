@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 ### Fixed
 * Fix bug in CLI languages command causing some target languages to be omitted.
+* Fix some tests that intermittently failed. 
 ### Security
 
 

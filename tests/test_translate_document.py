@@ -145,6 +145,7 @@ def test_invalid_document(translator, tmpdir):
         )
 
 
+@needs_mock_server
 def test_translate_document_low_level(
     translator,
     example_document_path,
@@ -153,7 +154,6 @@ def test_translate_document_low_level(
     server,
 ):
     # Set a small document queue time to attempt downloading a queued document
-    # Note: this is a noop unless using a mock-server
     server.set_doc_queue_time(100)
 
     with open(example_document_path, "rb") as infile:
