@@ -5,17 +5,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [Unreleased]
+## [1.6.0] - 2022-04-12
 ### Added
 * Add `error_message` property to `DocumentStatus`, describing the error in case of document translation failure.
 ### Changed
 * Improve error message if `translate_text_with_glossary` is called without an instance of `GlossaryInfo`.
 * `translate_document` and `translate_document_from_filepath` return final `DocumentStatus`, allowing the number of
   billed characters to be queried.
-### Deprecated
-### Removed
-### Fixed
-### Security
 
 
 ## [1.5.1] - 2022-04-11
@@ -151,7 +147,7 @@ Version increased to avoid conflicts with old packages on PyPI.
 Initial version.
 
 
-[Unreleased]: https://github.com/DeepLcom/deepl-python/compare/v1.5.1...HEAD
+[1.6.0]: https://github.com/DeepLcom/deepl-python/compare/v1.5.1...v1.6.0
 [1.5.1]: https://github.com/DeepLcom/deepl-python/compare/v1.5.0...v1.5.1
 [1.5.0]: https://github.com/DeepLcom/deepl-python/compare/v1.4.1...v1.5.0
 [1.4.1]: https://github.com/DeepLcom/deepl-python/compare/v1.4.0...v1.4.1
