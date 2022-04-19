@@ -330,6 +330,7 @@ class Language:
     FINNISH = "fi"
     FRENCH = "fr"
     HUNGARIAN = "hu"
+    INDONESIAN = "id"
     ITALIAN = "it"
     JAPANESE = "ja"
     LITHUANIAN = "lt"
@@ -344,6 +345,7 @@ class Language:
     SLOVAK = "sk"
     SLOVENIAN = "sl"
     SWEDISH = "sv"
+    TURKISH = "tr"
     CHINESE = "zh"
 
 
