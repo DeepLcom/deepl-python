@@ -23,8 +23,9 @@ def test_example_translation(lang, translator):
     The texts are translations of "proton beam"."""
 
     input_text = example_text[lang]
+    source_lang = deepl.Language.remove_regional_variant(lang)
     result_text = translator.translate_text(
-        input_text, target_lang="EN-US"
+        input_text, source_lang=source_lang, target_lang="EN-US"
     ).text.lower()
     assert "proton" in result_text
 
