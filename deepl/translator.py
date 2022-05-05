@@ -1108,10 +1108,14 @@ class Translator:
         languages, containing the entries in dictionary. The glossary may be
         used in the translate_text functions.
 
-        Only certain language pairs are supported, currently the following:
-        EN<->DE, EN<->FR, and EN<->ES. The available language pairs can be
-        queried using get_glossary_languages(). A glossary with target language
-        EN may be used to translate texts into both EN-US and EN-GB.
+        Only certain language pairs are supported. The available language pairs
+        can be queried using get_glossary_languages(). Glossaries are not
+        regional specific: a glossary with target language EN may be used to
+        translate texts into both EN-US and EN-GB.
+
+        This function requires the glossary entries to be provided as a
+        dictionary of source-target terms. To create a glossary from a CSV file
+        downloaded from the DeepL website, see create_glossary_from_csv().
 
         :param name: user-defined name to attach to glossary.
         :param source_lang: Language of source terms.
