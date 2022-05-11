@@ -146,6 +146,11 @@ def test_usage_overrun(translator_with_random_auth_key, server, tmpdir):
     )
 
     usage = translator.get_usage()
+    assert usage.any_limit_reached
+    assert usage.document.limit_reached
+    assert usage.character.limit_reached
+    assert not usage.team_document.limit_reached
+    # Test deprecated properties as well
     assert usage.any_limit_exceeded
     assert usage.document.limit_exceeded
     assert usage.character.limit_exceeded
@@ -171,7 +176,7 @@ def test_usage_team_document_limit(
 
     translator = translator_with_random_auth_key
     usage = translator.get_usage()
-    assert not usage.any_limit_exceeded
+    assert not usage.any_limit_reached
     assert "Characters" not in str(usage)
     assert "Documents" not in str(usage)
     assert "Team documents: 0 of 1" in str(usage)
@@ -185,7 +190,7 @@ def test_usage_team_document_limit(
     )
 
     usage = translator.get_usage()
-    assert usage.any_limit_exceeded
-    assert not usage.document.limit_exceeded
-    assert not usage.character.limit_exceeded
-    assert usage.team_document.limit_exceeded
+    assert usage.any_limit_reached
+    assert not usage.document.limit_reached
+    assert not usage.character.limit_reached
+    assert usage.team_document.limit_reached

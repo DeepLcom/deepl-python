@@ -218,7 +218,8 @@ class Usage:
     The character, document and team_document properties provide details about
     each corresponding usage type. These properties allow each usage type to be
     checked individually.
-    The any_limit_exceeded property checks if any usage type is exceeded.
+    The any_limit_reached property checks if for any usage type the amount used
+    has reached the allowed amount.
     """
 
     class Detail:
@@ -243,9 +244,20 @@ class Usage:
             return self._count is not None and self._limit is not None
 
         @property
-        def limit_exceeded(self) -> bool:
-            """True iff this limit is valid and exceeded."""
+        def limit_reached(self) -> bool:
+            """True if this limit is valid and the amount used is greater than
+            or equal to the amount allowed, otherwise False."""
             return self.valid and self.count >= self.limit
+
+        @property
+        def limit_exceeded(self) -> bool:
+            """Deprecated, use limit_reached instead."""
+            import warnings
+
+            warnings.warn(
+                "limit_reached is deprecated", DeprecationWarning, stacklevel=2
+            )
+            return self.limit_reached
 
         def __str__(self) -> str:
             return f"{self.count} of {self.limit}" if self.valid else "Unknown"
@@ -256,13 +268,24 @@ class Usage:
         self._team_document = self.Detail(json, "team_document")
 
     @property
-    def any_limit_exceeded(self) -> bool:
-        """True if any API function limit is exceeded."""
+    def any_limit_reached(self) -> bool:
+        """True if for any API usage type, the amount used is greater than or
+        equal to the amount allowed, otherwise False."""
         return (
-            self.character.limit_exceeded
-            or self.document.limit_exceeded
-            or self.team_document.limit_exceeded
+            self.character.limit_reached
+            or self.document.limit_reached
+            or self.team_document.limit_reached
         )
+
+    @property
+    def any_limit_exceeded(self) -> bool:
+        """Deprecated, use any_limit_reached instead."""
+        import warnings
+
+        warnings.warn(
+            "any_limit_reached is deprecated", DeprecationWarning, stacklevel=2
+        )
+        return self.any_limit_reached
 
     @property
     def character(self) -> Detail:

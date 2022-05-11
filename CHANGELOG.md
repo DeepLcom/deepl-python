@@ -10,8 +10,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * New languages available: Indonesian (`'id'`) and Turkish (`'tr'`). Add language code constants and tests.
 
   Note: older library versions also support the new languages, this update only adds new code constants.
+* Add `limit_reached` and `any_limit_reached` properties to `Usage` object
+  returned by `get_usage()`.
 ### Changed
 ### Deprecated
+* Deprecate `limit_exceeded` and `any_limit_exceeded` properties of `Usage`
+  object returned by `get_usage()`, use `limit_reached` and `any_limit_reached`
+  instead.
 ### Removed
 ### Fixed
 ### Security
