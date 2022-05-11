@@ -467,7 +467,7 @@ class Translator:
         if server_url is None:
             server_url = (
                 self._DEEPL_SERVER_URL_FREE
-                if auth_key.endswith(":fx")
+                if util.auth_key_is_free_account(auth_key)
                 else self._DEEPL_SERVER_URL
             )
 

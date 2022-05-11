@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   returned by `get_usage()`.
 * Add `Translator.translate_document_wait_until_done()` to poll translation
   status until translation is complete or fails.
+* Add `auth_key_is_free_account()` utility function.
 ### Changed
 ### Deprecated
 * Deprecate `limit_exceeded` and `any_limit_exceeded` properties of `Usage`
