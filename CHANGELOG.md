@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   status until translation is complete or fails.
 * Add `auth_key_is_free_account()` utility function.
 ### Changed
+* Improve readme usage examples.
 ### Deprecated
 * Deprecate `limit_exceeded` and `any_limit_exceeded` properties of `Usage`
   object returned by `get_usage()`, use `limit_reached` and `any_limit_reached`
