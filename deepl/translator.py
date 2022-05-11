@@ -884,17 +884,7 @@ class Translator:
         )
 
         try:
-            status = self.translate_document_get_status(handle)
-            while status.ok and not status.done:
-                secs = (status.seconds_remaining or 0) / 2.0 + 1.0
-                secs = max(1.0, min(secs, 60.0))
-                util.log_info(
-                    f"Rechecking document translation status "
-                    f"after sleeping for {secs:.3f} seconds."
-                )
-                time.sleep(secs)
-                status = self.translate_document_get_status(handle)
-
+            status = self.translate_document_wait_until_done(handle)
             if status.ok:
                 self.translate_document_download(handle, output_document)
         except Exception as e:
@@ -981,6 +971,30 @@ class Translator:
         return DocumentStatus(
             status, seconds_remaining, billed_characters, error_message
         )
+
+    def translate_document_wait_until_done(
+        self, handle: DocumentHandle
+    ) -> DocumentStatus:
+        """
+        Continually polls the status of the document translation associated
+        with the given handle, sleeping in between requests, and returns the
+        final status when the translation completes (whether successful or
+        not).
+
+        :param handle: DocumentHandle to the document translation to wait on.
+        :return: DocumentStatus containing the status when completed.
+        """
+        status = self.translate_document_get_status(handle)
+        while status.ok and not status.done:
+            secs = (status.seconds_remaining or 0) / 2.0 + 1.0
+            secs = max(1.0, min(secs, 60.0))
+            util.log_info(
+                f"Rechecking document translation status "
+                f"after sleeping for {secs:.3f} seconds."
+            )
+            time.sleep(secs)
+            status = self.translate_document_get_status(handle)
+        return status
 
     def translate_document_download(
         self,

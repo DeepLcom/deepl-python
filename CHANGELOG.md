@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Note: older library versions also support the new languages, this update only adds new code constants.
 * Add `limit_reached` and `any_limit_reached` properties to `Usage` object
   returned by `get_usage()`.
+* Add `Translator.translate_document_wait_until_done()` to poll translation
+  status until translation is complete or fails.
 ### Changed
 ### Deprecated
 * Deprecate `limit_exceeded` and `any_limit_exceeded` properties of `Usage`
