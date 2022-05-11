@@ -4,7 +4,7 @@
 [![Supported Python versions](https://img.shields.io/pypi/pyversions/deepl.svg)](https://pypi.org/project/deepl/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blueviolet.svg)](https://github.com/DeepLcom/deepl-python/blob/main/LICENSE)
 
-The [DeepL API](https://www.deepl.com/docs-api?utm_source=github&utm_medium=github-python-readme) is a language
+The [DeepL API][api-docs] is a language
 translation API that allows other computer programs to send texts and documents to DeepL's servers and receive
 high-quality translations. This opens a whole universe of opportunities for developers: any translation product you can
 imagine can now be built on top of DeepL's best-in-class translation technology.
@@ -16,12 +16,12 @@ they’re added to the API.
 
 ## Getting an authentication key 
 
-To use the DeepL Python Library, you'll need an API authentication key. To get a key, [please create an account here](https://www.deepl.com/pro?utm_source=github&utm_medium=github-python-readme#developer). You can translate up to 500,000 characters/month for free. 
+To use the DeepL Python Library, you'll need an API authentication key. To get a key, [please create an account here][create-account]. You can translate up to 500,000 characters/month for free. 
 
-After you have created an account, you can find your API authentication key on your [DeepL Pro Account](https://www.deepl.com/pro-account/?utm_source=github&utm_medium=github-python-readme).
+After you have created an account, you can find your API authentication key on your [DeepL Pro Account][pro-account].
 
 ## Installation
-The library can be installed from [PyPI](https://pypi.org/project/deepl/) using pip:
+The library can be installed from [PyPI][pypi-project] using pip:
 ```shell
 pip install --upgrade deepl
 ```
@@ -144,7 +144,7 @@ translator = deepl.Translator(..., proxy=proxy)
 ```
 
 The proxy argument is passed to the underlying `requests` session,
-[see the documentation here](https://docs.python-requests.org/en/latest/user/advanced/#proxies); a dictionary of schemes
+[see the documentation here][requests-proxy-docs]; a dictionary of schemes
 to proxy URLs is also accepted.
 
 ## Command Line Interface
@@ -177,7 +177,7 @@ Wrap text arguments in quotes to prevent the shell from splitting sentences into
 ## Issues
 
 If you experience problems using the library, or would like to request a new feature, please open an
-[issue](https://www.github.com/DeepLcom/deepl-python/issues). 
+[issue][issues]. 
 
 ## Development
 
@@ -191,8 +191,16 @@ Execute the tests using `pytest`. The tests communicate with the DeepL API using
 Be aware that the tests make DeepL API requests that contribute toward your API usage.
 
 The test suite may instead be configured to communicate with the mock-server provided by
-[deepl-mock](https://www.github.com/DeepLcom/deepl-mock). Although most test cases work for either, some test cases work
+[deepl-mock][deepl-mock]. Although most test cases work for either, some test cases work
 only with the DeepL API or the mock-server and will be otherwise skipped.  The test cases that require the mock-server
 trigger server errors and test the client error-handling. To execute the tests using deepl-mock, run it in another
 terminal while executing the tests. Execute the tests using `pytest` with the `DEEPL_MOCK_SERVER_PORT` and
 `DEEPL_SERVER_URL` environment variables defined referring to the mock-server.
+
+[api-docs]: https://www.deepl.com/docs-api?utm_source=github&utm_medium=github-python-readme
+[create-account]: https://www.deepl.com/pro?utm_source=github&utm_medium=github-python-readme#developer
+[deepl-mock]: https://www.github.com/DeepLcom/deepl-mock
+[issues]: https://www.github.com/DeepLcom/deepl-python/issues
+[pypi-project]: https://pypi.org/project/deepl/
+[pro-account]: https://www.deepl.com/pro-account/?utm_source=github&utm_medium=github-python-readme
+[requests-proxy-docs]: https://docs.python-requests.org/en/latest/user/advanced/#proxies
