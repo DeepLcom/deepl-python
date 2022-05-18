@@ -5,7 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [Unreleased]
+## [1.7.0] - 2022-05-18
 ### Added
 * New languages available: Indonesian (`'id'`) and Turkish (`'tr'`). Add language code constants and tests.
 
@@ -21,9 +21,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Deprecate `limit_exceeded` and `any_limit_exceeded` properties of `Usage`
   object returned by `get_usage()`, use `limit_reached` and `any_limit_reached`
   instead.
-### Removed
-### Fixed
-### Security
 
 
 ## [1.6.0] - 2022-04-12
@@ -168,7 +165,7 @@ Version increased to avoid conflicts with old packages on PyPI.
 Initial version.
 
 
-[Unreleased]: https://github.com/DeepLcom/deepl-python/compare/v1.6.0...HEAD
+[1.7.0]: https://github.com/DeepLcom/deepl-python/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/DeepLcom/deepl-python/compare/v1.5.1...v1.6.0
 [1.5.1]: https://github.com/DeepLcom/deepl-python/compare/v1.5.0...v1.5.1
 [1.5.0]: https://github.com/DeepLcom/deepl-python/compare/v1.4.1...v1.5.0
