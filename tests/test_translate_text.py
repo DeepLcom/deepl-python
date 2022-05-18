@@ -335,22 +335,22 @@ def test_empty_text(translator):
 
 
 def test_mixed_case_languages(translator):
-    result = translator.translate_text(example_text["EN"], target_lang="pt-pt")
-    assert example_text["PT-PT"] == result.text
-    assert "EN" == result.detected_source_lang
+    result = translator.translate_text(example_text["DE"], target_lang="en-us")
+    assert example_text["EN-US"] == result.text.lower()
+    assert "DE" == result.detected_source_lang
 
-    result = translator.translate_text(example_text["EN"], target_lang="PT-pt")
-    assert example_text["PT-PT"] == result.text
-    assert "EN" == result.detected_source_lang
-
-    result = translator.translate_text(
-        example_text["EN"], source_lang="en", target_lang="PT-PT"
-    )
-    assert example_text["PT-PT"] == result.text
-    assert "EN" == result.detected_source_lang
+    result = translator.translate_text(example_text["DE"], target_lang="EN-us")
+    assert example_text["EN-US"] == result.text.lower()
+    assert "DE" == result.detected_source_lang
 
     result = translator.translate_text(
-        example_text["EN"], source_lang="eN", target_lang="PT-PT"
+        example_text["DE"], source_lang="de", target_lang="EN-US"
     )
-    assert example_text["PT-PT"] == result.text
-    assert "EN" == result.detected_source_lang
+    assert example_text["EN-US"] == result.text.lower()
+    assert "DE" == result.detected_source_lang
+
+    result = translator.translate_text(
+        example_text["DE"], source_lang="dE", target_lang="EN-US"
+    )
+    assert example_text["EN-US"] == result.text.lower()
+    assert "DE" == result.detected_source_lang

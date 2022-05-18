@@ -32,6 +32,7 @@ from .translator import (  # noqa
 )
 
 from .util import (  # noqa
+    auth_key_is_free_account,
     convert_tsv_to_dict,
     convert_dict_to_tsv,
     validate_glossary_term,

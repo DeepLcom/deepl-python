@@ -77,6 +77,8 @@ class DocumentStatus:
         completes in seconds, or None if unknown.
     :param billed_characters: Number of characters billed for this document, or
         None if unknown or before translation is complete.
+    :param error_message: A short description of the error, or None if no error
+        has occurred.
     """
 
     class Status(Enum):
@@ -87,11 +89,16 @@ class DocumentStatus:
         ERROR = "error"
 
     def __init__(
-        self, status: Status, seconds_remaining=None, billed_characters=None
+        self,
+        status: Status,
+        seconds_remaining=None,
+        billed_characters=None,
+        error_message=None,
     ):
         self._status = self.Status(status)
         self._seconds_remaining = seconds_remaining
         self._billed_characters = billed_characters
+        self._error_message = error_message
 
     def __str__(self) -> str:
         return self.status.value
@@ -115,6 +122,10 @@ class DocumentStatus:
     @property
     def billed_characters(self) -> Optional[int]:
         return self._billed_characters
+
+    @property
+    def error_message(self) -> Optional[int]:
+        return self._error_message
 
 
 class GlossaryInfo:
@@ -207,7 +218,8 @@ class Usage:
     The character, document and team_document properties provide details about
     each corresponding usage type. These properties allow each usage type to be
     checked individually.
-    The any_limit_exceeded property checks if any usage type is exceeded.
+    The any_limit_reached property checks if for any usage type the amount used
+    has reached the allowed amount.
     """
 
     class Detail:
@@ -232,9 +244,20 @@ class Usage:
             return self._count is not None and self._limit is not None
 
         @property
-        def limit_exceeded(self) -> bool:
-            """True iff this limit is valid and exceeded."""
+        def limit_reached(self) -> bool:
+            """True if this limit is valid and the amount used is greater than
+            or equal to the amount allowed, otherwise False."""
             return self.valid and self.count >= self.limit
+
+        @property
+        def limit_exceeded(self) -> bool:
+            """Deprecated, use limit_reached instead."""
+            import warnings
+
+            warnings.warn(
+                "limit_reached is deprecated", DeprecationWarning, stacklevel=2
+            )
+            return self.limit_reached
 
         def __str__(self) -> str:
             return f"{self.count} of {self.limit}" if self.valid else "Unknown"
@@ -245,13 +268,24 @@ class Usage:
         self._team_document = self.Detail(json, "team_document")
 
     @property
-    def any_limit_exceeded(self) -> bool:
-        """True if any API function limit is exceeded."""
+    def any_limit_reached(self) -> bool:
+        """True if for any API usage type, the amount used is greater than or
+        equal to the amount allowed, otherwise False."""
         return (
-            self.character.limit_exceeded
-            or self.document.limit_exceeded
-            or self.team_document.limit_exceeded
+            self.character.limit_reached
+            or self.document.limit_reached
+            or self.team_document.limit_reached
         )
+
+    @property
+    def any_limit_exceeded(self) -> bool:
+        """Deprecated, use any_limit_reached instead."""
+        import warnings
+
+        warnings.warn(
+            "any_limit_reached is deprecated", DeprecationWarning, stacklevel=2
+        )
+        return self.any_limit_reached
 
     @property
     def character(self) -> Detail:
@@ -319,6 +353,7 @@ class Language:
     FINNISH = "fi"
     FRENCH = "fr"
     HUNGARIAN = "hu"
+    INDONESIAN = "id"
     ITALIAN = "it"
     JAPANESE = "ja"
     LITHUANIAN = "lt"
@@ -333,6 +368,7 @@ class Language:
     SLOVAK = "sk"
     SLOVENIAN = "sl"
     SWEDISH = "sv"
+    TURKISH = "tr"
     CHINESE = "zh"
 
 
@@ -431,7 +467,7 @@ class Translator:
         if server_url is None:
             server_url = (
                 self._DEEPL_SERVER_URL_FREE
-                if auth_key.endswith(":fx")
+                if util.auth_key_is_free_account(auth_key)
                 else self._DEEPL_SERVER_URL
             )
 
@@ -730,10 +766,21 @@ class Translator:
         :type text: UTF-8 :class:`str`; string sequence (list, tuple, iterator,
             generator)
         :param glossary: glossary to use for translation.
+        :type glossary: :class:`GlossaryInfo`.
         :param target_lang: override target language of glossary.
         :return: List of TextResult objects containing results, unless input
             text was one string, then a single TextResult object is returned.
         """
+
+        if not isinstance(glossary, GlossaryInfo):
+            msg = (
+                "This function expects the glossary parameter to be an "
+                "instance of GlossaryInfo. Use get_glossary() to obtain a "
+                "GlossaryInfo using the glossary ID of an existing "
+                "glossary. Alternatively, use translate_text() and "
+                "specify the glossary ID using the glossary parameter. "
+            )
+            raise ValueError(msg)
 
         if target_lang is None:
             target_lang = glossary.target_lang
@@ -757,7 +804,7 @@ class Translator:
         target_lang: str,
         formality: Union[str, Formality] = Formality.DEFAULT,
         glossary: Union[str, GlossaryInfo, None] = None,
-    ) -> None:
+    ) -> DocumentStatus:
         """Upload document at given input path, translate it into the target
         language, and download result to given output path.
 
@@ -772,6 +819,8 @@ class Translator:
             Formality enum, "less" or "more".
         :param glossary: (Optional) glossary or glossary ID to use for
             translation. Must match specified source_lang and target_lang.
+        :return: DocumentStatus when document translation completed, this
+            allows the number of billed characters to be queried.
 
         :raises DocumentTranslationException: If an error occurs during
             translation. The exception includes information about the document
@@ -780,7 +829,7 @@ class Translator:
         with open(input_path, "rb") as in_file:
             with open(output_path, "wb") as out_file:
                 try:
-                    self.translate_document(
+                    return self.translate_document(
                         in_file,
                         out_file,
                         target_lang=target_lang,
@@ -803,7 +852,7 @@ class Translator:
         formality: Union[str, Formality] = Formality.DEFAULT,
         glossary: Union[str, GlossaryInfo, None] = None,
         filename: Optional[str] = None,
-    ) -> None:
+    ) -> DocumentStatus:
         """Upload document, translate it into the target language, and download
         result.
 
@@ -822,6 +871,8 @@ class Translator:
             translation. Must match specified source_lang and target_lang.
         :param filename: (Optional) Filename including extension, only required
             if uploading string or bytes containing file content.
+        :return: DocumentStatus when document translation completed, this
+            allows the number of billed characters to be queried.
 
         :raises DocumentTranslationException: If an error occurs during
             translation, the exception includes the document handle.
@@ -837,26 +888,19 @@ class Translator:
         )
 
         try:
-            status = self.translate_document_get_status(handle)
-            while status.ok and not status.done:
-                secs = (status.seconds_remaining or 0) / 2.0 + 1.0
-                secs = max(1.0, min(secs, 60.0))
-                util.log_info(
-                    f"Rechecking document translation status "
-                    f"after sleeping for {secs:.3f} seconds."
-                )
-                time.sleep(secs)
-                status = self.translate_document_get_status(handle)
-
+            status = self.translate_document_wait_until_done(handle)
             if status.ok:
                 self.translate_document_download(handle, output_document)
         except Exception as e:
             raise DocumentTranslationException(str(e), handle) from e
 
         if not status.ok:
+            error_message = status.error_message or "unknown error"
             raise DocumentTranslationException(
-                "Error occurred while translating document", handle
+                f"Error occurred while translating document: {error_message}",
+                handle,
             )
+        return status
 
     def translate_document_upload(
         self,
@@ -927,7 +971,34 @@ class Translator:
         status = json["status"]
         seconds_remaining = json.get("seconds_remaining", None)
         billed_characters = json.get("billed_characters", None)
-        return DocumentStatus(status, seconds_remaining, billed_characters)
+        error_message = json.get("error_message", None)
+        return DocumentStatus(
+            status, seconds_remaining, billed_characters, error_message
+        )
+
+    def translate_document_wait_until_done(
+        self, handle: DocumentHandle
+    ) -> DocumentStatus:
+        """
+        Continually polls the status of the document translation associated
+        with the given handle, sleeping in between requests, and returns the
+        final status when the translation completes (whether successful or
+        not).
+
+        :param handle: DocumentHandle to the document translation to wait on.
+        :return: DocumentStatus containing the status when completed.
+        """
+        status = self.translate_document_get_status(handle)
+        while status.ok and not status.done:
+            secs = (status.seconds_remaining or 0) / 2.0 + 1.0
+            secs = max(1.0, min(secs, 60.0))
+            util.log_info(
+                f"Rechecking document translation status "
+                f"after sleeping for {secs:.3f} seconds."
+            )
+            time.sleep(secs)
+            status = self.translate_document_get_status(handle)
+        return status
 
     def translate_document_download(
         self,
@@ -1041,10 +1112,14 @@ class Translator:
         languages, containing the entries in dictionary. The glossary may be
         used in the translate_text functions.
 
-        Only certain language pairs are supported, currently the following:
-        EN<->DE, EN<->FR, and EN<->ES. The available language pairs can be
-        queried using get_glossary_languages(). A glossary with target language
-        EN may be used to translate texts into both EN-US and EN-GB.
+        Only certain language pairs are supported. The available language pairs
+        can be queried using get_glossary_languages(). Glossaries are not
+        regional specific: a glossary with target language EN may be used to
+        translate texts into both EN-US and EN-GB.
+
+        This function requires the glossary entries to be provided as a
+        dictionary of source-target terms. To create a glossary from a CSV file
+        downloaded from the DeepL website, see create_glossary_from_csv().
 
         :param name: user-defined name to attach to glossary.
         :param source_lang: Language of source terms.

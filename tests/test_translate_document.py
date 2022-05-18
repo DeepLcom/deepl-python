@@ -19,12 +19,15 @@ def test_translate_document_from_filepath(
     example_document_translation,
     output_document_path,
 ):
-    translator.translate_document_from_filepath(
+    status = translator.translate_document_from_filepath(
         example_document_path,
         output_path=output_document_path,
         **default_lang_args,
     )
     assert example_document_translation == output_document_path.read_text()
+    assert status.billed_characters == len(example_text["EN"])
+    assert status.status == deepl.DocumentStatus.Status.DONE
+    assert status.done
 
     # Note: cases with invalid file paths are not tested, because standard
     #     library functions are used.
@@ -71,7 +74,7 @@ def test_translate_document_with_waiting(
 
 
 @needs_mock_server
-def test_translate_document(
+def test_translate_large_document(
     translator, example_large_document_path, example_large_document_translation
 ):
     with io.BytesIO() as output_file:
@@ -107,12 +110,11 @@ def test_translate_document_formality(
     assert "Wie geht es dir?" == output_document_path.read_text()
 
 
-@needs_mock_server
-def test_document_failure(
-    translator, server, example_document_path, output_document_path
+def test_document_failure_during_translation(
+    translator, example_document_path, output_document_path
 ):
-    server.set_doc_failure(1)
-
+    # Translating text from DE to DE will trigger error
+    example_document_path.write_text(example_text["DE"])
     with pytest.raises(
         deepl.exceptions.DocumentTranslationException,
     ) as exc_info:
@@ -122,6 +124,7 @@ def test_document_failure(
 
     # Ensure that document translation error contains document handle
     exception = exc_info.value
+    assert "Source and target language" in str(exception)
     assert exception.document_handle is not None
     match = re.compile("ID: [0-9A-F]{32}, key: [0-9A-F]{64}")
     assert match.search(str(exception)) is not None
@@ -145,6 +148,7 @@ def test_invalid_document(translator, tmpdir):
         )
 
 
+@needs_mock_server
 def test_translate_document_low_level(
     translator,
     example_document_path,
@@ -153,7 +157,6 @@ def test_translate_document_low_level(
     server,
 ):
     # Set a small document queue time to attempt downloading a queued document
-    # Note: this is a noop unless using a mock-server
     server.set_doc_queue_time(100)
 
     with open(example_document_path, "rb") as infile:

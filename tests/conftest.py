@@ -358,6 +358,7 @@ example_text = {
     "FI": "protonisäde",
     "FR": "faisceau de protons",
     "HU": "protonnyaláb",
+    "ID": "berkas proton",
     "IT": "fascio di protoni",
     "JA": "陽子ビーム",
     "LT": "protonų spindulys",
@@ -372,5 +373,6 @@ example_text = {
     "SK": "protónový lúč",
     "SL": "protonski žarek",
     "SV": "protonstråle",
+    "TR": "proton ışını",
     "ZH": "质子束",
 }

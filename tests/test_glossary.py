@@ -46,14 +46,6 @@ def test_glossary_create_invalid(
             translator.create_glossary("", "EN", "DE", {"Hello": "Hallo"})
         with pytest.raises(deepl.DeepLException):
             translator.create_glossary(
-                glossary_name, "EN", "JA", {"Hello": "Hallo"}
-            )
-        with pytest.raises(deepl.DeepLException):
-            translator.create_glossary(
-                glossary_name, "JA", "DE", {"Hello": "Hallo"}
-            )
-        with pytest.raises(deepl.DeepLException):
-            translator.create_glossary(
                 glossary_name, "EN", "XX", {"Hello": "Hallo"}
             )
         with pytest.raises(ValueError):
@@ -265,5 +257,11 @@ def test_glossary_translate_text_invalid(translator, glossary_manager):
                 text,
                 source_lang="DE",
                 target_lang="EN",
+                glossary=glossary_deen.glossary_id,
+            )
+
+        with pytest.raises(ValueError, match="GlossaryInfo"):
+            translator.translate_text_with_glossary(
+                text,
                 glossary=glossary_deen.glossary_id,
             )

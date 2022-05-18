@@ -34,6 +34,12 @@ def get_int_safe(d: dict, key: str) -> Optional[int]:
         return None
 
 
+def auth_key_is_free_account(auth_key: str) -> bool:
+    """Returns True if the given authentication key belongs to a DeepL API Free
+    account, otherwise False."""
+    return auth_key.endswith(":fx")
+
+
 def validate_glossary_term(term: str) -> None:
     """Checks if the given glossary term contains any disallowed characters.
 
