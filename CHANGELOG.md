@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Changed
 * Update contributing guidelines, we can now accept Pull Requests.
+### Fixed
+* Fix GitLab CI config.
 
 
 ## [1.7.0] - 2022-05-18

@@ -109,8 +109,9 @@ test:
     - poetry run coverage xml
   artifacts:
     reports:
-      cobertura:
-        - coverage.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
       junit:
         - test_report.xml
     when: always
