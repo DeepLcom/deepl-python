@@ -500,8 +500,8 @@ feature, please open an [issue][issues].
 
 ## Development
 
-We are currently unable to accept Pull Requests. If you would like to suggest
-changes, please open an [issue][issues] instead.
+We welcome Pull Requests, please read the
+[contributing guidelines](CONTRIBUTING.md).
 
 ### Tests
 
