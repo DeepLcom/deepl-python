@@ -1,12 +1,19 @@
 # Note: This GitLab CI configuration is used for internal testing, users can ignore it.
-
+include:
+  - project: '${CI_PROJECT_NAMESPACE}/ci-libs-for-client-libraries'
+    file:
+      - '/${CI_PROJECT_NAME}/.gitlab-ci.yml'
+      
 # Global --------------------------
 
 image: python:3.10
 
 variables:
   PIP_CACHE_DIR: "${CI_PROJECT_DIR}/.cache/pip"
-
+  XDG_CACHE_HOME: "${CI_PROJECT_DIR}/.cache"
+  POETRY_VIRTUALENVS_IN_PROJECT: "true"
+  REQUESTS_CA_BUNDLE: "/etc/ssl/certs/ca-certificates.crt"
+  
 cache:
   key:
     prefix: ${CI_JOB_IMAGE}
@@ -24,9 +31,11 @@ stages:
   - publish
 
 before_script:
+  - python3 -m venv .venv
+  - source .venv/bin/activate
+  - pip install --upgrade pip
   - pip install poetry
   - poetry --version
-  - poetry config virtualenvs.in-project true
   - poetry install -vv
 
 # stage: check ----------------------
@@ -51,21 +60,9 @@ package:
 
 # stage: test -------------------------
 
-.use-test-server-template: &use_test_server_template
-  secrets:
-    DEEPL_AUTH_KEY:
-      vault: jenkins/client_libraries/test_auth_key@backend
-      file: false
-    DEEPL_SERVER_URL:
-      vault: jenkins/client_libraries/test_server_url@backend
-      file: false
-
 test:
-  <<: *use_test_server_template
   stage: test
-  services:
-    - name: $DOCKER_REGISTRY/deepl/deepl-mock
-      alias: deepl-mock
+  extends: .test
   parallel:
     matrix:
       - DOCKER_IMAGE: "python:3.10"
@@ -119,18 +116,11 @@ test:
 # stage: publish -------------------------
 
 pypi upload:
+  extends: .publish
   stage: publish
   dependencies:
     - package
   rules:
     - if: '$CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]+$/'
   script:
-    - poetry publish --verbose --no-interaction --username $PYPI_USERNAME --password $PYPI_PASSWORD
-  secrets:
-    PYPI_USERNAME:
-      vault: jenkins/client_libraries/pypi_username@backend
-      file: false
-    PYPI_PASSWORD:
-      vault: jenkins/client_libraries/pypi_password@backend
-      file: false
-
+    - poetry publish --verbose --no-interaction
