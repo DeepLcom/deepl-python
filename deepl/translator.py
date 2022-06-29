@@ -630,6 +630,35 @@ class Translator:
             request_data["glossary_id"] = glossary
         return request_data
 
+    def _create_glossary(
+        self,
+        name: str,
+        source_lang: Union[str, Language],
+        target_lang: Union[str, Language],
+        entries_format: str,
+        entries: str,
+    ) -> GlossaryInfo:
+        # glossaries are only supported for base language types
+        source_lang = Language.remove_regional_variant(source_lang)
+        target_lang = Language.remove_regional_variant(target_lang)
+
+        if not name:
+            raise ValueError("glossary name must not be empty")
+
+        request_data = {
+            "name": name,
+            "source_lang": source_lang,
+            "target_lang": target_lang,
+            "entries_format": entries_format,
+            "entries": entries,
+        }
+
+        status, content, json = self._api_call(
+            "v2/glossaries", data=request_data
+        )
+        self._raise_for_status(status, content, json, glossary=True)
+        return GlossaryInfo.from_json(json)
+
     def close(self):
         if hasattr(self, "_client"):
             self._client.close()
@@ -1133,28 +1162,16 @@ class Translator:
         :raises DeepLException: If source and target language pair are not
             supported for glossaries.
         """
-        # glossaries are only supported for base language types
-        target_lang = Language.remove_regional_variant(target_lang)
-        source_lang = Language.remove_regional_variant(source_lang)
-
-        if not name:
-            raise ValueError("glossary name must not be empty")
         if not entries:
             raise ValueError("glossary entries must not be empty")
 
-        request_data = {
-            "name": name,
-            "source_lang": source_lang,
-            "target_lang": target_lang,
-            "entries_format": "tsv",
-            "entries": util.convert_dict_to_tsv(entries),
-        }
-
-        status, content, json = self._api_call(
-            "v2/glossaries", data=request_data
+        return self._create_glossary(
+            name,
+            source_lang,
+            target_lang,
+            "tsv",
+            util.convert_dict_to_tsv(entries),
         )
-        self._raise_for_status(status, content, json, glossary=True)
-        return GlossaryInfo.from_json(json)
 
     def get_glossary(self, glossary_id: str) -> GlossaryInfo:
         """Retrieves GlossaryInfo for the glossary with specified ID.
