@@ -297,6 +297,27 @@ def example_document_path(tmpdir):
 
 
 @pytest.fixture
+def example_glossary_csv(tmpdir):
+    tmpdir = pathlib.Path(tmpdir)
+    content = (
+        "sourceEntry1,targetEntry1,en,de\n"
+        '"source""Entry","target,Entry",en,de'
+    )
+    path = tmpdir / "glossary" / "example_glossary.csv"
+    path.parent.mkdir()
+    path.write_text(content)
+    return path
+
+
+@pytest.fixture
+def example_glossary_csv_entries():
+    return {
+        "sourceEntry1": "targetEntry1",
+        'source"Entry': "target,Entry",
+    }
+
+
+@pytest.fixture
 def example_document_translation():
     return example_text["DE"]
 

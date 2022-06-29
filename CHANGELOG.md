@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+* Add `Translator.create_glossary_from_csv()` allowing glossaries downloaded
+  from website to be easily uploaded to API.
 ### Changed
 ### Deprecated
 ### Removed

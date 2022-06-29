@@ -266,6 +266,25 @@ print(
 # Example: Created 'My glossary' (559192ed-8e23-...) EN->DE containing 2 entries
 ```
 
+You can also upload a glossary downloaded from the DeepL website using
+`create_glossary_from_csv()`. Instead of supplying the entries as a dictionary,
+specify the CSV data as `csv_data` either as a file-like object or string or
+bytes containing file content:
+
+```python
+with open('/path/to/glossary_file.csv', 'r') as csv_file:
+    csv_data = csv_file.read()  # Read the file contents as a string
+    my_csv_glossary = translator.create_glossary_from_csv(
+        "CSV glossary",
+        source_lang="EN",
+        target_lang="DE",
+        csv_data=csv_data,
+    )
+```
+
+The [API documentation][api-docs-csv-format] explains the expected CSV format in
+detail.
+
 #### Getting, listing and deleting stored glossaries
 
 Functions to get, list, and delete stored glossaries are also provided:
@@ -521,6 +540,8 @@ tests using `pytest` with the `DEEPL_MOCK_SERVER_PORT` and `DEEPL_SERVER_URL`
 environment variables defined referring to the mock-server.
 
 [api-docs]: https://www.deepl.com/docs-api?utm_source=github&utm_medium=github-python-readme
+
+[api-docs-csv-format]: https://www.deepl.com/docs-api/managing-glossaries/supported-glossary-formats/?utm_source=github&utm_medium=github-python-readme
 
 [api-docs-xml-handling]: https://www.deepl.com/docs-api/handling-xml/?utm_source=github&utm_medium=github-python-readme
 

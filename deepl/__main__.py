@@ -86,22 +86,37 @@ def action_glossary(
 
 
 def action_glossary_create(
-    translator: deepl.Translator, entry_list, file, **kwargs
+    translator: deepl.Translator, entry_list, file, csv, **kwargs
 ):
+    term_separator = None
     if file:
         if entry_list:
             raise deepl.DeepLException(
                 "The --file argument cannot be used together with "
                 "command-line entries"
             )
-        file_contents = pathlib.Path(file).read_text("UTF-8")
-        entry_dict = deepl.convert_tsv_to_dict(file_contents)
+        content = pathlib.Path(file).read_text("UTF-8")
     elif entry_list and entry_list[0] == "-":
-        entry_dict = deepl.convert_tsv_to_dict(sys.stdin.read())
+        content = sys.stdin.read()
     else:
-        entry_dict = deepl.convert_tsv_to_dict("\n".join(entry_list), "=")
+        content = "\n".join(entry_list)
+        term_separator = "="
+        if csv:
+            raise Exception(
+                "csv option is not compatible with command-line entries"
+            )
 
-    glossary = translator.create_glossary(entries=entry_dict, **kwargs)
+    if csv:
+        glossary = translator.create_glossary_from_csv(
+            csv_data=content, **kwargs
+        )
+    else:
+        if term_separator:
+            entry_dict = deepl.convert_tsv_to_dict(content, term_separator)
+        else:
+            entry_dict = deepl.convert_tsv_to_dict(content)
+        glossary = translator.create_glossary(entries=entry_dict, **kwargs)
+
     print(f"Created {glossary}")
     print_glossaries([glossary])
 
@@ -367,8 +382,8 @@ def get_parser(prog_name):
     parser_glossary_create = glossary_subparsers.add_parser(
         "create",
         help="create a new glossary",
-        description="create a new glossary using entries specified in "
-        "a TSV file, standard-input, or provided via command-line",
+        description="create a new glossary using entries provided via command-"
+        "line, standard-input, or specified in a TSV or CSV file",
     )
     parser_glossary_create.add_argument(
         "--name", required=True, help="name to be associated with glossary."
@@ -393,17 +408,25 @@ def get_parser(prog_name):
         type=str,
         metavar="SOURCE=TARGET",
         help="one or more entries to add to glossary, may be repeated. "
-        'Alternatively, use "-" to read entries from standard-input in TSV '
-        "format (see --file argument). These arguments cannot be used "
-        "together with the --file argument.",
+        'Alternatively, use "-" to read entries from standard-input in TSV or '
+        "CSV format (see --file argument for formatting information). These "
+        "arguments cannot be used together with the --file argument.",
     )
     parser_glossary_create.add_argument(
         "--file",
         type=str,
-        help="file to read glossary entries from. File must be in "
-        "tab-separated values (TSV) format: one entry-pair per line, each "
-        "line contains the source entry, a tab, then the target entry. Empty "
-        "lines are ignored.",
+        help="file to read glossary entries from. Unless --csv is specified, "
+        "file format is expected to be tab-separated values (TSV) format: one "
+        "entry-pair per line, each line contains the source entry, a tab, "
+        "then the target entry. Empty lines are ignored.",
+    )
+    parser_glossary_create.add_argument(
+        "--csv",
+        action="store_true",
+        help="the provided --file option or standard-input should be "
+        "interpreted as a CSV file. Information about the expected CSV format "
+        "can be found in the API documentation: "
+        "https://www.deepl.com/docs-api/managing-glossaries/supported-glossary-formats/.",  # noqa
     )
 
     parser_glossary_list = glossary_subparsers.add_parser(

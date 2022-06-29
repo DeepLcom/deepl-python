@@ -204,11 +204,16 @@ def test_glossary_no_subcommand(runner):
 
 
 def test_glossary_create(
-    runner, glossary_name, tmpdir, cleanup_matching_glossaries
+    runner,
+    glossary_name,
+    tmpdir,
+    cleanup_matching_glossaries,
+    example_glossary_csv,
 ):
     name_cli = f"{glossary_name}-cli"
     name_stdin = f"{glossary_name}-stdin"
     name_file = f"{glossary_name}-file"
+    name_csv = f"{glossary_name}-csv"
     entries = {"Hallo": "Hello", "Maler": "Artist"}
     entries_tsv = deepl.convert_dict_to_tsv(entries)
     entries_cli = "\n".join(f"{s}={t}" for s, t in entries.items())
@@ -240,6 +245,14 @@ def test_glossary_create(
         assert (
             result.exit_code == 0
         ), f"exit: {result.exit_code}\n {result.output}"
+        result = runner.invoke(
+            main_function,
+            f'-vv glossary create --name "{name_csv}" --from EN --to DE '
+            f"--file {example_glossary_csv} --csv",
+        )
+        assert (
+            result.exit_code == 0
+        ), f"exit: {result.exit_code}\n {result.output}"
 
         result = runner.invoke(main_function, "-vv glossary list")
         assert (
@@ -248,6 +261,7 @@ def test_glossary_create(
         assert name_cli in result.output
         assert name_stdin in result.output
         assert name_file in result.output
+        assert name_csv in result.output
 
         # Cannot use --file option together with entries
         result = runner.invoke(
@@ -262,7 +276,8 @@ def test_glossary_create(
 
     finally:
         cleanup_matching_glossaries(
-            lambda glossary: glossary.name in [name_file, name_cli, name_stdin]
+            lambda glossary: glossary.name
+            in [name_file, name_cli, name_stdin, name_csv]
         )
 
 

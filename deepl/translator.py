@@ -1173,6 +1173,49 @@ class Translator:
             util.convert_dict_to_tsv(entries),
         )
 
+    def create_glossary_from_csv(
+        self,
+        name: str,
+        source_lang: Union[str, Language],
+        target_lang: Union[str, Language],
+        csv_data: Union[TextIO, BinaryIO, str, bytes, Any],
+    ) -> GlossaryInfo:
+        """Creates a glossary with given name for the source and target
+        languages, containing the entries in the given CSV data.
+        The glossary may be used in the translate_text functions.
+
+        Only certain language pairs are supported. The available language pairs
+        can be queried using get_glossary_languages(). Glossaries are not
+        regional specific: a glossary with target language EN may be used to
+        translate texts into both EN-US and EN-GB.
+
+        This function allows you to upload a glossary CSV file that you have
+        downloaded from the DeepL website.
+
+        Information about the expected CSV format can be found in the API
+        documentation: https://www.deepl.com/docs-api/managing-glossaries/supported-glossary-formats/  # noqa
+
+        :param name: user-defined name to attach to glossary.
+        :param source_lang: Language of source terms.
+        :param target_lang: Language of target terms.
+        :param csv_data: CSV data containing glossary entries, either as a
+            file-like object or string or bytes containing file content.
+        :return: GlossaryInfo containing information about created glossary.
+
+        :raises ValueError: If the glossary name is empty, or entries are
+            empty or invalid.
+        :raises DeepLException: If source and target language pair are not
+            supported for glossaries.
+        """
+
+        entries = (
+            csv_data if isinstance(csv_data, (str, bytes)) else csv_data.read()
+        )
+
+        return self._create_glossary(
+            name, source_lang, target_lang, "csv", entries
+        )
+
     def get_glossary(self, glossary_id: str) -> GlossaryInfo:
         """Retrieves GlossaryInfo for the glossary with specified ID.
 

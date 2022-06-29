@@ -38,6 +38,30 @@ def test_glossary_create(
         )
 
 
+def test_glossary_create_csv(
+    translator,
+    glossary_name,
+    cleanup_matching_glossaries,
+    example_glossary_csv,
+    example_glossary_csv_entries,
+):
+    source_lang = "EN"
+    target_lang = "DE"
+    try:
+        with open(example_glossary_csv, "r") as csv_data:
+            glossary = translator.create_glossary_from_csv(
+                glossary_name, source_lang, target_lang, csv_data=csv_data
+            )
+        assert glossary.entry_count == len(example_glossary_csv_entries)
+
+        entries = translator.get_glossary_entries(glossary.glossary_id)
+        assert entries == example_glossary_csv_entries
+    finally:
+        cleanup_matching_glossaries(
+            lambda glossary: glossary.name == glossary_name
+        )
+
+
 def test_glossary_create_invalid(
     translator, glossary_name, cleanup_matching_glossaries
 ):
