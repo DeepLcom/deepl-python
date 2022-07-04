@@ -23,67 +23,58 @@ DeepL 的 Python库 可以通过 [PyPI][pypi-project] 使用 pip 进行安装:
 pip install --upgrade deepl
 ```
 
-If you need to modify this source code, install the dependencies using poetry:
+
+如果你需要修改源代码，请用 poetry 安装所有依赖项。
 
 ```shell
 poetry install
 ```
 
-### Requirements
+### 依赖项
 
-The library is tested with Python versions 3.6 to 3.10.
+该库在Python 3.6到3.10版本下进行了测试。
 
-The `requests` module is used to perform HTTP requests; the minimum is version
-2.0.
+`requests` 模块用于执行 HTTP 需求; 最低版本限制为2.0.
+## 使用方法
 
-## Usage
+导入软件包并构建一个 `Translator`. 第一个参数是一个字符串包含有你在
+[DeepL Pro Account][pro-account]中所得到的API认证密钥。
 
-Import the package and construct a `Translator`. The first argument is a string
-containing your API authentication key as found in your
-[DeepL Pro Account][pro-account].
-
-Be careful not to expose your key, for example when sharing source code.
+当你在分享源码时，请一定注意不要将你的密钥一并导出，可能会发生泄露。
 
 ```python
 import deepl
 
-auth_key = "f63c02c5-f056-..."  # Replace with your key
+auth_key = "f63c02c5-f056-..."  # 用你的密钥进行替换
 translator = deepl.Translator(auth_key)
 
 result = translator.translate_text("Hello, world!", target_lang="FR")
-print(result.text)  # "Bonjour, le monde !"
+print(result.text)  # "将hello，world翻译为法语：Bonjour, le monde !"
 ```
 
-This example is for demonstration purposes only. In production code, the
-authentication key should not be hard-coded, but instead fetched from a
-configuration file or environment variable.
+这个例子仅用于示范目的。在编写代码中，认证密钥不应该为硬编码，而应该从一个
+配置文件或环境变量中获取。
 
-`Translator` accepts additional options, see [Configuration](#configuration)
-for more information.
+`Translator` 接受另外的配置, 详见 [配置](#configuration)
 
-### Translating text
+### 翻译文本
 
-To translate text, call `translate_text()`. The first argument is a string
-containing the text you want to translate, or a list of strings if you want to
-translate multiple texts.
+要翻译文本，请调用 `translate_text()`。第一个参数是一个包含你想翻译的文本的字符串
+，如果你想翻译多个文本，也可以将参数更改为一个字符串列表，
 
-`source_lang` and `target_lang` specify the source and target language codes
-respectively. The `source_lang` is optional, if it is unspecified the source
-language will be auto-detected.
+`source_lang` 和 `target_lang` 分别指定源语言和目标语言. 
+`source_lang`（源语言）是可选的, 如果它没有被指定，源语言将被自动检测。
 
-Language codes are **case-insensitive** strings according to ISO 639-1, for
-example `'DE'`, `'FR'`, `'JA''`. Some target languages also include the regional
-variant according to ISO 3166-1, for example `'EN-US'`, or `'PT-BR'`. The full
-list of supported languages is in the
-[API documentation][api-docs-lang-list].
+根据ISO 639-1，语言代码是**不区分大小写的**字符串，例如"DE"，"FR"，"JA"。
+根据ISO 3166-1，一些目标语言还包括区域性的变体，例如`'EN-US'`或`'PT-BR'`。支持的语言的完整列表在
+[API文档][api-docs-lang-list] 。
 
-There are additional optional arguments to control translation, see
-[Text translation options](#text-translation-options) below.
+还有一些额外的可选参数来控制翻译软件，详见
+[文本翻译选项](#text-translation-options)。
 
-`translate_text()` returns a `TextResult`, or a list of `TextResult`s
-corresponding to your input text(s). `TextResult` has two properties: `text` is
-the translated text, and `detected_source_lang` is the detected source language
-code.
+`translate_text()`返回一个`TextResult`的列表，或一个`TextResult`的列表。
+对应于你的输入文本。`TextResult'`有两个属性。`text`是
+翻译后的文本，`detected_source_lang`是检测到的源语言代码。
 
 ```python
 # Translate text into a target language, in this case, French:
