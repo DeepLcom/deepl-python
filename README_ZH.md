@@ -365,26 +365,28 @@ for language_pair in glossary_languages:
     # Example: "EN to DE", "DE to EN", etc.
 ```
 
-You can also find the list of supported glossary language pairs in the
-[API documentation][api-docs-glossary-lang-list].
+你也可以在以下文件中找到支持的词汇表语言对的列表
+[API文档][api-docs-lossary-lang-list]。
 
-Note that glossaries work for all target regional-variants: a glossary for the
-target language English (`"EN"`) supports translations to both American English
-(`"EN-US"`) and British English (`"EN-GB""`).
-
-### Exceptions
+请注意，词汇表适用于所有的目标区域变体：一个目标语言英语的词汇表
+目标语言英语("EN")的词汇表支持翻译成美国英语("EN-US")和英国英语("EN-GB")。
+### 例外情况
 
 All module functions may raise `deepl.DeepLException` or one of its subclasses.
 If invalid arguments are provided, they may raise the standard exceptions
 `ValueError` and `TypeError`.
+所有的模块函数都可能引发`deepl.DeepLException`或其子类之一。
+如果提供了无效的参数，它们可能引发标准的异常:
+`ValueError'`和`TypeError'`。
+### 配置
 
-### Configuration
-
-#### Logging
+#### 日志
 
 Logging can be enabled to see the HTTP requests sent and responses received by
 the library. Enable and control logging using Python's `logging` module, for
 example:
+
+可以启用日志记录功能，以查看HTTP请求的发送和库的接收情况。使用Python的`logging`模块来启用和控制日志记录，例如：
 
 ```python
 import logging
@@ -393,22 +395,21 @@ logging.basicConfig()
 logging.getLogger('deepl').setLevel(logging.DEBUG)
 ```
 
-#### Server URL configuration
+#### 服务器URL配置
 
-You can override the URL of the DeepL API by specifying the `server_url`
-argument when constructing a `deepl.Translator`. This may be useful for testing
-purposes. You **do not** need to specify the URL to distinguish API Free and API
-Pro accounts, the library selects the correct URL automatically.
+
+你可以通过在构建 `"deepl.Translator"`时指定 `"server_url"`参数来覆盖DeepL API的URL。
+参数来重写 API的URL，这在构建` "deepl.Translator "`时非常有用。这可能对测试
+的目的。你**不需要**指定URL来区分API免费和API专业账户，库会自动选择正确的URL。
 
 ```python
 server_url = "http://user:pass@localhost:3000"
 translator = deepl.Translator(..., server_url=server_url)
 ```
 
-#### Proxy configuration
+#### 代理配置
 
-You can configure a proxy by specifying the `proxy` argument when constructing a
-`deepl.Translator`:
+你可以通过在构建 "deepl.Translator "时指定 "proxy "参数。
 
 ```python
 proxy = "http://user:pass@10.10.1.10:3128"
@@ -419,69 +420,63 @@ The proxy argument is passed to the underlying `requests` session, see the
 [documentation for requests][requests-proxy-docs]; a dictionary of schemes to
 proxy URLs is also accepted.
 
-## Command Line Interface
+代理参数被传递给底层的`requests`会话，见
+[requests的文档][requests-proxy-docs]；
 
-The library can be run on the command line supporting all API functions. Use the
-`--help` option for usage information:
+## 命令行界面
+
+该库可以在支持所有API功能的命令行上运行。使用
+`--help`选项获取使用信息。
 
 ```shell
 python3 -m deepl --help
 ```
-
-The CLI requires your DeepL authentication key specified either as the
-`DEEPL_AUTH_KEY` environment variable, or using the `--auth-key` option, for
-example:
+CLI需要你的DeepL 认证密钥，指定为
+`DEEPL_AUTH_KEY`环境变量，或使用`--auth-key`选项，例如:
 
 ```shell
 python3 -m deepl --auth-key=YOUR_AUTH_KEY usage
 ```
 
 Note that the `--auth-key` argument must appear *before* the command argument.
-The recognized commands are:
+请注意，`--auth-key` 参数必须出现在 **命令参数之前**。
+识别的命令有：
 
-| Command   | Description                                            |
+| 命令      | 描述                                            |
 | :-------- | :----------------------------------------------------- |
-| text      | translate text(s)                                      |
-| document  | translate document(s)                                  |
-| usage     | print usage information for the current billing period |
-| languages | print available languages                              |
-| glossary  | create, list, and remove glossaries                    |
+| text      | 译文                                      |
+| document  | 翻译文件                                  |
+| usage     | 打印当前计费期的使用信息 |
+| languages | 打印可用的语言                              |
+| glossary  | 创建、列出和删除词汇表                    |
 
-For example, to translate text:
+例如，要翻译文本。
 
 ```shell
 python3 -m deepl --auth-key=YOUR_AUTH_KEY text --to=DE "Text to be translated."
 ```
 
-Wrap text arguments in quotes to prevent the shell from splitting sentences into
-words.
+将文本参数用引号括起来，以防止 shell 将句子拆分成字。
 
-## Issues
+## 问题
 
-If you experience problems using the library, or would like to request a new
-feature, please open an [issue][issues].
+如果您在使用库时遇到问题，或者想申请新的
+功能，请打开一个[issue][issues].
 
-## Development
+## 发展
 
-We welcome Pull Requests, please read the
-[contributing guidelines](CONTRIBUTING.md).
+我们欢迎Pull Request，请阅读
+[贡献指南](CONTRIBUTING.md)。
 
-### Tests
+### 测试
 
-Execute the tests using `pytest`. The tests communicate with the DeepL API using
-the auth key defined by the `DEEPL_AUTH_KEY` environment variable.
+使用 `pytest` 执行测试。 测试使用 DeepL API 进行通信
+由 `DEEPL_AUTH_KEY` 环境变量定义的身份验证密钥。
 
-Be aware that the tests make DeepL API requests that contribute toward your API
-usage.
+请注意，测试会发出有助于您的 API 的 DeepL API 请求
+用法。
 
-The test suite may instead be configured to communicate with the mock-server
-provided by [deepl-mock][deepl-mock]. Although most test cases work for either,
-some test cases work only with the DeepL API or the mock-server and will be
-otherwise skipped. The test cases that require the mock-server trigger server
-errors and test the client error-handling. To execute the tests using
-deepl-mock, run it in another terminal while executing the tests. Execute the
-tests using `pytest` with the `DEEPL_MOCK_SERVER_PORT` and `DEEPL_SERVER_URL`
-environment variables defined referring to the mock-server.
+测试套件可以被配置为与[deepl-mock][deepl-mock]提供的模拟服务器通信。虽然大多数测试用例对两者都适用，但有些测试用例只适用于DeepL API或模拟服务器，否则将被跳过。需要模拟服务器的测试用例会触发服务器错误并测试客户端错误处理。要使用deepl-mock执行测试，在执行测试的同时在另一个终端运行它。使用`pytest`执行测试，定义`DEEPL_MOCK_SERVER_PORT`和`DEEPL_SERVER_URL`环境变量，参考模拟服务器。
 
 [api-docs]: https://www.deepl.com/docs-api?utm_source=github&utm_medium=github-python-readme
 
