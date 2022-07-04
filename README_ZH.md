@@ -77,20 +77,20 @@ print(result.text)  # "将hello，world翻译为法语：Bonjour, le monde !"
 翻译后的文本，`detected_source_lang`是检测到的源语言代码。
 
 ```python
-# Translate text into a target language, in this case, French:
+# 将文本翻译成目标语言，本例中为法语:
 result = translator.translate_text("Hello, world!", target_lang="FR")
 print(result.text)  # "Bonjour, le monde !"
 
-# Translate multiple texts into British English
+# 将多个文本翻译成英式英语
 result = translator.translate_text(
     ["お元気ですか？", "¿Cómo estás?"], target_lang="EN-GB"
 )
 print(result[0].text)  # "How are you?"
-print(result[0].detected_source_lang)  # "JA" the language code for Japanese
+print(result[0].detected_source_lang)  # "JA" 为日语的缩写
 print(result[1].text)  # "How are you?"
-print(result[1].detected_source_lang)  # "ES" the language code for Spanish
+print(result[1].detected_source_lang)  # "ES" 为西班牙语的缩写
 
-# Translate into German with less and more Formality:
+# 下面的例子中，语言将会被翻译成少而精的德语。
 print(
     translator.translate_text(
         "How are you?", target_lang="DE", formality="less"
@@ -103,23 +103,17 @@ print(
 )  # 'Wie geht es Ihnen?'
 ```
 
-#### Text translation options
+#### 文本翻译选项
 
-In addition to the input text(s) argument, the available `translate_text()`
-arguments are:
+除了输入文本参数外，可用的 `translate_text()` 参数有：
 
-- `source_lang`: Specifies the source language code, but may be omitted to
-  auto-detect the source language.
-- `target_lang`: Required. Specifies the target language code.
-- `split_sentences`: specify how input text should be split into sentences,
-  default: `'on'`.
-    - `'on''` (`SplitSentences.ON`): input text will be split into sentences
-      using both newlines and punctuation.
-    - `'off'` (`SplitSentences.OFF`): input text will not be split into
-      sentences. Use this for applications where each input text contains only
-      one sentence.
-    - `'nonewlines'` (`SplitSentences.NO_NEWLINES`): input text will be split
-      into sentences using punctuation but not newlines.
+- `source_lang`: 指定源语言代码，但可以省略，因为DeepL可以自动检测源语言。
+- `target_lang`: 指定目标语言代码（必须）。
+- `split_sentences`: 指定输入的文本应如何分割成句。
+  默认: `'on'`.
+    - `'on''` (`SplitSentences.ON`): 输入的文本将使用换行符和标点符号被分割成几个句子。
+    - `'off'` (`SplitSentences.OFF`): 输入的文本将不会被分割成句子。请在只包含一个句子的文本中使用该选项。
+    - `'nonewlines'` (`SplitSentences.NO_NEWLINES`): （没有换行符）输入的文本将用标点符号被分割成句子，但不会使用换行符来分割为句子
 - `preserve_formatting`: controls automatic-formatting-correction. Set to `True`
   to prevent automatic-correction of formatting, default: `False`.
 - `formality`: controls whether translations should lean toward informal or
