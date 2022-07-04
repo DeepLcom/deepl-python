@@ -114,54 +114,44 @@ print(
     - `'on''` (`SplitSentences.ON`): 输入的文本将使用换行符和标点符号被分割成几个句子。
     - `'off'` (`SplitSentences.OFF`): 输入的文本将不会被分割成句子。请在只包含一个句子的文本中使用该选项。
     - `'nonewlines'` (`SplitSentences.NO_NEWLINES`): （没有换行符）输入的文本将用标点符号被分割成句子，但不会使用换行符来分割为句子
-- `preserve_formatting`: controls automatic-formatting-correction. Set to `True`
-  to prevent automatic-correction of formatting, default: `False`.
-- `formality`: controls whether translations should lean toward informal or
-  formal language. This option is only available for some target languages, see
-  [Listing available languages](#listing-available-languages).
-    - `'less'` (`Formality.LESS`): use informal language.
-    - `'more'` (`Formality.MORE`): use formal, more polite language.
-- `glossary`: specifies a glossary to use with translation, either as a string
-  containing the glossary ID, or a `GlossaryInfo` as returned by
-  `get_glossary()`.
-- `tag_handling`: type of tags to parse before translation, options are `'html'`
-  and `'xml'`.
+- `preserve_formatting`: 控制自动格式校正。设置为 "True "是为了防止自动更正格式.默认为`False`。
+- `formality`: 控制翻译是否应该偏向于非正式或
+  正式语言。这个选项只适用于某些目标语言，详见
+  [列出可用语言](#listing-available-languages)。
+    - `'less'` (`Formality.LESS`): 使用非正式的语言。
+    - `'more'` (`Formality.MORE`): 使用正式的、更有礼貌的语言。
+- `glossary`: 指定一个用于翻译的词汇表，可以是一个包含词汇表ID的字符串
+  或由`get_glossary()`返回的`GlossaryInfo`词汇表。
+- `tag_handling`: 翻译前要解析的标签类型，选项是`'html'`和`'xml'`。
 
-The following options are only used if `tag_handling` is `'xml'`:
+以下选项只在`tag_handling'`为`'xml'`时使用。
 
-- `outline_detection`: specify `False` to disable automatic tag detection,
-  default is `True`.
-- `splitting_tags`: list of XML tags that should be used to split text into
-  sentences. Tags may be specified as an array of strings (`['tag1', 'tag2']`),
-  or a comma-separated list of strings (`'tag1,tag2'`). The default is an empty
-  list.
-- `non_splitting_tags`: list of XML tags that should not be used to split text
-  into sentences. Format and default are the same as for `splitting_tags`.
-- `ignore_tags`: list of XML tags that containing content that should not be
-  translated. Format and default are the same as for `splitting_tags`.
+- `outline_detection`: 指定 "False "来禁用自动标签检测。
+  默认为 `"True"`。
+- `splitting_tags`: 
+  XML标签列表，这些标签应被用来将文本分割成句子。标签可以被指定为一个字符串数组（`['tag1', 'tag2']`）。或以逗号分隔的字符串列表（`'tag1,tag2'`）。默认是一个空列表。
+- `non_splitting_tags`: XML标签列表，这些标签不应该被用来将文本分割成句子。格式和默认值与`splitting_tags`相同。
+- `ignore_tags`: 包含不应该被翻译的内容的XML标签的列表。格式和默认值与`splitting_tags`相同。
 
-For a detailed explanation of the XML handling options, see the
-[API documentation][api-docs-xml-handling].
+关于XML处理选项的详细解释，见
+[API 文档][api-docs-xml-handling]。
 
-### Translating documents
+### 翻译文件
 
-To translate documents, you may call either `translate_document()` using file IO
-objects, or `translate_document_from_filepath()` using file paths. For both
-functions, the first and second arguments correspond to the input and output
-files respectively.
+要翻译文件，你可以调用`translate_document()`使用文件对象，或者使用文件路径调用 `translate_document_from_filepath()`。对于这两个
+函数，第一个和第二个参数分别对应于输入和输出的文件。
 
-Just as for the `translate_text()` function, the `source_lang` and
-`target_lang` arguments specify the source and target language codes.
+就像`translate_text()`函数一样，通过`source_lang`和`target_lang`参数指定源语言和目标语言代码。
 
-There are additional optional arguments to control translation, see
-[Document translation options](#document-translation-options) below.
+还有一些额外的可选参数来控制翻译，参见
+[文档翻译选项](#document-translation-options)。
 
 ```python
-# Translate a formal document from English to German
+# 将一份正式文件从英文翻译成德文
 input_path = "/path/to/Instruction Manual.docx"
 output_path = "/path/to/Bedienungsanleitung.docx"
 try:
-    # Using translate_document_from_filepath() with file paths 
+    # 使用带有文件路径的 translate_document_from_filepath()。
     translator.translate_document_from_filepath(
         input_path,
         output_path,
@@ -169,7 +159,7 @@ try:
         formality="more"
     )
 
-    # Alternatively you can use translate_document() with file IO objects
+    # 另外，你可以使用translate_document()与文件IO对象一起使用
     with open(input_path, "rb") as in_file, open(output_path, "wb") as out_file:
         translator.translate_document(
             in_file,
@@ -179,15 +169,15 @@ try:
         )
 
 except deepl.DocumentTranslationException as error:
-    # If an error occurs during document translation after the document was
-    # already uploaded, a DocumentTranslationException is raised. The
-    # document_handle property contains the document handle that may be used to
-    # later retrieve the document from the server, or contact DeepL support.
+    # 如果在文档翻译过程中发生错误，而该文档已经被
+    # 已经上传，就会产生一个DocumentTranslationException异常
+    # document_handle 属性包含了文档的句柄，可以用来
+    # 以后从服务器上检索文档，或联系 DeepL 。
     doc_id = error.document_handle.id
     doc_key = error.document_handle.key
     print(f"Error after uploading ${error}, id: ${doc_id} key: ${doc_key}")
 except deepl.DeepLException as error:
-    # Errors during upload raise a DeepLException
+    # 上传过程中的错误会引发一个DeepLException
     print(error)
 ```
 
