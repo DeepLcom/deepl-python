@@ -181,45 +181,42 @@ except deepl.DeepLException as error:
     print(error)
 ```
 
-`translate_document()` and `translate_document_from_filepath()` are convenience
-functions that wrap multiple API calls: uploading, polling status until the
-translation is complete, and downloading. If your application needs to execute
-these steps individually, you can instead use the following functions directly:
+`translate_document()`和`translate_document_from_filepath()`是两个方便使用的
+函数，包含了多个API调用：上传、轮询状态直到翻译完成以及最后的下载。如果你的应用程序需要单独执行
+这些步骤，你可以直接使用以下函数。
 
 - `translate_document_upload()`,
-- `translate_document_get_status()` (or
-  `translate_document_wait_until_done()`), and
+- `translate_document_get_status()` (或者`translate_document_wait_until_done()`)
 - `translate_document_download()`
 
-#### Document translation options
+#### 文件翻译选项
 
 In addition to the input file, output file, `source_lang` and `target_lang`
 arguments, the available `translate_document()` and
 `translate_document_from_filepath()` arguments are:
+除了输入文件、输出文件、"source_lang "和 "target_lang "参数外,可用的`translate_document()`和 "translate_document_from_filepath() "的参数是。
 
-- `formality`: same as in [Text translation options](#text-translation-options).
-- `glossary`: same as in [Text translation options](#text-translation-options).
+- `formality`: 与[文本翻译选项](#text-translation-options)中相同。
+- `glossary`: 与[文本翻译选项](#text-translation-options)中相同。
+### 词汇表
 
-### Glossaries
+词汇表允许你使用用户定义的术语来定制你的翻译。
+您的账户可以存储多个词汇表，每个词汇表都有一个用户指定的名称和唯一分配的ID.
 
-Glossaries allow you to customize your translations using user-defined terms.
-Multiple glossaries can be stored with your account, each with a user-specified
-name and a uniquely-assigned ID.
+#### 创建一个词汇表
 
-#### Creating a glossary
+你可以用你想要的术语和名称创建一个词汇表，使用
+`create_glossary()`创建一个词汇表。每个词汇表适用于单一的源语言-目标语言
+对。注意：词汇表只支持某些语言对，见
+[列出可用的词汇表语言](#listing-available-glossary-languages)
+获取更多信息。
 
-You can create a glossary with your desired terms and name using
-`create_glossary()`. Each glossary applies to a single source-target language
-pair. Note: Glossaries are only supported for some language pairs, see
-[Listing available glossary languages](#listing-available-glossary-languages)
-for more information. The entries should be specified as a dictionary.
 
-If successful, the glossary is created and stored with your DeepL account, and
-a `GlossaryInfo` object is returned including the ID, name, languages and entry
-count.
+如果成功，词汇表将被创建并存储在你的DeepL 账户中，并且
+返回一个`GlossaryInfo`对象，包括ID、名称、语言和条目数。
 
 ```python
-# Create an English to German glossary with two terms:
+# 用两个术语创建一个英语到德语的词汇表。
 entries = {"artist": "Maler", "prize": "Gewinn"}
 my_glossary = translator.create_glossary(
     "My glossary",
@@ -232,52 +229,49 @@ print(
     f"{my_glossary.source_lang}->{my_glossary.target_lang} "
     f"containing {my_glossary.entry_count} entries"
 )
-# Example: Created 'My glossary' (559192ed-8e23-...) EN->DE containing 2 entries
+# 这是一个例子。创建了'我的词汇表'（559192ed-8e23-...）EN->DE，包含2个条目
 ```
 
-#### Getting, listing and deleting stored glossaries
+#### 获取、列出和删除存储的词汇表
 
-Functions to get, list, and delete stored glossaries are also provided:
+还提供了获取、列出和删除存储的词汇表的功能。
 
-- `get_glossary()` takes a glossary ID and returns a `GlossaryInfo` object for a
-  stored glossary, or raises an exception if no such glossary is found.
-- `list_glossaries()` returns a list of `GlossaryInfo` objects corresponding to
-  all of your stored glossaries.
-- `delete_glossary()` takes a glossary ID or `GlossaryInfo` object and deletes
-  the stored glossary from the server, or raises an exception if no such
-  glossary is found.
+- `get_glossary()` 接受一个词汇表ID，并返回一个`GlossaryInfo'对象，用于存储一个词汇表。
+如果没有找到这样的词汇表，则会引发一个异常。
+- `list_glossaries()` 返回一个`GlossaryInfo`对象的列表，该列表对应于你所有存储的词汇表。
+- `delete_glossary()` 接受一个词汇表ID或`GlossaryInfo`对象并从服务器上删除存储的词汇表，如果没有找到这样的词汇表，则会引发一个异常。
+
 
 ```python
-# Retrieve a stored glossary using the ID
+# 使用ID检索一个存储的词汇表
 glossary_id = "559192ed-8e23-..."
 my_glossary = translator.get_glossary(glossary_id)
 
-# Find and delete glossaries named 'Old glossary'
+# 查找并删除名为 "旧词汇表 "的词汇表
 glossaries = translator.list_glossaries()
 for glossary in glossaries:
     if glossary.name == "Old glossary":
         translator.delete_glossary(glossary)
 ```
 
-#### Listing entries in a stored glossary
+#### 在存储的词汇表中列出条目 
 
-The `GlossaryInfo` object does not contain the glossary entries, but instead
-only the number of entries in the `entry_count` property.
+`GlossaryInfo`对象不包含词汇表条目，而是只包含`entry_count`属性中的条目数量。
 
-To list the entries contained within a stored glossary, use
-`get_glossary_entries()` providing either the `GlossaryInfo` object or glossary
-ID:
+要列出一个存储的词汇表所包含的条目，请使用
+`get_glossary_entries()`提供`GlossaryInfo`对象或 glossary
+ID。
 
 ```python
 entries = translator.get_glossary_entries(my_glossary)
 print(entries)  # "{'artist': 'Maler', 'prize': 'Gewinn'}"
 ```
 
-#### Using a stored glossary
+#### 使用存储的词汇表
 
-You can use a stored glossary for text translation by setting the `glossary`
-argument to either the glossary ID or `GlossaryInfo` object. You must also
-specify the `source_lang` argument (it is required when using a glossary):
+你可以通过设置`glossary`参数来使用存储的词汇表进行文本翻译。
+参数设置为词汇表ID或`GlossaryInfo`对象。你还必须
+指定`source_lang`参数（当使用词汇表时，它是必须的）。
 
 ```python
 text = "The artist was awarded a prize."
@@ -300,25 +294,24 @@ translator.translate_document(
 )
 ```
 
-The `translate_document()`, `translate_document_from_filepath()` and
-`translate_document_upload()` functions all support the `glossary` argument.
+`translate_document()`, `translate_document_from_filepath()` 和
+`translate_document_upload()`函数都支持`glossary`参数。
+### 支票账户的使用
 
-### Checking account usage
+要检查账户使用情况，请使用`get_usage()`函数。
 
-To check account usage, use the `get_usage()` function.
-
-The returned `Usage` object contains three usage subtypes: `character`,
-`document` and `team_document`. Depending on your account type, some usage
-subtypes may be invalid; this can be checked using the `valid` property. For API
-accounts:
+返回的 "使用 "对象包含三个使用子类型。`character`,
+`document` and `team_document`.根据你的账户类型，一些用法
+可能是无效的；对于API
+帐户，可以通过`valid`属性来检查。
 
 - `usage.character.valid` is `True`,
 - `usage.document.valid` and `usage.team_document.valid` are `False`.
 
-Each usage subtype (if valid) has `count` and `limit` properties giving the
-amount used and maximum amount respectively, and the `limit_reached` property
-that checks if the usage has reached the limit. The top level `Usage` object has
-the `any_limit_reached` property to check all usage subtypes.
+每个使用类型（如果有效）都有`count`和`limit`属性，分别给出使用量和最大使用量。
+以及`limit_reached'属性，检查使用量是否达到限制。顶层的`Usage`对象有
+`any_limit_reached'属性来检查所有使用量的子类型。
+
 
 ```python
 usage = translator.get_usage()
@@ -331,16 +324,18 @@ if usage.document.valid:
     print(f"Document usage: {usage.document.count} of {usage.document.limit}")
 ```
 
-### Listing available languages
+### 列出可用的语言
 
-You can request the list of languages supported by DeepL for text and documents
-using the `get_source_languages()` and `get_target_languages()` functions. They
-both return a list of `Language` objects.
+你可以使用`get_source_languages()`和`get_target_languages()`函数请求DeepL 支持的文本和文档语言列表。
+使用`get_source_languages()`和`get_target_languages()`函数。它们
+它们都返回一个 "语言 "对象的列表。
 
 The `name` property gives the name of the language in English, and the `code`
 property gives the language code. The `supports_formality` property only appears
 for target languages, and indicates whether the target language supports the
 optional `formality` parameter.
+`name`属性给出了语言的英文名称，`code`属性给出了语言代码。
+`supports_formality`属性只出现在目标语言中，并指示目标语言是否支持可选的`formality`参数。
 
 ```python
 print("Source languages:")
@@ -351,18 +346,17 @@ print("Target languages:")
 for language in translator.get_target_languages():
     if language.supports_formality:
         print(f"{language.name} ({language.code}) supports formality")
-        # Example: "Italian (IT) supports formality"
+        # 例子："意大利语（IT）支持正式性"
     else:
         print(f"{language.name} ({language.code})")
-        # Example: "Lithuanian (LT)"
+        # 例子："立陶宛语（LT）"
 ```
 
-#### Listing available glossary languages
+#### 列出可用的词汇表语言
 
-Glossaries are supported for a subset of language pairs. To retrieve those
-languages use the `get_glossary_languages()` function, which returns an array
-of `GlossaryLanguagePair` objects. Each has `source_lang` and `target_lang`
-properties indicating that that pair of language codes is supported.
+词汇表支持一个语言对的子集。要检索这些
+使用`get_glossary_languages()`函数，该函数返回一个`GlossaryLanguagePair`对象的数组。
+每个对象都有`source_lang'和`target_lang'属性，表示支持这对语言。
 
 ```python
 glossary_languages = translator.get_glossary_languages()
