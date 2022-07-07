@@ -5,15 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [Unreleased]
+## [1.9.0] - 2022-07-07
 ### Added
 * Add `Translator.create_glossary_from_csv()` allowing glossaries downloaded
   from website to be easily uploaded to API.
-### Changed
-### Deprecated
-### Removed
-### Fixed
-### Security
 
 
 ## [1.8.0] - 2022-06-10
@@ -188,7 +183,7 @@ Version increased to avoid conflicts with old packages on PyPI.
 Initial version.
 
 
-[Unreleased]: https://github.com/DeepLcom/deepl-python/compare/v1.8.0...HEAD
+[1.9.0]: https://github.com/DeepLcom/deepl-python/compare/v1.8.0...v1.9.0
 [1.8.0]: https://github.com/DeepLcom/deepl-python/compare/v1.7.0...v1.8.0
 [1.7.0]: https://github.com/DeepLcom/deepl-python/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/DeepLcom/deepl-python/compare/v1.5.1...v1.6.0
