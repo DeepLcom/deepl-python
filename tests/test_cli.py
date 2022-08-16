@@ -94,6 +94,37 @@ def test_text(runner):
     assert example_text["DE"] in result.output
     assert "Detected source" in result.output
 
+    # Test text options
+    extra_options = [
+        ("--formality more", "'formality': 'more'"),
+        ("--split-sentences 0", "'split_sentences': '0'"),
+        ("--preserve-formatting", "'preserve_formatting': '1'"),
+        ("--tag-handling xml", "'tag_handling': 'xml'"),
+        ("--outline-detection-off", "'outline_detection': '0'"),
+        ("--ignore-tags a,b --ignore-tags c", "'ignore_tags': 'a,b,c'"),
+        (
+            "--splitting-tags a,b --splitting-tags c",
+            "'splitting_tags': 'a,b,c'",
+        ),
+        (
+            "--non-splitting-tags a,b --non-splitting-tags c",
+            "'non_splitting_tags': 'a,b,c'",
+        ),
+    ]
+    for args, search_str in extra_options:
+        result = runner.invoke(
+            main_function, f'-vv text --to DE "proton beam" {args}'
+        )
+        assert (
+            result.exit_code == 0
+        ), f"exit: {result.exit_code}\n {result.output}"
+        request_details = next(
+            line
+            for line in result.output.splitlines()
+            if line.startswith("Request details data")
+        )
+        assert search_str in request_details
+
 
 def test_text_stdin(runner):
     result = runner.invoke(
