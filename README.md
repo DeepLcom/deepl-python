@@ -426,7 +426,7 @@ You can also find the list of supported glossary language pairs in the
 
 Note that glossaries work for all target regional-variants: a glossary for the
 target language English (`"EN"`) supports translations to both American English
-(`"EN-US"`) and British English (`"EN-GB""`).
+(`"EN-US"`) and British English (`"EN-GB"`).
 
 ### Exceptions
 
