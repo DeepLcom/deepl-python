@@ -272,7 +272,9 @@ specify the CSV data as `csv_data` either as a file-like object or string or
 bytes containing file content:
 
 ```python
-with open('/path/to/glossary_file.csv', 'r') as csv_file:
+# Open the CSV file assuming UTF-8 encoding. If your file contains a BOM,
+# consider using encoding='utf-8-sig' instead.
+with open('/path/to/glossary_file.csv', 'r',  encoding='utf-8') as csv_file:
     csv_data = csv_file.read()  # Read the file contents as a string
     my_csv_glossary = translator.create_glossary_from_csv(
         "CSV glossary",
