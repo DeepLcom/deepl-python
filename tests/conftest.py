@@ -395,5 +395,6 @@ example_text = {
     "SL": "protonski žarek",
     "SV": "protonstråle",
     "TR": "proton ışını",
+    "UK": "протонний пучок",
     "ZH": "质子束",
 }

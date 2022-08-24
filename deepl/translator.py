@@ -369,6 +369,7 @@ class Language:
     SLOVENIAN = "sl"
     SWEDISH = "sv"
     TURKISH = "tr"
+    UKRAINIAN = "uk"
     CHINESE = "zh"
 
 

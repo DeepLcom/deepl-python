@@ -6,10 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## [Unreleased]
+### Added
+* New language available: Ukrainian (`'uk'`). Add language code constant and tests.
+
+  Note: older library versions also support new languages, this update only adds new code constant.
 ### Changed
 * Add note and workaround to README about Poetry error on Ubuntu 22.04.
   * Pull request [#48](https://github.com/DeepLcom/deepl-python/pull/48)
     thanks to [FOehlschlaeger](https://github.com/FOehlschlaeger).
+
 
 ## [1.9.0] - 2022-07-07
 ### Added
