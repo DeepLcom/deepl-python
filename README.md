@@ -35,6 +35,8 @@ If you need to modify this source code, install the dependencies using poetry:
 poetry install
 ```
 
+On Ubuntu 22.04 there might occur an `ModuleNotFoundError: No module named 'cachecontrol'`. This can be fixed with based on this [bug report](https://bugs.launchpad.net/ubuntu/+source/poetry/+bug/1958227) using `sudo apt install python3-cachecontrol`.
+
 ### Requirements
 
 The library is tested with Python versions 3.6 to 3.10.
