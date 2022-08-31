@@ -34,7 +34,10 @@ before_script:
   - python3 -m venv .venv
   - source .venv/bin/activate
   - pip install --upgrade pip
-  - pip install poetry
+  # Stick to Poetry 1.1.15, because with Poetry 1.2.0 there is a build issue on Python 3.6:
+  # "pydantic-1.9.0-cp36-cp36m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl is not a supported wheel on this platform."
+  # Note: Poetry and the project dependencies should also be installed in separate virtual-envs (that is not done here)
+  - pip install poetry==1.1.15
   - poetry --version
   - poetry install -vv
 
