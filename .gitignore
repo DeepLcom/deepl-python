@@ -1,5 +1,6 @@
 __pycache__
 .idea/
+.venv*/
 venv*/
 dist/
 .pytest_cache/
