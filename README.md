@@ -35,7 +35,9 @@ If you need to modify this source code, install the dependencies using poetry:
 poetry install
 ```
 
-On Ubuntu 22.04 there might occur an `ModuleNotFoundError: No module named 'cachecontrol'`. This can be fixed with based on this [bug report](https://bugs.launchpad.net/ubuntu/+source/poetry/+bug/1958227) using `sudo apt install python3-cachecontrol`.
+On Ubuntu 22.04 an error might occur: `ModuleNotFoundError: No module named 
+'cachecontrol'`. Use the workaround `sudo apt install python3-cachecontrol` as
+explained in this [bug report][bug-report-ubuntu-2204].
 
 ### Requirements
 
@@ -552,6 +554,8 @@ environment variables defined referring to the mock-server.
 [api-docs-lang-list]: https://www.deepl.com/docs-api/translating-text/?utm_source=github&utm_medium=github-python-readme
 
 [api-docs-glossary-lang-list]: https://www.deepl.com/docs-api/managing-glossaries/?utm_source=github&utm_medium=github-python-readme
+
+[bug-report-ubuntu-2204]: https://bugs.launchpad.net/ubuntu/+source/poetry/+bug/1958227
 
 [create-account]: https://www.deepl.com/pro?utm_source=github&utm_medium=github-python-readme#developer
 
