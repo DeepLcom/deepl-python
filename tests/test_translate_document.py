@@ -108,6 +108,21 @@ def test_translate_document_formality(
         **default_lang_args,
     )
     assert "Wie geht es dir?" == output_document_path.read_text()
+    example_document_path.write_text("How are you?")
+    translator.translate_document_from_filepath(
+        example_document_path,
+        output_document_path,
+        formality=deepl.Formality.PREFER_MORE,
+        **default_lang_args,
+    )
+    assert "Wie geht es Ihnen?" == output_document_path.read_text()
+    translator.translate_document_from_filepath(
+        example_document_path,
+        output_document_path,
+        formality=deepl.Formality.PREFER_LESS,
+        **default_lang_args,
+    )
+    assert "Wie geht es dir?" == output_document_path.read_text()
 
 
 def test_document_failure_during_translation(

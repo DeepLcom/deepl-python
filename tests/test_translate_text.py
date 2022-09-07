@@ -200,6 +200,30 @@ def test_formality(translator, server):
             "Test", target_lang="EN-US", formality="more"
         )
 
+    result = translator.translate_text(
+        input_text, target_lang="DE", formality=deepl.Formality.PREFER_LESS
+    )
+    if not server.is_mock_server:
+        assert informal == result.text
+
+    result = translator.translate_text(
+        input_text, target_lang="DE", formality=deepl.Formality.PREFER_MORE
+    )
+    if not server.is_mock_server:
+        assert formal == result.text
+
+    # Using prefer_ * with a language that does not support formality is not
+    # an error
+    translator.translate_text(
+        input_text, target_lang="TR", formality=deepl.Formality.PREFER_MORE
+    )
+    with pytest.raises(
+        deepl.DeepLException, match=r".*formality.*target_lang.*"
+    ):
+        _ = translator.translate_text(
+            input_text, target_lang="TR", formality="more"
+        )
+
 
 def test_preserve_formatting(translator):
     # Note: this test may use the mock server that will not translate the text,

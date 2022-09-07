@@ -97,6 +97,7 @@ def test_text(runner):
     # Test text options
     extra_options = [
         ("--formality more", "'formality': 'more'"),
+        ("--formality prefer_less", "'formality': 'prefer_less'"),
         ("--split-sentences 0", "'split_sentences': '0'"),
         ("--preserve-formatting", "'preserve_formatting': '1'"),
         ("--tag-handling xml", "'tag_handling': 'xml'"),

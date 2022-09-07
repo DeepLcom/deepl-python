@@ -399,8 +399,21 @@ class Formality(Enum):
     """Options for formality parameter."""
 
     LESS = "less"
+    """Translate using informal language."""
+
     DEFAULT = "default"
+    """Translate using the default formality."""
+
     MORE = "more"
+    """Translate using formal language."""
+
+    PREFER_MORE = "prefer_more"
+    """Translate using formal language if the target language supports
+    formality, otherwise use default formality."""
+
+    PREFER_LESS = "prefer_less"
+    """Translate using informal language if the target language supports
+    formality, otherwise use default formality."""
 
     def __str__(self):
         return self.value
@@ -701,7 +714,8 @@ class Translator:
             translation engine from correcting some formatting aspects, and
             instead leave the formatting unchanged.
         :param formality: (Optional) Desired formality for translation, as
-            Formality enum, "less" or "more".
+            Formality enum, "less", "more", "prefer_less", "prefer_more", or
+            "default".
         :param glossary: (Optional) glossary or glossary ID to use for
             translation. Must match specified source_lang and target_lang.
         :param tag_handling: (Optional) Type of tags to parse before
@@ -846,7 +860,7 @@ class Translator:
         :param target_lang: Language code to translate document into, for
             example "DE", "EN-US", "FR".
         :param formality: (Optional) Desired formality for translation, as
-            Formality enum, "less" or "more".
+            Formality enum, "less", "more", "prefer_less", or "prefer_more".
         :param glossary: (Optional) glossary or glossary ID to use for
             translation. Must match specified source_lang and target_lang.
         :return: DocumentStatus when document translation completed, this
@@ -896,7 +910,7 @@ class Translator:
         :param target_lang: Language code to translate document into, for
             example "DE", "EN-US", "FR".
         :param formality: (Optional) Desired formality for translation, as
-            Formality enum, "less" or "more".
+            Formality enum, "less", "more", "prefer_less", or "prefer_more".
         :param glossary: (Optional) glossary or glossary ID to use for
             translation. Must match specified source_lang and target_lang.
         :param filename: (Optional) Filename including extension, only required
@@ -953,7 +967,7 @@ class Translator:
         :param target_lang: Language code to translate document into, for
             example "DE", "EN-US", "FR".
         :param formality: (Optional) Desired formality for translation, as
-            Formality enum, "less" or "more".
+            Formality enum, "less", "more", "prefer_less", or "prefer_more".
         :param glossary: (Optional) glossary or glossary ID to use for
             translation. Must match specified source_lang and target_lang.
         :param filename: (Optional) Filename including extension, only required

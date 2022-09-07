@@ -5,11 +5,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [Unreleased]
+### Added
+* Add formality options `'prefer_less'` and `'prefer_more'`.
+
+
 ## [1.10.0] - 2022-09-09
 ### Added
 * New language available: Ukrainian (`'uk'`). Add language code constant and tests.
 
   Note: older library versions also support new languages, this update only adds new code constant.
+* Add new `Formality` options: `PREFER_MORE` and `PREFER_LESS`.
 ### Changed
 * Add note and workaround to README about Poetry error on Ubuntu 22.04.
   * Pull request [#48](https://github.com/DeepLcom/deepl-python/pull/48)
@@ -194,6 +200,7 @@ Version increased to avoid conflicts with old packages on PyPI.
 Initial version.
 
 
+[Unreleased]: https://github.com/DeepLcom/deepl-python/compare/v1.10.0...HEAD
 [1.10.0]: https://github.com/DeepLcom/deepl-python/compare/v1.9.0...v1.10.0
 [1.9.0]: https://github.com/DeepLcom/deepl-python/compare/v1.8.0...v1.9.0
 [1.8.0]: https://github.com/DeepLcom/deepl-python/compare/v1.7.0...v1.8.0
