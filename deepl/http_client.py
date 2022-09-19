@@ -198,9 +198,7 @@ class HttpClient:
             return exception.should_retry
 
         status_code, _ = response
-        # Retry on Too-Many-Requests error and internal errors except
-        # Service-Unavailable errors
+        # Retry on Too-Many-Requests error and internal errors
         return status_code == http.HTTPStatus.TOO_MANY_REQUESTS or (
             status_code >= http.HTTPStatus.INTERNAL_SERVER_ERROR
-            and status_code != http.HTTPStatus.SERVICE_UNAVAILABLE
         )

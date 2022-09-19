@@ -181,13 +181,6 @@ def test_translate_document_low_level(
     status = translator.translate_document_get_status(handle)
     assert status.ok and not status.done
 
-    # Calling download() before document is ready will fail
-    with pytest.raises(
-        deepl.DocumentNotReadyException, match="Document not ready"
-    ):
-        with open(output_document_path, "wb") as output_file:
-            translator.translate_document_download(handle, output_file)
-
     # Test recreating a document handle from id & key
     doc_id, doc_key = handle.document_id, handle.document_key
     del handle

@@ -7,7 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
-* Add formality options `'prefer_less'` and `'prefer_more'`.
+* Add formality options `'PREFER_LESS'` and `'PREFER_MORE'`.
+### Changed
+* Requests resulting in `503 Service Unavailable` errors are now retried.
+  Attempting to download a document before translation is completed will now
+  wait and retry (up to 5 times by default), rather than raising an exception.
 
 
 ## [1.10.0] - 2022-09-09
@@ -15,7 +19,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * New language available: Ukrainian (`'uk'`). Add language code constant and tests.
 
   Note: older library versions also support new languages, this update only adds new code constant.
-* Add new `Formality` options: `PREFER_MORE` and `PREFER_LESS`.
 ### Changed
 * Add note and workaround to README about Poetry error on Ubuntu 22.04.
   * Pull request [#48](https://github.com/DeepLcom/deepl-python/pull/48)
