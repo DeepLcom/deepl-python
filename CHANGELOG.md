@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.11.0] - 2022-09-26
 ### Added
-* Add formality options `'PREFER_LESS'` and `'PREFER_MORE'`.
+* Add formality options `PREFER_LESS` and `PREFER_MORE`.
 ### Changed
 * Requests resulting in `503 Service Unavailable` errors are now retried.
   Attempting to download a document before translation is completed will now
