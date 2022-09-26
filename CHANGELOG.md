@@ -5,7 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [Unreleased]
+## [1.11.0] - 2022-09-26
 ### Added
 * Add formality options `'PREFER_LESS'` and `'PREFER_MORE'`.
 ### Changed
@@ -203,7 +203,7 @@ Version increased to avoid conflicts with old packages on PyPI.
 Initial version.
 
 
-[Unreleased]: https://github.com/DeepLcom/deepl-python/compare/v1.10.0...HEAD
+[1.11.0]: https://github.com/DeepLcom/deepl-python/compare/v1.10.0...v1.11.0
 [1.10.0]: https://github.com/DeepLcom/deepl-python/compare/v1.9.0...v1.10.0
 [1.9.0]: https://github.com/DeepLcom/deepl-python/compare/v1.8.0...v1.9.0
 [1.8.0]: https://github.com/DeepLcom/deepl-python/compare/v1.7.0...v1.8.0
