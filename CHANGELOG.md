@@ -5,6 +5,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [Unreleased]
+### Fixed
+* Fix py dependency by upgrading pytest version to 7.2.0 for Python 3.7+. For 
+  Python 3.6 tests pytest needs to be added manually.
+
+
 ## [1.11.0] - 2022-09-26
 ### Added
 * Add formality options `'PREFER_LESS'` and `'PREFER_MORE'`.
@@ -203,6 +209,7 @@ Version increased to avoid conflicts with old packages on PyPI.
 Initial version.
 
 
+[Unreleased]: https://github.com/DeepLcom/deepl-python/compare/v1.11.0...HEAD
 [1.11.0]: https://github.com/DeepLcom/deepl-python/compare/v1.10.0...v1.11.0
 [1.10.0]: https://github.com/DeepLcom/deepl-python/compare/v1.9.0...v1.10.0
 [1.9.0]: https://github.com/DeepLcom/deepl-python/compare/v1.8.0...v1.9.0

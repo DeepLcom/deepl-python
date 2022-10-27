@@ -545,6 +545,9 @@ deepl-mock, run it in another terminal while executing the tests. Execute the
 tests using `pytest` with the `DEEPL_MOCK_SERVER_PORT` and `DEEPL_SERVER_URL`
 environment variables defined referring to the mock-server.
 
+Note: for testing on Python 3.6, you need to install an older version of
+`pytest` manually, using `poetry add pytest@6.2.3`. 
+
 [api-docs]: https://www.deepl.com/docs-api?utm_source=github&utm_medium=github-python-readme
 
 [api-docs-csv-format]: https://www.deepl.com/docs-api/managing-glossaries/supported-glossary-formats/?utm_source=github&utm_medium=github-python-readme

@@ -70,6 +70,7 @@ test:
     matrix:
       - DOCKER_IMAGE: "python:3.10"
       - DOCKER_IMAGE: "python:3.6"
+        EXTRA_POETRY_ADD_ARGUMENT: "pytest@6.2.3"
         USE_MOCK_SERVER: "use mock server"
       - DOCKER_IMAGE: "python:3.7"
         USE_MOCK_SERVER: "use mock server"
@@ -80,7 +81,7 @@ test:
       - DOCKER_IMAGE: "python:3.10"
         USE_MOCK_SERVER: "use mock server"
       - DOCKER_IMAGE: "python:3.6"
-        EXTRA_POETRY_ADD_ARGUMENT: "requests@2.0"
+        EXTRA_POETRY_ADD_ARGUMENT: "requests@2.0 pytest@6.2.3"
         USE_MOCK_SERVER: "use mock server"
       - DOCKER_IMAGE: "python:3.9"
         EXTRA_POETRY_ADD_ARGUMENT: "requests@2.0"
