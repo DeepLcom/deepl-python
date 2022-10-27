@@ -46,7 +46,6 @@ black = "^21.4b2"
 pytest = { version = "^7.2.0", python = ">=3.7,<4" }
 pydantic = "^1.8.1"
 coverage = "^5.5"
-tox = "^3.23.1"
 flake8 = "^3.9.2"
 
 [tool.poetry.scripts]

@@ -7,8 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Fixed
-* Fix py dependency by upgrading pytest version to 7.2.0 for Python 3.7+. For 
-  Python 3.6 tests pytest needs to be added manually.
+* Fix `py` dependency by upgrading `pytest` version to 7.2.0 for Python 3.7+. 
+  For Python 3.6 tests `pytest` needs to be added manually.
+* Remove unused `tox` dependency.
 
 
 ## [1.11.0] - 2022-09-26
