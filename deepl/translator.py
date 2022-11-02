@@ -610,7 +610,7 @@ class Translator:
         self,
         source_lang: Union[str, Language, None],
         target_lang: Union[str, Language],
-        formality: Union[str, Formality],
+        formality: Union[str, Formality, None],
         glossary: Union[str, GlossaryInfo, None] = None,
     ) -> dict:
         # target_lang and source_lang are case insensitive
@@ -636,7 +636,7 @@ class Translator:
         request_data = {"target_lang": target_lang}
         if source_lang is not None:
             request_data["source_lang"] = source_lang
-        if str(formality).lower() != str(Formality.DEFAULT):
+        if formality is not None:
             request_data["formality"] = str(formality).lower()
         if isinstance(glossary, GlossaryInfo):
             request_data["glossary_id"] = glossary.glossary_id
@@ -687,12 +687,12 @@ class Translator:
         *,
         source_lang: Union[str, Language, None] = None,
         target_lang: Union[str, Language],
-        split_sentences: Union[str, SplitSentences] = SplitSentences.ALL,
-        preserve_formatting: bool = False,
-        formality: Union[str, Formality] = Formality.DEFAULT,
+        split_sentences: Union[str, SplitSentences, None] = None,
+        preserve_formatting: Optional[bool] = None,
+        formality: Union[str, Formality, None] = None,
         glossary: Union[str, GlossaryInfo, None] = None,
         tag_handling: Optional[str] = None,
-        outline_detection: bool = True,
+        outline_detection: Optional[bool] = None,
         non_splitting_tags: Union[str, List[str], None] = None,
         splitting_tags: Union[str, List[str], None] = None,
         ignore_tags: Union[str, List[str], None] = None,
@@ -754,14 +754,18 @@ class Translator:
         )
         request_data["text"] = text
 
-        if str(split_sentences) != str(SplitSentences.DEFAULT):
+        if split_sentences is not None:
             request_data["split_sentences"] = str(split_sentences)
-        if preserve_formatting:
-            request_data["preserve_formatting"] = "1"
+        if preserve_formatting is not None:
+            request_data["preserve_formatting"] = (
+                "1" if preserve_formatting else "0"
+            )
         if tag_handling is not None:
             request_data["tag_handling"] = tag_handling
-        if not outline_detection:
-            request_data["outline_detection"] = "0"
+        if outline_detection is not None:
+            request_data["outline_detection"] = (
+                "1" if outline_detection else "0"
+            )
 
         def join_tags(tag_argument: Union[str, Iterable[str]]) -> str:
             return (
@@ -952,7 +956,7 @@ class Translator:
         *,
         source_lang: Optional[str] = None,
         target_lang: str,
-        formality: Union[str, Formality] = Formality.DEFAULT,
+        formality: Union[str, Formality, None] = None,
         glossary: Union[str, GlossaryInfo, None] = None,
         filename: Optional[str] = None,
     ) -> DocumentHandle:

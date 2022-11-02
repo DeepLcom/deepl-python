@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   For Python 3.6 tests `pytest` needs to be added manually.
 * Remove unused `tox` dependency.
 * Update `coverage` dependency.
+* Also send options in API requests even if they are default values.
 
 
 ## [1.11.0] - 2022-09-26
