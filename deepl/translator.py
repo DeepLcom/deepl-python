@@ -558,28 +558,48 @@ class Translator:
             return
         elif status_code == http.HTTPStatus.FORBIDDEN:
             raise AuthorizationException(
-                f"Authorization failure, check auth_key{message}"
+                f"Authorization failure, check auth_key{message}",
+                http_status_code=status_code,
             )
         elif status_code == self._HTTP_STATUS_QUOTA_EXCEEDED:
             raise QuotaExceededException(
-                f"Quota for this billing period has been exceeded{message}"
+                f"Quota for this billing period has been exceeded{message}",
+                http_status_code=status_code,
             )
         elif status_code == http.HTTPStatus.NOT_FOUND:
             if glossary:
-                raise GlossaryNotFoundException(f"Glossary not found{message}")
-            raise DeepLException(f"Not found, check server_url{message}")
+                raise GlossaryNotFoundException(
+                    f"Glossary not found{message}",
+                    http_status_code=status_code,
+                )
+            raise DeepLException(
+                f"Not found, check server_url{message}",
+                http_status_code=status_code,
+            )
         elif status_code == http.HTTPStatus.BAD_REQUEST:
-            raise DeepLException(f"Bad request{message}")
+            raise DeepLException(
+                f"Bad request{message}", http_status_code=status_code
+            )
         elif status_code == http.HTTPStatus.TOO_MANY_REQUESTS:
             raise TooManyRequestsException(
                 "Too many requests, DeepL servers are currently experiencing "
-                f"high load{message}"
+                f"high load{message}",
+                should_retry=True,
+                http_status_code=status_code,
             )
         elif status_code == http.HTTPStatus.SERVICE_UNAVAILABLE:
             if downloading_document:
-                raise DocumentNotReadyException(f"Document not ready{message}")
+                raise DocumentNotReadyException(
+                    f"Document not ready{message}",
+                    should_retry=True,
+                    http_status_code=status_code,
+                )
             else:
-                raise DeepLException(f"Service unavailable{message}")
+                raise DeepLException(
+                    f"Service unavailable{message}",
+                    should_retry=True,
+                    http_status_code=status_code,
+                )
         else:
             status_name = (
                 http.client.responses[status_code]
@@ -588,7 +608,9 @@ class Translator:
             )
             raise DeepLException(
                 f"Unexpected status code: {status_code} {status_name}, "
-                f"content: {content}."
+                f"content: {content}.",
+                should_retry=False,
+                http_status_code=status_code,
             )
 
     def _check_valid_languages(

@@ -2,11 +2,28 @@
 # Use of this source code is governed by an MIT
 # license that can be found in the LICENSE file.
 
+from typing import Optional
+
 
 class DeepLException(Exception):
-    """Base class for deepl module exceptions."""
+    """Base class for deepl module exceptions.
 
-    pass
+    :param message: Message describing the error that occurred.
+    :param should_retry: True if the request would normally be retried
+        following this error, otherwise false.
+    :param http_status_code: The HTTP status code in the response, if
+        applicable, otherwise None.
+    """
+
+    def __init__(
+        self,
+        message: str,
+        should_retry: bool = False,
+        http_status_code: Optional[int] = None,
+    ):
+        super().__init__(message)
+        self.should_retry = should_retry
+        self.http_status_code = http_status_code
 
 
 class AuthorizationException(DeepLException):
@@ -37,11 +54,13 @@ class ConnectionException(DeepLException):
 
     def __init__(
         self,
-        message,
-        should_retry=False,
+        message: str,
+        should_retry: bool = False,
     ):
-        super().__init__(message)
-        self.should_retry = should_retry
+        super().__init__(
+            message,
+            should_retry=should_retry,
+        )
 
 
 class DocumentTranslationException(DeepLException):
@@ -51,7 +70,9 @@ class DocumentTranslationException(DeepLException):
     :param document_handle: The document handle of the associated document.
     """
 
-    def __init__(self, message, document_handle):
+    def __init__(
+        self, message: str, document_handle: "DocumentHandle"  # noqa
+    ):
         super().__init__(message)
         self.document_handle = document_handle
 
