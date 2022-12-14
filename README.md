@@ -3,6 +3,7 @@
 [![PyPI version](https://img.shields.io/pypi/v/deepl.svg)](https://pypi.org/project/deepl/)
 [![Supported Python versions](https://img.shields.io/pypi/pyversions/deepl.svg)](https://pypi.org/project/deepl/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blueviolet.svg)](https://github.com/DeepLcom/deepl-python/blob/main/LICENSE)
+[![Downloads](https://img.shields.io/pypi/dm/deepl)](https://pypistats.org/packages/deepl)
 
 The [DeepL API][api-docs] is a language AI API that allows other computer programs
 to send texts and documents to DeepL's servers and receive high-quality
