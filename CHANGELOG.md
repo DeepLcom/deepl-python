@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 ### Fixed
 ### Security
+* Update `certifi` to resolve security advisory.
+  * `certifi` is a development-only dependency; library users are unaffected. 
 
 
 ## [1.12.0] - 2023-01-09
