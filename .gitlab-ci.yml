@@ -119,6 +119,18 @@ test:
         - test_report.xml
     when: always
 
+mustache example:
+  stage: test
+  extends: .test
+  script:
+    - cd examples/mustache
+    - pip install deepl
+    - python . --help
+    - python . --from en --to de "Hello {{user}}, your balance is {{{balance}}} dollars." > mustache_result.txt
+    - cat mustache_result.txt
+    - grep -q "{{user}}" mustache_result.txt
+    - grep -q "{{{balance}}}" mustache_result.txt
+
 # stage: publish -------------------------
 
 pypi upload:

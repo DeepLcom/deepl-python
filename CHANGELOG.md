@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+* Add [example script](examples/mustache) to translate Mustache templates.
 ### Changed
 ### Deprecated
 ### Removed
