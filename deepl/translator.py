@@ -356,8 +356,10 @@ class Language:
     INDONESIAN = "id"
     ITALIAN = "it"
     JAPANESE = "ja"
+    KOREAN = "ko"
     LITHUANIAN = "lt"
     LATVIAN = "lv"
+    NORWEGIAN = "nb"
     DUTCH = "nl"
     POLISH = "pl"
     PORTUGUESE = "pt"  # Only usable as a source language
