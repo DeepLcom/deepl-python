@@ -1,11 +1,34 @@
 # Copyright 2022 DeepL SE (https://www.deepl.com)
 # Use of this source code is governed by an MIT
 # license that can be found in the LICENSE file.
+import importlib
 import itertools
 import logging
 from typing import Dict, Optional
 
 logger = logging.getLogger("deepl")
+
+
+def _optional_import(module_name: str):
+    """Tries importing the specified module and returns it if successful,
+    else None.
+    Example:
+
+    keyring = _optional_import('keyring')
+    if keyring:
+        keyring.get_password(...)
+    else:
+        # Code to handle the module not being present
+        pass
+
+    :param module_name: str containing the exact module name
+    :return: The module, if the import was successful, or None
+    """
+    try:
+        module = importlib.import_module(module_name)
+        return module
+    except ImportError:
+        return None
 
 
 def _get_log_text(message, **kwargs):

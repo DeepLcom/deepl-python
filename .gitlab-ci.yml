@@ -3,7 +3,10 @@ include:
   - project: '${CI_PROJECT_NAMESPACE}/ci-libs-for-client-libraries'
     file:
       - '/${CI_PROJECT_NAME}/.gitlab-ci.yml'
-      
+  - project: 'deepl/ops/ci-cd-infrastructure/gitlab-ci-lib'
+    file:
+      - '/templates/.buildkit.yml'
+
 # Global --------------------------
 
 image: python:3.11
@@ -13,7 +16,7 @@ variables:
   XDG_CACHE_HOME: "${CI_PROJECT_DIR}/.cache"
   POETRY_VIRTUALENVS_IN_PROJECT: "true"
   REQUESTS_CA_BUNDLE: "/etc/ssl/certs/ca-certificates.crt"
-  
+
 cache:
   key:
     prefix: ${CI_JOB_IMAGE}
@@ -29,6 +32,7 @@ stages:
   - build
   - test
   - publish
+
 
 before_script:
   - python3 -m venv .venv

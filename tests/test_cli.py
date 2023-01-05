@@ -11,6 +11,7 @@ import deepl
 import pathlib
 import pytest
 import re
+from unittest.mock import patch
 
 
 main_function = deepl.__main__
@@ -58,6 +59,46 @@ def test_no_auth(runner):
     )
     assert result.exit_code == 1, f"exit: {result.exit_code}\n {result.output}"
     assert "DEEPL_AUTH_KEY" in result.output
+
+
+# Unfortunately there is no secure way to use the keyring module in our CI,
+# so we have to mock the module's behavior here
+# For the reason, see https://github.com/jaraco/keyring/issues/477
+@patch("deepl.__main__._optional_import")
+def test_keyring_auth(import_mock, runner):
+    mocked_keyring = {
+        "deepl": {"DEEPL_AUTH_KEY": runner.env["DEEPL_AUTH_KEY"]}
+    }
+
+    def get_pw_mock(service_name, username):
+        return mocked_keyring[service_name][username]
+
+    import_mock.return_value.get_password.side_effect = get_pw_mock
+    result = runner.invoke(
+        main_function, "usage", env={"DEEPL_AUTH_KEY": None}
+    )
+    assert result.exit_code == 0, f"exit: {result.exit_code}\n {result.output}"
+    assert "Usage this billing period" in result.output
+
+
+@patch("importlib.import_module")
+def test_no_auth_no_keyring(mock, runner):
+    mock.side_effect = ImportError("Keyring module not available in this test")
+
+    result = runner.invoke(
+        main_function, "usage", env={"DEEPL_AUTH_KEY": None}
+    )
+    assert result.exit_code == 1, f"exit: {result.exit_code}\n {result.output}"
+    assert "DEEPL_AUTH_KEY" in result.output
+
+
+@patch("importlib.import_module")
+def test_env_auth_no_keyring(mock, runner):
+    mock.side_effect = ImportError("Keyring module not available in this test")
+
+    result = runner.invoke(main_function, "usage")
+    assert result.exit_code == 0, f"exit: {result.exit_code}\n {result.output}"
+    assert "Usage this billing period" in result.output
 
 
 def test_no_command(runner):

@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 * Add [example script](examples/mustache) to translate Mustache templates.
+* Add support for storing your API Key in a keyring via the `keyring` module.
 ### Changed
 ### Deprecated
 ### Removed

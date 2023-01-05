@@ -491,14 +491,16 @@ python3 -m deepl --help
 ```
 
 The CLI requires your DeepL authentication key specified either as the
-`DEEPL_AUTH_KEY` environment variable, or using the `--auth-key` option, for
-example:
+`DEEPL_AUTH_KEY` environment variable, through the `keyring` module, or
+using the `--auth-key` option, for example:
 
 ```shell
 python3 -m deepl --auth-key=YOUR_AUTH_KEY usage
 ```
 
 Note that the `--auth-key` argument must appear *before* the command argument.
+To use the [keyring](https://pypi.org/project/keyring/) module, set the 
+*DEEPL_AUTH_KEY* field in the service *deepl* to your API key.
 The recognized commands are:
 
 | Command   | Description                                            |

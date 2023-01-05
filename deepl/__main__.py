@@ -9,6 +9,7 @@ import os
 import pathlib
 import sys
 from typing import List
+from deepl.util import _optional_import
 
 # Program name for integration with click.testing
 name = "python -m deepl"
@@ -16,6 +17,9 @@ name = "python -m deepl"
 env_auth_key = "DEEPL_AUTH_KEY"
 env_server_url = "DEEPL_SERVER_URL"
 env_proxy_url = "DEEPL_PROXY_URL"
+
+keyring_key_folder = "deepl"
+keyring_key_name = env_auth_key
 
 
 def action_usage(translator: deepl.Translator):
@@ -208,7 +212,9 @@ def get_parser(prog_name):
         "--auth-key",
         default=None,
         help="authentication key as given in your DeepL account; the "
-        f"{env_auth_key} environment variable is used as secondary fallback",
+        f"{env_auth_key} environment variable is used as secondary fallback; "
+        f"the key {keyring_key_name} in {keyring_key_folder} is used "
+        "as tertiary fallback",
     )
     parser.add_argument(
         "--server-url",
@@ -500,14 +506,26 @@ def main(args=None, prog_name=None):
         logger.setLevel(logging.WARNING)
 
     server_url = args.server_url or os.getenv(env_server_url)
-    auth_key = args.auth_key or os.getenv(env_auth_key)
     proxy_url = args.proxy_url or os.getenv(env_proxy_url)
+
+    auth_key = args.auth_key or os.getenv(env_auth_key)
+    keyring = _optional_import("keyring")
+    if keyring:
+        keyring_pw = None
+        try:
+            keyring_pw = keyring.get_password(
+                keyring_key_folder, keyring_key_name
+            )
+        except keyring.errors.NoKeyringError:
+            pass
+        auth_key = auth_key or keyring_pw
 
     try:
         if auth_key is None:
             raise Exception(
                 f"Please provide authentication key via the {env_auth_key} "
-                "environment variable or --auth_key argument"
+                "environment variable or --auth_key argument or via "
+                f"{keyring_key_name} in {keyring_key_folder} in keyring"
             )
 
         # Note: the get_languages() call to verify language codes is skipped
