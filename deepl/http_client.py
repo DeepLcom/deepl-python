@@ -7,7 +7,7 @@ from .exceptions import ConnectionException, DeepLException
 import http
 import platform
 import random
-import requests
+import requests  # type: ignore
 import traceback
 import time
 from functools import lru_cache

@@ -3,7 +3,7 @@
 # license that can be found in the LICENSE file.
 
 from .conftest import example_text, needs_mock_server, needs_mock_proxy_server
-from requests import Response
+from requests import Response  # type: ignore
 from unittest.mock import patch, Mock
 import deepl
 import pathlib

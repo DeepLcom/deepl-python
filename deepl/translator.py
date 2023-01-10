@@ -28,7 +28,7 @@ import http.client
 import json as json_module
 import os
 import pathlib
-import requests
+import requests  # type: ignore
 import time
 from typing import (
     Any,
@@ -765,6 +765,8 @@ class Translator:
         # TODO: once we drop py3.6 support, replace this with @overload
         # annotations in `_api_call` and chained private functions.
         # See for example https://stackoverflow.com/a/74070166/4926599
+        # In addition, drop the type: ignore annotation on the
+        # `import requests` / `from requests`
         assert isinstance(response, requests.Response)
 
         self._raise_for_status(

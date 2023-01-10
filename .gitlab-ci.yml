@@ -117,6 +117,21 @@ secret_detection:
   rules:
     - if: $CI_MERGE_REQUEST_ID
 
+.mypy_base:
+  stage: check
+  script: poetry run mypy --exclude 'examples/' .
+
+mypy_scheduled:
+  extends: .mypy_base
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+  retry: 2
+
+mypy_manual:
+  extends: .mypy_base
+  rules:
+    - if: $CI_PIPELINE_SOURCE != "schedule"
+
 # stage: build ----------------------
 
 package:
