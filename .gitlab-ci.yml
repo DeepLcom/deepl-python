@@ -43,7 +43,7 @@ before_script:
   # Note: Poetry and the project dependencies should also be installed in separate virtual-envs (that is not done here)
   - pip install poetry==1.1.15
   - poetry --version
-  - poetry install -vv
+  - poetry install -vv -E keyring
 
 # stage: check ----------------------
 
