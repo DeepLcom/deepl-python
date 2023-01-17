@@ -5,6 +5,7 @@
 from . import version
 from .exceptions import ConnectionException, DeepLException
 import http
+import platform
 import random
 import requests
 import time
@@ -12,7 +13,10 @@ from typing import Dict, Optional, Tuple, Union
 from .util import log_info
 
 
-user_agent = f"deepl-python/{version.VERSION}"
+user_agent = (
+    f"deepl-python/{version.VERSION} ({platform.platform()}) "
+    f"python/{platform.python_version()} requests/{requests.__version__}"
+)
 max_network_retries = 5
 min_connection_timeout = 10.0
 

@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
   Note: older library versions also support the new languages, this update only adds new code constants.
 ### Changed
+* Added system, python and request library version information to the user-agent string that is sent with API calls.
 ### Deprecated
 ### Removed
 ### Fixed
