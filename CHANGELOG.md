@@ -9,10 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 * Add [example script](examples/mustache) to translate Mustache templates.
 * Add support for storing your API Key in a keyring via the `keyring` module.
+* Added a CI check for copyright headers.
 ### Changed
 ### Deprecated
 ### Removed
 ### Fixed
+* Copyright headers are updated for 2023
 ### Security
 * Update `certifi` to resolve security advisory.
   * `certifi` is a development-only dependency; library users are unaffected. 

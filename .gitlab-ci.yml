@@ -55,6 +55,12 @@ flake8:
   stage: check
   script: poetry run flake8 deepl tests
 
+licenseCheck:
+  stage: check
+  script:
+    - ./license_checker.sh '*.py' | tee license_check_output.txt
+    - '[ ! -s license_check_output.txt ]'
+
 # stage: build ----------------------
 
 package:
