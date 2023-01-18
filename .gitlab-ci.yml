@@ -70,6 +70,7 @@ package:
 test:
   stage: test
   extends: .test
+  retry: 1
   parallel:
     matrix:
       - DOCKER_IMAGE: "python:3.11"
@@ -125,6 +126,7 @@ test:
 mustache example:
   stage: test
   extends: .test
+  retry: 1
   script:
     - cd examples/mustache
     - pip install deepl
