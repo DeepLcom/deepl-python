@@ -5,7 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [Unreleased]
+## [1.13.0] - 2023-01-26
 ### Added
 * Add [example script](examples/mustache) to translate Mustache templates.
 * Add support for storing your API Key in a keyring via the `keyring` module.
@@ -234,7 +234,7 @@ Version increased to avoid conflicts with old packages on PyPI.
 Initial version.
 
 
-[Unreleased]: https://github.com/DeepLcom/deepl-python/compare/v1.12.0...HEAD
+[1.13.0]: https://github.com/DeepLcom/deepl-python/compare/v1.12.0...v1.13.0
 [1.12.0]: https://github.com/DeepLcom/deepl-python/compare/v1.11.0...v1.12.0
 [1.11.0]: https://github.com/DeepLcom/deepl-python/compare/v1.10.0...v1.11.0
 [1.10.0]: https://github.com/DeepLcom/deepl-python/compare/v1.9.0...v1.10.0
