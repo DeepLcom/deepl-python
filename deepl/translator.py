@@ -454,6 +454,10 @@ class Translator:
         URL strings for the 'http' and 'https' keys. This is passed to the
         underlying requests session, see the requests proxy documentation for
         more information.
+    :param send_platform_info: (Optional) boolean that indicates if the client
+        library can send basic platform info (python version, OS, http library
+        version) to the DeepL API. True = send info, False = only send client
+        library version
     :param skip_language_check: Deprecated, and now has no effect as the
         corresponding internal functionality has been removed. This parameter
         will be removed in a future version.
@@ -475,6 +479,7 @@ class Translator:
         *,
         server_url: Optional[str] = None,
         proxy: Union[Dict, str, None] = None,
+        send_platform_info: bool = True,
         skip_language_check: bool = False,
     ):
         if not auth_key:
@@ -488,7 +493,7 @@ class Translator:
             )
 
         self._server_url = server_url
-        self._client = http_client.HttpClient(proxy)
+        self._client = http_client.HttpClient(proxy, send_platform_info)
         self.headers = {"Authorization": f"DeepL-Auth-Key {auth_key}"}
 
     def __del__(self):
@@ -700,6 +705,10 @@ class Translator:
     def close(self):
         if hasattr(self, "_client"):
             self._client.close()
+
+    def set_app_info(self, app_info_name: str, app_info_version: str):
+        self._client.set_app_info(app_info_name, app_info_version)
+        return self
 
     @property
     def server_url(self):

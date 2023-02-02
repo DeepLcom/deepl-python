@@ -9,14 +9,12 @@ import platform
 import random
 import requests
 import time
+from functools import lru_cache
 from typing import Dict, Optional, Tuple, Union
 from .util import log_info
 
 
-user_agent = (
-    f"deepl-python/{version.VERSION} ({platform.platform()}) "
-    f"python/{platform.python_version()} requests/{requests.__version__}"
-)
+user_agent = None
 max_network_retries = 5
 min_connection_timeout = 10.0
 
@@ -62,7 +60,11 @@ class _BackoffTimer:
 
 
 class HttpClient:
-    def __init__(self, proxy: Union[Dict, str, None] = None):
+    def __init__(
+        self,
+        proxy: Union[Dict, str, None] = None,
+        send_platform_info: bool = True,
+    ):
         self._session = requests.Session()
         if proxy:
             if isinstance(proxy, str):
@@ -73,8 +75,14 @@ class HttpClient:
                     "containing URL strings for the http and https keys."
                 )
             self._session.proxies.update(proxy)
-        self._session.headers = {"User-Agent": user_agent}
-        pass
+        self._send_platform_info = send_platform_info
+        self._app_info_name = None
+        self._app_info_version = None
+
+    def set_app_info(self, app_info_name: str, app_info_version: str):
+        self._app_info_name = app_info_name
+        self._app_info_version = app_info_version
+        return self
 
     def close(self):
         self._session.close()
@@ -94,7 +102,15 @@ class HttpClient:
         backoff = _BackoffTimer()
 
         try:
-            headers.setdefault("User-Agent", user_agent)
+            headers.setdefault(
+                "User-Agent",
+                _generate_user_agent(
+                    user_agent,
+                    self._send_platform_info,
+                    self._app_info_name,
+                    self._app_info_version,
+                ),
+            )
             request = requests.Request(
                 method, url, data=data, headers=headers, **kwargs
             ).prepare()
@@ -151,7 +167,15 @@ class HttpClient:
         If no response is received will raise ConnectionException."""
 
         try:
-            headers.setdefault("User-Agent", user_agent)
+            headers.setdefault(
+                "User-Agent",
+                _generate_user_agent(
+                    user_agent,
+                    self._send_platform_info,
+                    self._app_info_name,
+                    self._app_info_version,
+                ),
+            )
             request = requests.Request(
                 method, url, data=data, headers=headers, **kwargs
             ).prepare()
@@ -206,3 +230,25 @@ class HttpClient:
         return status_code == http.HTTPStatus.TOO_MANY_REQUESTS or (
             status_code >= http.HTTPStatus.INTERNAL_SERVER_ERROR
         )
+
+
+@lru_cache(maxsize=4)
+def _generate_user_agent(
+    user_agent_str: Optional[str],
+    send_platform_info: bool,
+    app_info_name: Optional[str],
+    app_info_version: Optional[str],
+):
+    if user_agent_str:
+        library_info_str = user_agent_str
+    else:
+        library_info_str = f"deepl-python/{version.VERSION}"
+        if send_platform_info:
+            library_info_str += (
+                f" ({platform.platform()}) "
+                f"python/{platform.python_version()} "
+                f"requests/{requests.__version__}"
+            )
+    if app_info_name and app_info_version:
+        library_info_str += f" {app_info_name}/{app_info_version}"
+    return library_info_str

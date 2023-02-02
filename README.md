@@ -434,6 +434,20 @@ Note that glossaries work for all target regional-variants: a glossary for the
 target language English (`"EN"`) supports translations to both American English
 (`"EN-US"`) and British English (`"EN-GB"`).
 
+### Writing a Plugin
+
+If you use this library in an application, please identify the application with
+`deepl.Translator.set_app_info`, which needs the name and version of the app:
+
+```python
+translator = deepl.Translator(...).set_app_info("sample_python_plugin", "1.0.2")
+```
+
+This information is passed along when the library makes calls to the DeepL API.
+Both name and version are required. Please note that setting the `User-Agent` header
+via `deepl.http_client.user_agent` will override this setting, if you need to use this,
+please manually identify your Application in the `User-Agent` header.
+
 ### Exceptions
 
 All module functions may raise `deepl.DeepLException` or one of its subclasses.
@@ -480,6 +494,21 @@ translator = deepl.Translator(..., proxy=proxy)
 The proxy argument is passed to the underlying `requests` session, see the
 [documentation for requests][requests-proxy-docs]; a dictionary of schemes to
 proxy URLs is also accepted.
+
+#### Anonymous platform information
+
+By default, we send some basic information about the platform the client library is running on with each request, see [here for an explanation](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent). This data is completely anonymous and only used to improve our product, not track any individual users. If you do not wish to send this data, you can opt-out when creating your `deepl.Translator` object by setting the `send_platform_info` flag like so:
+
+```python
+translator = deepl.Translator(..., send_platform_info=False)
+```
+
+You can also customize the `user_agent` by setting its value explicitly before constructing your `deepl.Translator` object.
+
+```python
+deepl.http_client.user_agent = 'my custom user agent'
+translator = deepl.Translator(os.environ["DEEPL_AUTH_KEY"])
+```
 
 ## Command Line Interface
 

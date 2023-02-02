@@ -3,9 +3,12 @@
 # license that can be found in the LICENSE file.
 
 from .conftest import example_text, needs_mock_server, needs_mock_proxy_server
+from requests import Response
+from unittest.mock import patch, Mock
 import deepl
 import pathlib
 import pytest
+import os
 
 
 def test_version():
@@ -84,6 +87,85 @@ def test_server_url_selected_based_on_auth_key(server):
     translator_free = deepl.Translator("ABCD:fx")
     assert translator_normal.server_url == "https://api.deepl.com"
     assert translator_free.server_url == "https://api-free.deepl.com"
+
+
+@patch("requests.adapters.HTTPAdapter.send")
+def test_user_agent(mock_send):
+    mock_send.return_value = _build_test_response()
+    translator = deepl.Translator(os.environ["DEEPL_AUTH_KEY"])
+    translator.translate_text(example_text["EN"], target_lang="DA")
+    ua_header = mock_send.call_args[0][0].headers["User-agent"]
+    assert "requests/" in ua_header
+    assert " python/" in ua_header
+    assert "(" in ua_header
+
+
+@patch("requests.adapters.HTTPAdapter.send")
+def test_user_agent_opt_out(mock_send):
+    mock_send.return_value = _build_test_response()
+    translator = deepl.Translator(
+        os.environ["DEEPL_AUTH_KEY"], send_platform_info=False
+    )
+    translator.translate_text(example_text["EN"], target_lang="DA")
+    ua_header = mock_send.call_args[0][0].headers["User-agent"]
+    assert "requests/" not in ua_header
+    assert " python/" not in ua_header
+    assert "(" not in ua_header
+
+
+@patch("requests.adapters.HTTPAdapter.send")
+def test_custom_user_agent(mock_send):
+    mock_send.return_value = _build_test_response()
+    old_user_agent = deepl.http_client.user_agent
+    deepl.http_client.user_agent = "my custom user agent"
+    translator = deepl.Translator(os.environ["DEEPL_AUTH_KEY"])
+    translator.translate_text(example_text["EN"], target_lang="DA")
+    ua_header = mock_send.call_args[0][0].headers["User-agent"]
+    assert ua_header == "my custom user agent"
+    deepl.http_client.user_agent = old_user_agent
+
+
+@patch("requests.adapters.HTTPAdapter.send")
+def test_user_agent_with_app_info(mock_send):
+    mock_send.return_value = _build_test_response()
+    translator = deepl.Translator(
+        os.environ["DEEPL_AUTH_KEY"],
+    ).set_app_info("sample_python_plugin", "1.0.2")
+    translator.translate_text(example_text["EN"], target_lang="DA")
+    ua_header = mock_send.call_args[0][0].headers["User-agent"]
+    assert "requests/" in ua_header
+    assert " python/" in ua_header
+    assert "(" in ua_header
+    assert " sample_python_plugin/1.0.2" in ua_header
+
+
+@patch("requests.adapters.HTTPAdapter.send")
+def test_user_agent_opt_out_with_app_info(mock_send):
+    mock_send.return_value = _build_test_response()
+    translator = deepl.Translator(
+        os.environ["DEEPL_AUTH_KEY"],
+        send_platform_info=False,
+    ).set_app_info("sample_python_plugin", "1.0.2")
+    translator.translate_text(example_text["EN"], target_lang="DA")
+    ua_header = mock_send.call_args[0][0].headers["User-agent"]
+    assert "requests/" not in ua_header
+    assert " python/" not in ua_header
+    assert "(" not in ua_header
+    assert " sample_python_plugin/1.0.2" in ua_header
+
+
+@patch("requests.adapters.HTTPAdapter.send")
+def test_custom_user_agent_with_app_info(mock_send):
+    mock_send.return_value = _build_test_response()
+    old_user_agent = deepl.http_client.user_agent
+    deepl.http_client.user_agent = "my custom user agent"
+    translator = deepl.Translator(os.environ["DEEPL_AUTH_KEY"]).set_app_info(
+        "sample_python_plugin", "1.0.2"
+    )
+    translator.translate_text(example_text["EN"], target_lang="DA")
+    ua_header = mock_send.call_args[0][0].headers["User-agent"]
+    assert ua_header == "my custom user agent sample_python_plugin/1.0.2"
+    deepl.http_client.user_agent = old_user_agent
 
 
 @needs_mock_proxy_server
@@ -194,3 +276,26 @@ def test_usage_team_document_limit(
     assert not usage.document.limit_reached
     assert not usage.character.limit_reached
     assert usage.team_document.limit_reached
+
+
+def _build_test_response():
+    response = Mock(spec=Response)
+    response.status_code = 200
+    response.text = (
+        '{"translations": [{"detected_source_language": "EN", '
+        '"text": "protonstråle"}]}'
+    )
+    response.headers = {
+        "Content-Type": "application/json",
+        "Server": "nginx",
+        "Content-Length": str(len(response.text.encode("utf-8"))),
+        "Connection": "keep-alive",
+        "Access-Control-Allow-Origin": "*",
+    }
+    response.encoding = "utf-8"
+    response.history = None
+    response.raw = None
+    response.is_redirect = False
+    response.stream = False
+    response.url = "https://api.deepl.com/v2/translate"
+    return response

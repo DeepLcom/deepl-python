@@ -207,6 +207,14 @@ def get_parser(prog_name):
         help="print additional information, can be supplied multiple times "
         "for more verbose output",
     )
+    parser.add_argument(
+        "--no-platform-info",
+        default=False,
+        action="store_true",
+        dest="noplatforminfo",
+        help="if this flag is enabled, do not send additional information "
+        "about the platform with API requests.",
+    )
 
     parser.add_argument(
         "--auth-key",
@@ -535,6 +543,7 @@ def main(args=None, prog_name=None):
             server_url=server_url,
             proxy=proxy_url,
             skip_language_check=True,
+            send_platform_info=not args.noplatforminfo,
         )
 
         if args.command == "text":
@@ -549,7 +558,13 @@ def main(args=None, prog_name=None):
                 sys.exit(1)
 
         # Remove global args so they are not unrecognised in action functions
-        del args.verbose, args.server_url, args.auth_key, args.proxy_url
+        del (
+            args.verbose,
+            args.server_url,
+            args.auth_key,
+            args.proxy_url,
+            args.noplatforminfo,
+        )
         args = vars(args)
         # Call action function corresponding to command with remaining args
         command = args.pop("command")
