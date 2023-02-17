@@ -9,7 +9,7 @@ include:
 
 # Global --------------------------
 
-image: python:3.11
+image: ${CI_REGISTRY_IMAGE}/python:3.11
 
 variables:
   PIP_CACHE_DIR: "${CI_PROJECT_DIR}/.cache/pip"
@@ -26,6 +26,12 @@ cache:
   paths:
     - .cache/pip
     - .venv
+
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_TAG
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
 
 stages:
   - check
@@ -47,19 +53,52 @@ before_script:
 
 # stage: check ----------------------
 
-black:
+.black_base:
   stage: check
   script: poetry run black --check .
 
-flake8:
+black_scheduled:
+  extends: .black_base
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+  retry: 2
+
+black_manual:
+  extends: .black_base
+  rules:
+    - if: $CI_PIPELINE_SOURCE != "schedule"
+
+.flake8_base:
   stage: check
   script: poetry run flake8 deepl tests
 
-licenseCheck:
+flake8_scheduled:
+  extends: .flake8_base
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+  retry: 2
+
+flake8_manual:
+  extends: .flake8_base
+  rules:
+    - if: $CI_PIPELINE_SOURCE != "schedule"
+
+.license_check_base:
   stage: check
   script:
     - ./license_checker.sh '*.py' | tee license_check_output.txt
     - '[ ! -s license_check_output.txt ]'
+
+license_check_scheduled:
+  extends: .license_check_base
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+  retry: 2
+
+license_check_manual:
+  extends: .license_check_base
+  rules:
+    - if: $CI_PIPELINE_SOURCE != "schedule"
 
 # stage: build ----------------------
 
@@ -73,10 +112,9 @@ package:
 
 # stage: test -------------------------
 
-test:
+.test_base:
   stage: test
   extends: .test
-  retry: 1
   parallel:
     matrix:
       - DOCKER_IMAGE: "python:3.11"
@@ -102,7 +140,7 @@ test:
         # Set minimum possible requests and urllib3 versions to work with Python 3.11
         EXTRA_POETRY_ADD_ARGUMENT: "requests@2.20 urllib3@1.23"
         USE_MOCK_SERVER: "use mock server"
-  image: ${DOCKER_IMAGE}
+  image: ${CI_REGISTRY_IMAGE}/${DOCKER_IMAGE}
   script:
     - >
       if [[ ! -z "${EXTRA_POETRY_ADD_ARGUMENT}" ]]; then
@@ -129,10 +167,21 @@ test:
         - test_report.xml
     when: always
 
-mustache example:
+test_scheduled:
+  extends: .test_base
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+  retry: 2
+
+test_manual:
+  stage: test
+  extends: .test_base
+  rules:
+    - if: $CI_PIPELINE_SOURCE != "schedule"
+
+.mustache_example_base:
   stage: test
   extends: .test
-  retry: 1
   script:
     - cd examples/mustache
     - pip install deepl
@@ -141,6 +190,18 @@ mustache example:
     - cat mustache_result.txt
     - grep -q "{{user}}" mustache_result.txt
     - grep -q "{{{balance}}}" mustache_result.txt
+
+mustache_example_scheduled:
+  extends: .mustache_example_base
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+  retry: 2
+
+mustache_example_manual:
+  stage: test
+  extends: .mustache_example_base
+  rules:
+    - if: $CI_PIPELINE_SOURCE != "schedule"
 
 # stage: publish -------------------------
 
