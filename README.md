@@ -495,6 +495,19 @@ The proxy argument is passed to the underlying `requests` session, see the
 [documentation for requests][requests-proxy-docs]; a dictionary of schemes to
 proxy URLs is also accepted.
 
+#### Override SSL verification
+
+You can control how `requests` performs SSL verification by specifying the 
+`verify_ssl` option when constructing a `deepl.Translator`, for example to
+disable SSL certificate verification:
+
+```python
+translator = deepl.Translator(..., verify_ssl=False)
+```
+
+This option is passed to the underlying `requests` session as the `verify`
+option, see the [documentation for requests][requests-verify-ssl-docs].
+
 #### Anonymous platform information
 
 By default, we send some basic information about the platform the client library is running on with each request, see [here for an explanation](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent). This data is completely anonymous and only used to improve our product, not track any individual users. If you do not wish to send this data, you can opt-out when creating your `deepl.Translator` object by setting the `send_platform_info` flag like so:
@@ -599,3 +612,5 @@ environment variables defined referring to the mock-server.
 [pro-account]: https://www.deepl.com/pro-account/?utm_source=github&utm_medium=github-python-readme
 
 [requests-proxy-docs]: https://docs.python-requests.org/en/latest/user/advanced/#proxies
+
+[requests-verify-ssl-docs]: https://docs.python-requests.org/en/latest/user/advanced/#ssl-cert-verification

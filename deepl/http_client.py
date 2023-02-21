@@ -64,6 +64,7 @@ class HttpClient:
         self,
         proxy: Union[Dict, str, None] = None,
         send_platform_info: bool = True,
+        verify_ssl: Union[bool, str, None] = None,
     ):
         self._session = requests.Session()
         if proxy:
@@ -75,6 +76,8 @@ class HttpClient:
                     "containing URL strings for the http and https keys."
                 )
             self._session.proxies.update(proxy)
+        if verify_ssl is not None:
+            self._session.verify = verify_ssl
         self._send_platform_info = send_platform_info
         self._app_info_name = None
         self._app_info_version = None

@@ -458,6 +458,9 @@ class Translator:
         library can send basic platform info (python version, OS, http library
         version) to the DeepL API. True = send info, False = only send client
         library version
+    :param verify_ssl: (Optional) Controls how requests verifies SSL
+        certificates. This is passed to the underlying requests session, see
+        the requests verify documentation for more information.
     :param skip_language_check: Deprecated, and now has no effect as the
         corresponding internal functionality has been removed. This parameter
         will be removed in a future version.
@@ -480,6 +483,7 @@ class Translator:
         server_url: Optional[str] = None,
         proxy: Union[Dict, str, None] = None,
         send_platform_info: bool = True,
+        verify_ssl: Union[bool, str, None] = None,
         skip_language_check: bool = False,
     ):
         if not auth_key:
@@ -493,7 +497,9 @@ class Translator:
             )
 
         self._server_url = server_url
-        self._client = http_client.HttpClient(proxy, send_platform_info)
+        self._client = http_client.HttpClient(
+            proxy, send_platform_info, verify_ssl
+        )
         self.headers = {"Authorization": f"DeepL-Auth-Key {auth_key}"}
 
     def __del__(self):

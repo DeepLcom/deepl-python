@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Add [example](examples/json) to translate JSON inputs. 
 * Added platform and python version information to the user-agent string that is sent with API calls, along with an opt-out.
 * Added method for applications that use this library to identify themselves in API requests they make.
+* Added `verify_ssl` option to `Translator` to control underlying `requests` session.
+  * Thanks to [andrefloriani](https://github.com/andrefloriani) for the 
+    suggestion in [#60](https://github.com/DeepLcom/deepl-python/issues/60).
 
 
 ## [1.13.0] - 2023-01-26
