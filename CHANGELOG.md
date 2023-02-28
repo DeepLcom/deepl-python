@@ -5,6 +5,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [Unreleased]
+### Fixed
+* Removed `CHANGELOG.md` and `SECURITY.md` from the python package. The `LICENSE` file is no longer installed, but still included in package tarball and wheel files.
+* Thanks to [TurtleWilly](https://github.com/TurtleWilly) for the report in [#66](https://github.com/DeepLcom/deepl-python/issues/66).
+
+
 ## [1.14.0] - 2023-02-21
 ### Added
 * Add [example](examples/json) to translate JSON inputs. 
@@ -244,6 +250,7 @@ Version increased to avoid conflicts with old packages on PyPI.
 Initial version.
 
 
+[Unreleased]: https://github.com/DeepLcom/deepl-python/compare/v1.14.0...HEAD
 [1.14.0]: https://github.com/DeepLcom/deepl-python/compare/v1.13.0...v1.14.0
 [1.13.0]: https://github.com/DeepLcom/deepl-python/compare/v1.12.0...v1.13.0
 [1.12.0]: https://github.com/DeepLcom/deepl-python/compare/v1.11.0...v1.12.0

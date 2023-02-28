@@ -21,7 +21,6 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
 ]
-include = ["CHANGELOG.md", "LICENSE", "SECURITY.md"]
 
 [tool.poetry.urls]
 "Bug Tracker" = "https://github.com/DeepLcom/deepl-python/issues"
