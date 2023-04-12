@@ -279,7 +279,7 @@ class Usage:
         """Returns usage details for documents shared among your team."""
         return self._team_document
 
-    def __str__(self):
+    def __str__(self) -> str:
         details: List[Tuple[str, Usage.Detail]] = [
             ("Characters", self.character),
             ("Documents", self.document),
@@ -312,7 +312,7 @@ class Language:
         return self.code
 
     @staticmethod
-    def remove_regional_variant(language: Union[str]) -> str:
+    def remove_regional_variant(language: Union[str, "Language"]) -> str:
         """Removes the regional variant from a language, e.g. EN-US gives EN"""
         return str(language).upper()[0:2]
 

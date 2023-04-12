@@ -732,7 +732,12 @@ class Translator:
         )
 
         if output_file:
-            for chunk in response.iter_content(chunk_size=chunk_size):
+            chunks = (
+                response.iter_content(chunk_size=chunk_size)
+                if isinstance(response, requests.Response)
+                else [response]
+            )
+            for chunk in chunks:
                 output_file.write(chunk)
             return None
         else:
