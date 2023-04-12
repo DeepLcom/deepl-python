@@ -4,6 +4,8 @@
 
 from typing import Optional
 
+from deepl.api_data import DocumentHandle
+
 
 class DeepLException(Exception):
     """Base class for deepl module exceptions.
@@ -70,9 +72,7 @@ class DocumentTranslationException(DeepLException):
     :param document_handle: The document handle of the associated document.
     """
 
-    def __init__(
-        self, message: str, document_handle: "DocumentHandle"  # noqa
-    ):
+    def __init__(self, message: str, document_handle: DocumentHandle):
         super().__init__(message)
         self.document_handle = document_handle
 
