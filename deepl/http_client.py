@@ -83,8 +83,8 @@ class HttpClient:
         if verify_ssl is not None:
             self._session.verify = verify_ssl
         self._send_platform_info = send_platform_info
-        self._app_info_name = None
-        self._app_info_version = None
+        self._app_info_name: Optional[str] = None
+        self._app_info_version: Optional[str] = None
 
     def set_app_info(self, app_info_name: str, app_info_version: str):
         self._app_info_name = app_info_name
@@ -129,7 +129,7 @@ class HttpClient:
                 if response is not None:
                     return response
                 else:
-                    raise exception
+                    raise exception  # type: ignore[misc]
 
             if exception is not None:
                 log_info(
@@ -235,7 +235,9 @@ class HttpClient:
             ) >= packaging_version_module.parse("2.4.2"):
                 kwargs["json"] = json
             elif json is not None:
-                data = json_module.dumps(json)
+                # This is fine, see official docs
+                # https://requests.readthedocs.io/en/latest/user/quickstart/#more-complicated-post-requests
+                data = json_module.dumps(json)  # type: ignore[assignment]
                 headers["Content-Type"] = "application/json"
             return requests.Request(
                 method, url, data=data, headers=headers, **kwargs
