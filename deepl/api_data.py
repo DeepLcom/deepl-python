@@ -221,9 +221,7 @@ class Usage:
         def limit_reached(self) -> bool:
             """True if this limit is valid and the amount used is greater than
             or equal to the amount allowed, otherwise False."""
-            return (
-                self.valid and self.count >= self.limit
-            )  # type: ignore[operator]
+            return self.valid and self.count >= self.limit  # type: ignore[operator] # noqa: E501
 
         @property
         def limit_exceeded(self) -> bool:
