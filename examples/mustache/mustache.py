@@ -2,6 +2,7 @@
 # Use of this source code is governed by an MIT
 # license that can be found in the LICENSE file.
 
+from deepl.translator import TextResult
 from html_parsing import TagReplacerHTMLParser
 import deepl
 import logging
@@ -117,6 +118,7 @@ def translate_mustache(
     result = translator.translate_text(
         placeholder_xml, target_lang=target_lang, tag_handling="xml", **kwargs
     )
+    assert isinstance(result, TextResult)
     logger.info("Translated XML: %s", result.text)
 
     # Reinsert the extracted Mustache tags in the translated XML

@@ -6,6 +6,9 @@ import deepl
 import json
 import logging
 from typing import Any, Callable, List, Tuple
+from collections.abc import Iterable
+
+from deepl.translator import TextResult
 
 
 def batch_translate(
@@ -23,6 +26,7 @@ def batch_translate(
     results = translator.translate_text(
         inputs, target_lang=target_lang, **kwargs
     )
+    assert isinstance(results, list)
     for result, handler in zip(results, handlers):
         handler(result)
 
@@ -38,6 +42,7 @@ def parse_json_for_translation(
     translation candidates list
     """
 
+    keys: Iterable = []
     if type(obj) is dict:
         keys = obj.keys()
     elif type(obj) is list:
@@ -80,7 +85,9 @@ def translate_json(
     obj = [obj]
 
     # Find all text in the JSON that is to be translated
-    translation_candidates = []
+    translation_candidates: List[
+        Tuple[str, Callable[[deepl.TextResult], None]]
+    ] = []
     parse_json_for_translation(obj, translation_candidates)
     logger.info(
         f"Found {len(translation_candidates)} strings to be translated"

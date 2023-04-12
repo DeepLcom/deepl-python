@@ -72,7 +72,10 @@ def action_text(
     **kwargs,
 ):
     """Action function for the text command."""
-    output_list = translator.translate_text(**kwargs)
+    translation = translator.translate_text(**kwargs)
+    output_list = (
+        translation if isinstance(translation, List) else [translation]
+    )
     for output in output_list:
         if show_detected_source:
             print(f"Detected source language: {output.detected_source_lang}")
