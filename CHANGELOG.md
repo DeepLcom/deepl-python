@@ -5,11 +5,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## Unreleased
+## [Unreleased]
 ### Changed
 * DeepL API calls now send requests with JSON-encoded bodies where possible.
 ### Fixed
 * Catch failures while constructing the user agent string.
+* Added `py.typed` to the package so that our package is typed for our users.
+* Fixed most type errors in the package.
 
 
 ## [1.15.0] - 2023-06-09
