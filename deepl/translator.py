@@ -117,7 +117,7 @@ class Translator:
         stream: bool = False,
         headers: Optional[dict] = None,
         **kwargs,
-    ) -> Tuple[int, Union[str, requests.Response], dict]:
+    ) -> Tuple[int, Union[str, requests.Response], Any]:
         """
         Makes a request to the API, and returns response as status code,
         content and JSON object.
@@ -167,14 +167,14 @@ class Translator:
         self,
         status_code: int,
         content: Union[str, requests.Response],
-        json: Optional[dict],
+        json: Any,
         glossary: bool = False,
         downloading_document: bool = False,
     ):
         message = ""
-        if json is not None and "message" in json:
+        if json is not None and isinstance(json, dict) and "message" in json:
             message += ", message: " + json["message"]
-        if json is not None and "detail" in json:
+        if json is not None and isinstance(json, dict) and "detail" in json:
             message += ", detail: " + json["detail"]
 
         if 200 <= status_code < 400:
@@ -296,7 +296,7 @@ class Translator:
         source_lang: Union[str, Language],
         target_lang: Union[str, Language],
         entries_format: str,
-        entries: str,
+        entries: Union[str, bytes],
     ) -> GlossaryInfo:
         # glossaries are only supported for base language types
         source_lang = Language.remove_regional_variant(source_lang)
@@ -437,11 +437,19 @@ class Translator:
 
         self._raise_for_status(status, content, json)
 
-        translations = json.get("translations", [])
+        translations = (
+            json.get("translations", [])
+            if (json and isinstance(json, dict))
+            else []
+        )
         output = []
         for translation in translations:
-            text = translation.get("text")
-            lang = translation.get("detected_source_language")
+            text = translation.get("text", "") if translation else ""
+            lang = (
+                translation.get("detected_source_language", "")
+                if translation
+                else ""
+            )
             output.append(TextResult(text, detected_source_lang=lang))
 
         return output if multi_input else output[0]
@@ -633,6 +641,7 @@ class Translator:
             source_lang, target_lang, formality, glossary
         )
 
+        files: Dict[str, Any] = {}
         if isinstance(input_document, (str, bytes)):
             if filename is None:
                 raise ValueError(
@@ -647,7 +656,11 @@ class Translator:
         )
         self._raise_for_status(status, content, json)
 
-        return DocumentHandle(json["document_id"], json["document_key"])
+        if not json:
+            json = {}
+        return DocumentHandle(
+            json.get("document_id", ""), json.get("document_key", "")
+        )
 
     def translate_document_get_status(
         self, handle: DocumentHandle
@@ -657,19 +670,42 @@ class Translator:
 
         :param handle: DocumentHandle to the request to check.
         :return: DocumentStatus containing the request status.
+
+        :raises DocumentTranslationException: If an error occurs during
+            querying the document, the exception includes the document handle.
         """
 
         data = {"document_key": handle.document_key}
         url = f"v2/document/{handle.document_id}"
 
-        status, content, json = self._api_call(url, json=data)
+        status_code, content, json = self._api_call(url, json=data)
 
-        self._raise_for_status(status, content, json)
+        self._raise_for_status(status_code, content, json)
 
-        status = json["status"]
-        seconds_remaining = json.get("seconds_remaining", None)
-        billed_characters = json.get("billed_characters", None)
-        error_message = json.get("error_message", None)
+        status = (
+            json.get("status", None)
+            if (json and isinstance(json, dict))
+            else None
+        )
+        if not status:
+            raise DocumentTranslationException(
+                "Querying document status gave an empty response", handle
+            )
+        seconds_remaining = (
+            json.get("seconds_remaining", None)
+            if (json and isinstance(json, dict))
+            else None
+        )
+        billed_characters = (
+            json.get("billed_characters", None)
+            if (json and isinstance(json, dict))
+            else None
+        )
+        error_message = (
+            json.get("error_message", None)
+            if (json and isinstance(json, dict))
+            else None
+        )
         return DocumentStatus(
             status, seconds_remaining, billed_characters, error_message
         )
@@ -726,17 +762,17 @@ class Translator:
         status_code, response, json = self._api_call(
             url, json=data, stream=True
         )
+        # TODO: once we drop py3.6 support, replace this with @overload
+        # annotations in `_api_call` and chained private functions.
+        # See for example https://stackoverflow.com/a/74070166/4926599
+        assert isinstance(response, requests.Response)
 
         self._raise_for_status(
             status_code, "<file>", json, downloading_document=True
         )
 
         if output_file:
-            chunks = (
-                response.iter_content(chunk_size=chunk_size)
-                if isinstance(response, requests.Response)
-                else [response]
-            )
+            chunks = response.iter_content(chunk_size=chunk_size)
             for chunk in chunks:
                 output_file.write(chunk)
             return None
@@ -753,12 +789,13 @@ class Translator:
         """
         status, content, json = self._api_call("v2/languages", method="GET")
         self._raise_for_status(status, content, json)
+        languages = json if (json and isinstance(json, list)) else []
         return [
             Language(
                 language["language"],
                 language["name"],
             )
-            for language in json
+            for language in languages
         ]
 
     def get_target_languages(self, skip_cache=False) -> List[Language]:
@@ -774,13 +811,14 @@ class Translator:
             "v2/languages", method="GET", data=data
         )
         self._raise_for_status(status, content, json)
+        languages = json if (json and isinstance(json, list)) else []
         return [
             Language(
                 language["language"],
                 language["name"],
                 language.get("supports_formality", None),
             )
-            for language in json
+            for language in languages
         ]
 
     def get_glossary_languages(self) -> List[GlossaryLanguagePair]:
@@ -791,11 +829,16 @@ class Translator:
 
         self._raise_for_status(status, content, json)
 
+        supported_languages = (
+            json.get("supported_languages", [])
+            if (json and isinstance(json, dict))
+            else []
+        )
         return [
             GlossaryLanguagePair(
                 language_pair["source_lang"], language_pair["target_lang"]
             )
-            for language_pair in json["supported_languages"]
+            for language_pair in supported_languages
         ]
 
     def get_usage(self) -> Usage:
@@ -804,6 +847,8 @@ class Translator:
 
         self._raise_for_status(status, content, json)
 
+        if not isinstance(json, dict):
+            json = {}
         return Usage(json)
 
     def create_glossary(
@@ -888,6 +933,8 @@ class Translator:
             csv_data if isinstance(csv_data, (str, bytes)) else csv_data.read()
         )
 
+        if not isinstance(entries, (bytes, str)):
+            raise ValueError("Entries of the glossary are invalid")
         return self._create_glossary(
             name, source_lang, target_lang, "csv", entries
         )
@@ -913,9 +960,12 @@ class Translator:
         """
         status, content, json = self._api_call("v2/glossaries", method="GET")
         self._raise_for_status(status, content, json, glossary=True)
-        return [
-            GlossaryInfo.from_json(glossary) for glossary in json["glossaries"]
-        ]
+        glossaries = (
+            json.get("glossaries", [])
+            if (json and isinstance(json, dict))
+            else []
+        )
+        return [GlossaryInfo.from_json(glossary) for glossary in glossaries]
 
     def get_glossary_entries(self, glossary: Union[str, GlossaryInfo]) -> dict:
         """Retrieves the entries of the specified glossary and returns them as
@@ -925,6 +975,8 @@ class Translator:
         :return: dictionary of glossary entries.
         :raises GlossaryNotFoundException: If no glossary with given ID is
             found.
+        :raises DeepLException: If the glossary could not be retrieved
+            in the right format.
         """
         if isinstance(glossary, GlossaryInfo):
             glossary_id = glossary.glossary_id
@@ -937,6 +989,11 @@ class Translator:
             headers={"Accept": "text/tab-separated-values"},
         )
         self._raise_for_status(status, content, json, glossary=True)
+        if not isinstance(content, str):
+            raise DeepLException(
+                "Could not get the glossary content as a string",
+                http_status_code=status,
+            )
         return util.convert_tsv_to_dict(content)
 
     def delete_glossary(self, glossary: Union[str, GlossaryInfo]) -> None:

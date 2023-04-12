@@ -49,10 +49,10 @@ def log_info(message, **kwargs):
     logger.info(text)
 
 
-def get_int_safe(d: dict, key: str) -> Optional[int]:
+def get_int_safe(d: Optional[dict], key: str) -> Optional[int]:
     """Returns value in dictionary with given key as int, or None."""
     try:
-        return int(d.get(key))
+        return int(d.get(key) if d else None)  # type: ignore[arg-type]
     except (TypeError, ValueError):
         return None
 

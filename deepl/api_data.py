@@ -197,7 +197,7 @@ class Usage:
     """
 
     class Detail:
-        def __init__(self, json: dict, prefix: str):
+        def __init__(self, json: Optional[dict], prefix: str):
             self._count = util.get_int_safe(json, f"{prefix}_count")
             self._limit = util.get_int_safe(json, f"{prefix}_limit")
 
@@ -238,7 +238,7 @@ class Usage:
         def __str__(self) -> str:
             return f"{self.count} of {self.limit}" if self.valid else "Unknown"
 
-    def __init__(self, json: dict):
+    def __init__(self, json: Optional[dict]):
         self._character = self.Detail(json, "character")
         self._document = self.Detail(json, "document")
         self._team_document = self.Detail(json, "team_document")

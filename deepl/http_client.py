@@ -163,7 +163,7 @@ class HttpClient:
         request = self._prepare_request(
             method, url, data, json, headers, **kwargs
         )
-        return self._internal_request(request, stream, stream=stream)
+        return self._internal_request(request, stream)
 
     def _internal_request(
         self,
