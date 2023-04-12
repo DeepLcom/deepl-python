@@ -548,20 +548,23 @@ class Translator:
 
         json = None
         if isinstance(content, str):
+            content_str = content
             try:
                 json = json_module.loads(content)
             except json_module.JSONDecodeError:
                 pass
+        else:
+            content_str = content.text
 
         util.log_info("DeepL API response", url=url, status_code=status_code)
-        util.log_debug("Response details", content=content)
+        util.log_debug("Response details", content=content_str)
 
         return status_code, content, json
 
     def _raise_for_status(
         self,
         status_code: int,
-        content: str,
+        content: Union[str, requests.Response],
         json: Optional[dict],
         glossary: bool = False,
         downloading_document: bool = False,
@@ -624,9 +627,10 @@ class Translator:
                 if status_code in http.client.responses
                 else "Unknown"
             )
+            content_str = content if isinstance(content, str) else content.text
             raise DeepLException(
                 f"Unexpected status code: {status_code} {status_name}, "
-                f"content: {content}.",
+                f"content: {content_str}.",
                 should_retry=False,
                 http_status_code=status_code,
             )
