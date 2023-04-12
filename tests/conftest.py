@@ -27,11 +27,11 @@ import uuid
 #  - using a real server with different IP (e.g. for testing)
 #      - user needs to configure their auth_key and server_url
 class Config(BaseSettings):
-    auth_key: str = None
-    server_url: str = None
-    mock_server_port: int = None
-    proxy_url: str = None
-    mock_proxy_server_port: int = None
+    auth_key: Optional[str] = None
+    server_url: Optional[str] = None
+    mock_server_port: Optional[int] = None
+    proxy_url: Optional[str] = None
+    mock_proxy_server_port: Optional[int] = None
 
     class Config:
         env_prefix = "DEEPL_"
