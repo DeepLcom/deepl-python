@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Removed `CHANGELOG.md` and `SECURITY.md` from the python package. The `LICENSE` file is no longer installed, but still included in package tarball and wheel files.
 * Thanks to [TurtleWilly](https://github.com/TurtleWilly) for the report in [#66](https://github.com/DeepLcom/deepl-python/issues/66).
 * Fix a dependency error in our CI by updating to a higher poetry version in most cases.
+* Fix getUsage request to be a HTTP GET request, not POST.
 
 
 ## [1.14.0] - 2023-02-21

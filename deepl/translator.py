@@ -1182,7 +1182,7 @@ class Translator:
 
     def get_usage(self) -> Usage:
         """Requests the current API usage."""
-        status, content, json = self._api_call("v2/usage")
+        status, content, json = self._api_call("v2/usage", method="GET")
 
         self._raise_for_status(status, content, json)
 
