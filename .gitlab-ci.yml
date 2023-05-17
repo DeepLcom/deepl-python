@@ -44,10 +44,17 @@ before_script:
   - python3 -m venv .venv
   - source .venv/bin/activate
   - pip install --upgrade pip
-  # Stick to Poetry 1.1.15, because with Poetry 1.2.0 there is a build issue on Python 3.6:
+  # For py3.6, stick to Poetry 1.1.15, because with Poetry 1.2.0 there is a build issue on Python 3.6:
   # "pydantic-1.9.0-cp36-cp36m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl is not a supported wheel on this platform."
   # Note: Poetry and the project dependencies should also be installed in separate virtual-envs (that is not done here)
-  - pip install poetry==1.1.15
+  - > 
+    if [[ ! -z "${USE_OLD_POETRY_VERSION}" ]]; then
+      echo "Installing old poetry version"
+      pip install poetry==1.1.15
+    else
+      echo "Installing newer poetry version"
+      pip install poetry==1.4.2
+    fi
   - poetry --version
   - poetry install -vv -E keyring
 
@@ -120,6 +127,7 @@ package:
       - DOCKER_IMAGE: "python:3.11"
       - DOCKER_IMAGE: "python:3.6"
         USE_MOCK_SERVER: "use mock server"
+        USE_OLD_POETRY_VERSION: "use old poetry version"
       - DOCKER_IMAGE: "python:3.7"
         USE_MOCK_SERVER: "use mock server"
       - DOCKER_IMAGE: "python:3.8"
@@ -133,6 +141,7 @@ package:
       - DOCKER_IMAGE: "python:3.6"
         EXTRA_POETRY_ADD_ARGUMENT: "requests@2.0"
         USE_MOCK_SERVER: "use mock server"
+        USE_OLD_POETRY_VERSION: "use old poetry version"
       - DOCKER_IMAGE: "python:3.9"
         EXTRA_POETRY_ADD_ARGUMENT: "requests@2.0"
         USE_MOCK_SERVER: "use mock server"
