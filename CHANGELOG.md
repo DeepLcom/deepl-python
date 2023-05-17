@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Thanks to [TurtleWilly](https://github.com/TurtleWilly) for the report in [#66](https://github.com/DeepLcom/deepl-python/issues/66).
 * Fix a dependency error in our CI by updating to a higher poetry version in most cases.
 * Fix getUsage request to be a HTTP GET request, not POST.
+* Change document translation to poll the server every 5 seconds. This should greatly reduce observed document translation processing time.
 
 
 ## [1.14.0] - 2023-02-21
