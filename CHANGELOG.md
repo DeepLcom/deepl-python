@@ -5,10 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [Unreleased]
+## [1.15.0] - 2023-06-09
 ### Fixed
 * Removed `CHANGELOG.md` and `SECURITY.md` from the python package. The `LICENSE` file is no longer installed, but still included in package tarball and wheel files.
-* Thanks to [TurtleWilly](https://github.com/TurtleWilly) for the report in [#66](https://github.com/DeepLcom/deepl-python/issues/66).
+  * Thanks to [TurtleWilly](https://github.com/TurtleWilly) for the report in [#66](https://github.com/DeepLcom/deepl-python/issues/66).
 * Fix a dependency error in our CI by updating to a higher poetry version in most cases.
 * Fix getUsage request to be a HTTP GET request, not POST.
 * Change document translation to poll the server every 5 seconds. This should greatly reduce observed document translation processing time.
@@ -253,7 +253,8 @@ Version increased to avoid conflicts with old packages on PyPI.
 Initial version.
 
 
-[Unreleased]: https://github.com/DeepLcom/deepl-python/compare/v1.14.0...HEAD
+[Unreleased]: https://github.com/DeepLcom/deepl-python/compare/v1.15.0...HEAD
+[1.15.0]: https://github.com/DeepLcom/deepl-python/compare/v1.14.0...v1.15.0
 [1.14.0]: https://github.com/DeepLcom/deepl-python/compare/v1.13.0...v1.14.0
 [1.13.0]: https://github.com/DeepLcom/deepl-python/compare/v1.12.0...v1.13.0
 [1.12.0]: https://github.com/DeepLcom/deepl-python/compare/v1.11.0...v1.12.0
