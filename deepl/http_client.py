@@ -8,10 +8,12 @@ import http
 import platform
 import random
 import requests
+import traceback
 import time
 from functools import lru_cache
 from typing import Dict, Optional, Tuple, Union
 from .util import log_info
+from deepl import util
 
 
 user_agent = None
@@ -247,11 +249,17 @@ def _generate_user_agent(
     else:
         library_info_str = f"deepl-python/{version.VERSION}"
         if send_platform_info:
-            library_info_str += (
-                f" ({platform.platform()}) "
-                f"python/{platform.python_version()} "
-                f"requests/{requests.__version__}"
-            )
+            try:
+                library_info_str += (
+                    f" ({platform.platform()}) "
+                    f"python/{platform.python_version()} "
+                    f"requests/{requests.__version__}"
+                )
+            except Exception:
+                util.log_info(
+                    "Exception when querying platform information:\n"
+                    + traceback.format_exc()
+                )
     if app_info_name and app_info_version:
         library_info_str += f" {app_info_name}/{app_info_version}"
     return library_info_str

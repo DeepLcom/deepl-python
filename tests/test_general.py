@@ -168,6 +168,20 @@ def test_custom_user_agent_with_app_info(mock_send):
     deepl.http_client.user_agent = old_user_agent
 
 
+@patch("requests.adapters.HTTPAdapter.send")
+@patch("platform.platform")
+def test_user_agent_exception(platform_mock, mock_send):
+    mock_send.return_value = _build_test_response()
+    platform_mock.side_effect = OSError("mocked test exception")
+    translator = deepl.Translator(os.environ["DEEPL_AUTH_KEY"])
+    translator.translate_text(example_text["EN"], target_lang="DA")
+    ua_header = mock_send.call_args[0][0].headers["User-agent"]
+    assert "deepl-python" in ua_header
+    assert "requests/" not in ua_header
+    assert " python/" not in ua_header
+    assert "(" not in ua_header
+
+
 @needs_mock_proxy_server
 def test_proxy_usage(
     server,
