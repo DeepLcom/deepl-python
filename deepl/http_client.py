@@ -14,6 +14,8 @@ from functools import lru_cache
 from typing import Dict, Optional, Tuple, Union
 from .util import log_info
 from deepl import util
+from packaging import version as packaging_version_module
+import json as json_module
 
 
 user_agent = None
@@ -228,8 +230,15 @@ class HttpClient:
                     self._app_info_version,
                 ),
             )
+            if packaging_version_module.parse(
+                requests.__version__
+            ) >= packaging_version_module.parse("2.4.2"):
+                kwargs["json"] = json
+            elif json is not None:
+                data = json_module.dumps(json)
+                headers["Content-Type"] = "application/json"
             return requests.Request(
-                method, url, data=data, json=json, headers=headers, **kwargs
+                method, url, data=data, headers=headers, **kwargs
             ).prepare()
         except Exception as e:
             raise DeepLException(
