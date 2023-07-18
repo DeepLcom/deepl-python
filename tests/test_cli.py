@@ -140,17 +140,20 @@ def test_text(runner):
         ("--formality more", "'formality': 'more'"),
         ("--formality prefer_less", "'formality': 'prefer_less'"),
         ("--split-sentences 0", "'split_sentences': '0'"),
-        ("--preserve-formatting", "'preserve_formatting': '1'"),
+        ("--preserve-formatting", "'preserve_formatting': True"),
         ("--tag-handling xml", "'tag_handling': 'xml'"),
-        ("--outline-detection-off", "'outline_detection': '0'"),
-        ("--ignore-tags a,b --ignore-tags c", "'ignore_tags': 'a,b,c'"),
+        ("--outline-detection-off", "'outline_detection': False"),
+        (
+            "--ignore-tags a,b --ignore-tags c",
+            "'ignore_tags': ['a', 'b', 'c']",
+        ),
         (
             "--splitting-tags a,b --splitting-tags c",
-            "'splitting_tags': 'a,b,c'",
+            "'splitting_tags': ['a', 'b', 'c']",
         ),
         (
             "--non-splitting-tags a,b --non-splitting-tags c",
-            "'non_splitting_tags': 'a,b,c'",
+            "'non_splitting_tags': ['a', 'b', 'c']",
         ),
     ]
     for args, search_str in extra_options:
@@ -209,12 +212,14 @@ def test_text_tags(runner):
     )
     assert result.exit_code == 0, f"exit: {result.exit_code}\n {result.output}"
     # Check ignore_tags parameter is sent in HTTP request
-    regex = re.compile("Request details.*'ignore_tags': 'a,b,c,d'")
+    regex = re.compile(
+        "Request details.*'ignore_tags': \\['a', 'b', 'c', 'd']"
+    )
     assert any(
         regex.match(line) is not None for line in result.output.split("\n")
     ), f"output:\n{result.output}"
     # Check splitting_tags parameter is sent in HTTP request
-    regex = re.compile("Request details.*'splitting_tags': 'split'")
+    regex = re.compile("Request details.*'splitting_tags': \\['split']")
     assert any(
         regex.match(line) is not None for line in result.output.split("\n")
     ), f"output:\n{result.output}"

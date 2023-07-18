@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## Unreleased
+### Changed
+* DeepL API calls now send requests with JSON-encoded bodies where possible.
 ### Fixed
 * Catch failures while constructing the user agent string.
 

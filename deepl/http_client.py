@@ -97,6 +97,7 @@ class HttpClient:
         method: str,
         url: str,
         data: Optional[dict],
+        json: Optional[dict],
         headers: dict,
         stream: bool = False,
         **kwargs,
@@ -117,7 +118,7 @@ class HttpClient:
                 ),
             )
             request = requests.Request(
-                method, url, data=data, headers=headers, **kwargs
+                method, url, data=data, json=json, headers=headers, **kwargs
             ).prepare()
         except Exception as e:
             raise DeepLException(
@@ -160,6 +161,7 @@ class HttpClient:
         method: str,
         url: str,
         data: Optional[dict],
+        json: Optional[dict],
         headers: dict,
         stream: bool = False,
         **kwargs,
@@ -182,7 +184,7 @@ class HttpClient:
                 ),
             )
             request = requests.Request(
-                method, url, data=data, headers=headers, **kwargs
+                method, url, data=data, json=json, headers=headers, **kwargs
             ).prepare()
         except Exception as e:
             raise DeepLException(

@@ -511,6 +511,7 @@ class Translator:
         *,
         method: str = "POST",
         data: Optional[dict] = None,
+        json: Optional[dict] = None,
         stream: bool = False,
         headers: Optional[dict] = None,
         **kwargs,
@@ -519,12 +520,15 @@ class Translator:
         Makes a request to the API, and returns response as status code,
         content and JSON object.
         """
+        if data is not None and json is not None:
+            raise ValueError("cannot accept both json and data")
+
         if data is None:
             data = {}
         url = urllib.parse.urljoin(self._server_url, url)
 
         util.log_info("Request to DeepL API", method=method, url=url)
-        util.log_debug("Request details", data=data)
+        util.log_debug("Request details", data=data, json=json)
 
         if headers is None:
             headers = dict()
@@ -536,6 +540,7 @@ class Translator:
             method,
             url,
             data=data,
+            json=json,
             stream=stream,
             headers=headers,
             **kwargs,
@@ -703,7 +708,7 @@ class Translator:
         }
 
         status, content, json = self._api_call(
-            "v2/glossaries", data=request_data
+            "v2/glossaries", json=request_data
         )
         self._raise_for_status(status, content, json, glossary=True)
         return GlossaryInfo.from_json(json)
@@ -777,9 +782,11 @@ class Translator:
         if isinstance(text, str):
             if len(text) == 0:
                 raise ValueError("text must not be empty")
+            text = [text]
             multi_input = False
         elif hasattr(text, "__iter__"):
             multi_input = True
+            text = list(text)
         else:
             raise TypeError(
                 "text parameter must be a string or an iterable of strings"
@@ -796,22 +803,20 @@ class Translator:
         if split_sentences is not None:
             request_data["split_sentences"] = str(split_sentences)
         if preserve_formatting is not None:
-            request_data["preserve_formatting"] = (
-                "1" if preserve_formatting else "0"
-            )
+            request_data["preserve_formatting"] = bool(preserve_formatting)
         if tag_handling is not None:
             request_data["tag_handling"] = tag_handling
         if outline_detection is not None:
-            request_data["outline_detection"] = (
-                "1" if outline_detection else "0"
-            )
+            request_data["outline_detection"] = bool(outline_detection)
 
-        def join_tags(tag_argument: Union[str, Iterable[str]]) -> str:
-            return (
-                tag_argument
-                if isinstance(tag_argument, str)
-                else ",".join(tag_argument)
-            )
+        def join_tags(tag_argument: Union[str, Iterable[str]]) -> List[str]:
+            if isinstance(tag_argument, str):
+                tag_argument = [tag_argument]
+            return [
+                tag
+                for arg_string in tag_argument
+                for tag in arg_string.split(",")
+            ]
 
         if non_splitting_tags is not None:
             request_data["non_splitting_tags"] = join_tags(non_splitting_tags)
@@ -821,7 +826,7 @@ class Translator:
             request_data["ignore_tags"] = join_tags(ignore_tags)
 
         status, content, json = self._api_call(
-            "v2/translate", data=request_data
+            "v2/translate", json=request_data
         )
 
         self._raise_for_status(status, content, json)
@@ -1051,7 +1056,7 @@ class Translator:
         data = {"document_key": handle.document_key}
         url = f"v2/document/{handle.document_id}"
 
-        status, content, json = self._api_call(url, data=data)
+        status, content, json = self._api_call(url, json=data)
 
         self._raise_for_status(status, content, json)
 
@@ -1113,7 +1118,7 @@ class Translator:
         url = f"v2/document/{handle.document_id}/result"
 
         status_code, response, json = self._api_call(
-            url, data=data, stream=True
+            url, json=data, stream=True
         )
 
         self._raise_for_status(
