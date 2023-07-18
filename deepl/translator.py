@@ -1135,7 +1135,7 @@ class Translator:
             parameter will be removed in a future version.
         :return: List of supported source languages.
         """
-        status, content, json = self._api_call("v2/languages")
+        status, content, json = self._api_call("v2/languages", method="GET")
         self._raise_for_status(status, content, json)
         return [
             Language(
@@ -1154,7 +1154,9 @@ class Translator:
         :return: List of supported target languages.
         """
         data = {"type": "target"}
-        status, content, json = self._api_call("v2/languages", data=data)
+        status, content, json = self._api_call(
+            "v2/languages", method="GET", data=data
+        )
         self._raise_for_status(status, content, json)
         return [
             Language(
