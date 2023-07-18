@@ -106,24 +106,9 @@ class HttpClient:
 
         Return and exceptions are the same as function request()."""
         backoff = _BackoffTimer()
-
-        try:
-            headers.setdefault(
-                "User-Agent",
-                _generate_user_agent(
-                    user_agent,
-                    self._send_platform_info,
-                    self._app_info_name,
-                    self._app_info_version,
-                ),
-            )
-            request = requests.Request(
-                method, url, data=data, json=json, headers=headers, **kwargs
-            ).prepare()
-        except Exception as e:
-            raise DeepLException(
-                f"Error occurred while preparing request: {e}"
-            ) from e
+        request = self._prepare_request(
+            method, url, data, json, headers, **kwargs
+        )
 
         while True:
             response: Optional[Tuple[int, Union[str, requests.Response]]]
@@ -173,23 +158,9 @@ class HttpClient:
 
         If no response is received will raise ConnectionException."""
 
-        try:
-            headers.setdefault(
-                "User-Agent",
-                _generate_user_agent(
-                    user_agent,
-                    self._send_platform_info,
-                    self._app_info_name,
-                    self._app_info_version,
-                ),
-            )
-            request = requests.Request(
-                method, url, data=data, json=json, headers=headers, **kwargs
-            ).prepare()
-        except Exception as e:
-            raise DeepLException(
-                f"Error occurred while preparing request: {e}"
-            ) from e
+        request = self._prepare_request(
+            method, url, data, json, headers, **kwargs
+        )
         return self._internal_request(request, stream, stream=stream)
 
     def _internal_request(
@@ -237,6 +208,33 @@ class HttpClient:
         return status_code == http.HTTPStatus.TOO_MANY_REQUESTS or (
             status_code >= http.HTTPStatus.INTERNAL_SERVER_ERROR
         )
+
+    def _prepare_request(
+        self,
+        method: str,
+        url: str,
+        data: Optional[dict],
+        json: Optional[dict],
+        headers: dict,
+        **kwargs,
+    ) -> requests.PreparedRequest:
+        try:
+            headers.setdefault(
+                "User-Agent",
+                _generate_user_agent(
+                    user_agent,
+                    self._send_platform_info,
+                    self._app_info_name,
+                    self._app_info_version,
+                ),
+            )
+            return requests.Request(
+                method, url, data=data, json=json, headers=headers, **kwargs
+            ).prepare()
+        except Exception as e:
+            raise DeepLException(
+                f"Error occurred while preparing request: {e}"
+            ) from e
 
 
 @lru_cache(maxsize=4)
