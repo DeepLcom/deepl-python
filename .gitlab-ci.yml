@@ -6,6 +6,7 @@ include:
   - project: 'deepl/ops/ci-cd-infrastructure/gitlab-ci-lib'
     file:
       - '/templates/.buildkit.yml'
+      - '/templates/.secret-detection.yml'
 
 # Global --------------------------
 
@@ -106,6 +107,15 @@ license_check_manual:
   extends: .license_check_base
   rules:
     - if: $CI_PIPELINE_SOURCE != "schedule"
+
+secret_detection:
+  extends: .secret-detection
+  stage: check
+  image: !reference [.secret-detection, image]
+  before_script:
+    - echo "overriding default before_script..."
+  rules:
+    - if: $CI_MERGE_REQUEST_ID
 
 # stage: build ----------------------
 
