@@ -10,7 +10,7 @@ include:
 
 # Global --------------------------
 
-image: ${CI_REGISTRY_IMAGE}/python:3.11
+image: python:3.11
 
 variables:
   PIP_CACHE_DIR: "${CI_PROJECT_DIR}/.cache/pip"
@@ -174,7 +174,7 @@ package:
         # Set minimum possible requests and urllib3 versions to work with Python 3.11
         EXTRA_POETRY_ADD_ARGUMENT: "requests@2.20 urllib3@1.23"
         USE_MOCK_SERVER: "use mock server"
-  image: ${CI_REGISTRY_IMAGE}/${DOCKER_IMAGE}
+  image: ${DOCKER_IMAGE}
   script:
     - >
       if [[ ! -z "${EXTRA_POETRY_ADD_ARGUMENT}" ]]; then
