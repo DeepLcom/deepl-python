@@ -46,6 +46,11 @@ The library is tested with Python versions 3.6 to 3.11.
 The `requests` module is used to perform HTTP requests; the minimum is version
 2.0.
 
+Starting in 2024, we will drop support for older Python versions that have
+reached official end-of-life. You can find the Python versions and support
+timelines [here][python-version-list].
+To continue using this library, you should update to Python 3.8+.
+
 ## Usage
 
 Import the package and construct a `Translator`. The first argument is a string
@@ -610,6 +615,8 @@ environment variables defined referring to the mock-server.
 [pypi-project]: https://pypi.org/project/deepl/
 
 [pro-account]: https://www.deepl.com/pro-account/?utm_source=github&utm_medium=github-python-readme
+
+[python-version-list]: https://devguide.python.org/versions/
 
 [requests-proxy-docs]: https://docs.python-requests.org/en/latest/user/advanced/#proxies
 

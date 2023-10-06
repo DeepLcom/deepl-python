@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Changed
+* Added notice in Readme that starting in 2024 the library will drop support for
+  Python versions that are officially end-of-life.
 * DeepL API calls now send requests with JSON-encoded bodies where possible.
 ### Fixed
 * Catch failures while constructing the user agent string.
