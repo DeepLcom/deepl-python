@@ -314,6 +314,7 @@ class Language:
         """Removes the regional variant from a language, e.g. EN-US gives EN"""
         return str(language).upper()[0:2]
 
+    ARABIC = "ar"
     BULGARIAN = "bg"
     CZECH = "cs"
     DANISH = "da"

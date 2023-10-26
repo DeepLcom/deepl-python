@@ -377,6 +377,7 @@ needs_real_server = pytest.mark.skipif(
 
 
 example_text = {
+    "AR": "شعاع البروتون",
     "BG": "протонен лъч",
     "CS": "protonový paprsek",
     "DA": "protonstråle",
