@@ -541,7 +541,7 @@ def main(args=None, prog_name=None):
         if auth_key is None:
             raise Exception(
                 f"Please provide authentication key via the {env_auth_key} "
-                "environment variable or --auth_key argument or via "
+                "environment variable or --auth-key argument or via "
                 f"{keyring_key_name} in {keyring_key_folder} in keyring"
             )
 
