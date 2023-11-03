@@ -284,6 +284,12 @@ def get_parser(prog_name):
     )
     add_common_arguments(parser_text)
     parser_text.add_argument(
+        "--context",
+        type=str,
+        help="additional contextual text to improve translations, see API docs"
+        " for information",
+    )
+    parser_text.add_argument(
         "--split-sentences",
         type=str,
         choices=[enum.value for enum in deepl.SplitSentences],

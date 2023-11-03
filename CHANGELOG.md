@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## [Unreleased]
+### Added
+* Add optional `context` parameter for text translation, that specifies
+  additional context to influence translations, that is not translated itself.
 ### Changed
 * Added notice in Readme that starting in 2024 the library will drop support for
   Python versions that are officially end-of-life.

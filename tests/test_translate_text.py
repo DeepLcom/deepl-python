@@ -236,6 +236,20 @@ def test_preserve_formatting(translator):
     )
 
 
+def test_context(translator):
+    # In German, "scharf" can mean:
+    # - spicy/hot when referring to food, or
+    # - sharp when referring to other objects such as a knife (Messer).
+    text = "Das ist scharf!"
+    _ = translator.translate_text(text, target_lang="en-US")
+    # Result: "That is hot!"
+
+    _ = translator.translate_text(
+        text, target_lang="en-US", context="Das ist ein Messer"
+    )
+    # Result: "That is sharp!"
+
+
 def test_split_sentences_basic(translator):
     text = """If the implementation is hard to explain, it's a bad idea.
         If the implementation is easy to explain, it may be a good idea."""

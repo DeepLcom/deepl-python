@@ -154,6 +154,11 @@ arguments are:
 - `glossary`: specifies a glossary to use with translation, either as a string
   containing the glossary ID, or a `GlossaryInfo` as returned by
   `get_glossary()`.
+- `context`: specifies additional context to influence translations, that is not
+  translated itself. Note this is an **alpha feature**: it may be deprecated at
+  any time, or incur charges if it becomes generally available.
+  See the [API documentation][api-docs-context-param] for more information and
+  example usage.
 - `tag_handling`: type of tags to parse before translation, options are `'html'`
   and `'xml'`.
 
@@ -599,6 +604,8 @@ environment variables defined referring to the mock-server.
 [api-docs-csv-format]: https://www.deepl.com/docs-api/managing-glossaries/supported-glossary-formats/?utm_source=github&utm_medium=github-python-readme
 
 [api-docs-xml-handling]: https://www.deepl.com/docs-api/handling-xml/?utm_source=github&utm_medium=github-python-readme
+
+[api-docs-context-param]: https://www.deepl.com/docs-api/translating-text/?utm_source=github&utm_medium=github-python-readme
 
 [api-docs-lang-list]: https://www.deepl.com/docs-api/translating-text/?utm_source=github&utm_medium=github-python-readme
 

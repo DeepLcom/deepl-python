@@ -337,6 +337,7 @@ class Translator:
         *,
         source_lang: Union[str, Language, None] = None,
         target_lang: Union[str, Language],
+        context: Optional[str] = None,
         split_sentences: Union[str, SplitSentences, None] = None,
         preserve_formatting: Optional[bool] = None,
         formality: Union[str, Formality, None] = None,
@@ -357,6 +358,11 @@ class Translator:
             language. If a glossary is used, source_lang must be specified.
         :param target_lang: language code to translate text into, for example
             "DE", "EN-US", "FR".
+        :param context: (Optional) Additional contextual text to influence
+            translations, that is not translated itself. Note: this is an alpha
+            feature: it may be deprecated at any time, or incur charges if it
+            becomes generally available. See the API documentation for more
+            information and example usage.
         :param split_sentences: (Optional) Controls how the translation engine
             should split input into sentences before translation, see
             :class:`SplitSentences`.
@@ -406,6 +412,8 @@ class Translator:
         )
         request_data["text"] = text
 
+        if context is not None:
+            request_data["context"] = context
         if split_sentences is not None:
             request_data["split_sentences"] = str(split_sentences)
         if preserve_formatting is not None:
