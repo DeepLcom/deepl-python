@@ -5,7 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [Unreleased]
+## [1.16.1] - 2023-11-07
 ### Fixed
 * Fixed typo in error message when no auth key is provided.
 * Removed dependency on `packaging` by replacing version comparison.
@@ -273,7 +273,7 @@ Version increased to avoid conflicts with old packages on PyPI.
 Initial version.
 
 
-[Unreleased]: https://github.com/DeepLcom/deepl-python/compare/v1.16.0...HEAD
+[1.16.1]: https://github.com/DeepLcom/deepl-python/compare/v1.16.0...v1.16.1
 [1.16.0]: https://github.com/DeepLcom/deepl-python/compare/v1.15.0...v1.16.0
 [1.15.0]: https://github.com/DeepLcom/deepl-python/compare/v1.14.0...v1.15.0
 [1.14.0]: https://github.com/DeepLcom/deepl-python/compare/v1.13.0...v1.14.0
