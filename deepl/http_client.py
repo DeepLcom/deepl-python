@@ -14,7 +14,6 @@ from functools import lru_cache
 from typing import Dict, Optional, Tuple, Union
 from .util import log_info
 from deepl import util
-from packaging import version as packaging_version_module
 import json as json_module
 
 
@@ -230,9 +229,9 @@ class HttpClient:
                     self._app_info_version,
                 ),
             )
-            if packaging_version_module.parse(
-                requests.__version__
-            ) >= packaging_version_module.parse("2.4.2"):
+
+            # TODO review when minimum Python version is raised
+            if tuple(map(int, requests.__version__.split("."))) >= (2, 4, 2):
                 kwargs["json"] = json
             elif json is not None:
                 # This is fine, see official docs

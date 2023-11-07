@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Fixed
 * Fixed typo in error message when no auth key is provided.
+* Removed dependency on `packaging` by replacing version comparison.
 
 
 ## [1.16.0] - 2023-11-03
