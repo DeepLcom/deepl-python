@@ -237,6 +237,31 @@ mustache_example_manual:
   rules:
     - if: $CI_PIPELINE_SOURCE != "schedule"
 
+.basic_usage_example_base:
+  stage: test
+  extends: .test
+  script:
+    - poetry build --verbose --no-interaction
+    - cd examples/basic_usage
+    - python3 -m venv .examplevenv
+    - source .examplevenv/bin/activate
+    - pip install ../../dist/deepl-*.tar.gz
+    - set -o pipefail
+    - python . 2>&1 | tee basic_usage_result.txt
+    - grep -q "Success" basic_usage_result.txt
+
+basic_usage_example_scheduled:
+  extends: .basic_usage_example_base
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+  retry: 2
+
+basic_usage_example_manual:
+  stage: test
+  extends: .basic_usage_example_base
+  rules:
+    - if: $CI_PIPELINE_SOURCE != "schedule"
+
 # stage: publish -------------------------
 
 pypi upload:
