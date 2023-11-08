@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 * Added basic usage example of the library
+### Fixed
+* Fixed typechecking errors when using `mypy`'s `strict` mode
+  * Thanks to [derlikh-smart](https://github.com/derlikh-smart) and [vad](https://github.com/vad) 
+    for the report in [#82](https://github.com/DeepLcom/deepl-python/issues/82)
 
 
 ## [1.16.1] - 2023-11-07

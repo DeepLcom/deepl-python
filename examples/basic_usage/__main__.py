@@ -10,7 +10,7 @@ env_auth_key = "DEEPL_AUTH_KEY"
 env_server_url = "DEEPL_SERVER_URL"
 
 
-def main():
+def main() -> None:
     auth_key = os.getenv(env_auth_key)
     server_url = os.getenv(env_server_url)
     if auth_key is None:
@@ -20,22 +20,25 @@ def main():
         )
 
     # Create a Translator object, and call get_usage() to validate connection
-    translator = deepl.Translator(auth_key, server_url=server_url)
-    translator.get_usage()
+    translator: deepl.Translator = deepl.Translator(
+        auth_key, server_url=server_url
+    )
+    u: deepl.Usage = translator.get_usage()
+    u.any_limit_exceeded
 
     # Use most translation features of the library
-    translator.translate_text(
+    _ = translator.translate_text(
         ["I am an example sentence", "I am another sentence"],
         source_lang="EN",
         target_lang="FR",
         formality=deepl.Formality.DEFAULT,
         tag_handling=None,
     )
-    ginfo = translator.create_glossary(
+    ginfo: deepl.GlossaryInfo = translator.create_glossary(
         "Test Glossary", "DE", "FR", {"Hallo": "Bonjour"}
     )
     with io.BytesIO() as output_file:
-        translator.translate_document(
+        doc_status: deepl.DocumentStatus = translator.translate_document(
             "My example document",
             output_file,
             source_lang="DE",
@@ -43,7 +46,8 @@ def main():
             filename="example.txt",
             glossary=ginfo,
         )
-    translator.translate_text_with_glossary(
+        doc_status.done
+    _ = translator.translate_text_with_glossary(
         ["Ich bin ein Beispielsatz.", "Ich bin noch ein Satz."], glossary=ginfo
     )
 

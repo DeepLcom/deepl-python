@@ -249,6 +249,8 @@ mustache_example_manual:
     - set -o pipefail
     - python . 2>&1 | tee basic_usage_result.txt
     - grep -q "Success" basic_usage_result.txt
+    - pip install mypy
+    - mypy .
 
 basic_usage_example_scheduled:
   extends: .basic_usage_example_base
