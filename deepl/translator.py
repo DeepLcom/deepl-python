@@ -540,6 +540,11 @@ class Translator:
             translation. The exception includes information about the document
             request.
         """
+        # Determine output_format from output path
+        in_ext = pathlib.PurePath(input_path).suffix.lower()
+        out_ext = pathlib.PurePath(output_path).suffix.lower()
+        output_format = None if in_ext == out_ext else out_ext[1:]
+
         with open(input_path, "rb") as in_file:
             with open(output_path, "wb") as out_file:
                 try:
@@ -550,6 +555,7 @@ class Translator:
                         source_lang=source_lang,
                         formality=formality,
                         glossary=glossary,
+                        output_format=output_format,
                     )
                 except Exception as e:
                     out_file.close()
@@ -566,6 +572,7 @@ class Translator:
         formality: Union[str, Formality] = Formality.DEFAULT,
         glossary: Union[str, GlossaryInfo, None] = None,
         filename: Optional[str] = None,
+        output_format: Optional[str] = None,
     ) -> DocumentStatus:
         """Upload document, translate it into the target language, and download
         result.
@@ -585,6 +592,8 @@ class Translator:
             translation. Must match specified source_lang and target_lang.
         :param filename: (Optional) Filename including extension, only required
             if uploading string or bytes containing file content.
+        :param output_format: (Optional) Desired output file extension, if
+            it differs from the input file format.
         :return: DocumentStatus when document translation completed, this
             allows the number of billed characters to be queried.
 
@@ -599,6 +608,7 @@ class Translator:
             formality=formality,
             glossary=glossary,
             filename=filename,
+            output_format=output_format,
         )
 
         try:
@@ -625,6 +635,7 @@ class Translator:
         formality: Union[str, Formality, None] = None,
         glossary: Union[str, GlossaryInfo, None] = None,
         filename: Optional[str] = None,
+        output_format: Optional[str] = None,
     ) -> DocumentHandle:
         """Upload document to be translated and return handle associated with
         request.
@@ -642,12 +653,16 @@ class Translator:
             translation. Must match specified source_lang and target_lang.
         :param filename: (Optional) Filename including extension, only required
             if uploading string or bytes containing file content.
+        :param output_format: (Optional) Desired output file extension, if
+            it differs from the input file format.
         :return: DocumentHandle with ID and key identifying document.
         """
 
         request_data = self._check_language_and_formality(
             source_lang, target_lang, formality, glossary
         )
+        if output_format:
+            request_data["output_format"] = output_format
 
         files: Dict[str, Any] = {}
         if isinstance(input_document, (str, bytes)):

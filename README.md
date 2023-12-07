@@ -244,6 +244,10 @@ arguments, the available `translate_document()` and
 
 - `formality`: same as in [Text translation options](#text-translation-options).
 - `glossary`: same as in [Text translation options](#text-translation-options).
+- `output_format`: (`translate_document()` only)
+  file extension of desired format of translated file, for example: `'pdf'`. If
+  unspecified, by default the translated file will be in the same format as the
+  input file. 
 
 ### Glossaries
 

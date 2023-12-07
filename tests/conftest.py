@@ -323,25 +323,36 @@ def example_document_translation():
 
 
 @pytest.fixture
-def example_large_document_path(tmpdir):
-    tmpdir = pathlib.Path(tmpdir)
-    path = tmpdir / "input" / "example_document.txt"
-    path.parent.mkdir()
-    path.write_text((example_text["EN"] + "\n") * 1000)
-    return path
-
-
-@pytest.fixture
 def example_large_document_translation():
     return (example_text["DE"] + "\n") * 1000
 
 
 @pytest.fixture
-def output_document_path(tmpdir):
+def input_dir_path(tmpdir):
     tmpdir = pathlib.Path(tmpdir)
-    path = tmpdir / "output" / "example_document.txt"
-    path.parent.mkdir()
+    path = tmpdir / "input"
+    path.mkdir(exist_ok=True)
     return path
+
+
+@pytest.fixture
+def output_dir_path(tmpdir):
+    tmpdir = pathlib.Path(tmpdir)
+    path = tmpdir / "output"
+    path.mkdir(exist_ok=True)
+    return path
+
+
+@pytest.fixture
+def example_large_document_path(input_dir_path):
+    path = input_dir_path / "example_document.txt"
+    path.write_text((example_text["EN"] + "\n") * 1000)
+    return path
+
+
+@pytest.fixture
+def output_document_path(output_dir_path):
+    return output_dir_path / "example_document.txt"
 
 
 # Decorate test functions with "@needs_mock_server" to skip them if a real

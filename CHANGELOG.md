@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+* Added `output_format` parameter for document upload function, that indicates
+  the file extension of the desired file format for the translated document. 
 * Added basic usage example of the library
 ### Fixed
 * Fixed typechecking errors when using `mypy`'s `strict` mode

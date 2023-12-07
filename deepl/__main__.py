@@ -8,7 +8,7 @@ import logging
 import os
 import pathlib
 import sys
-from typing import List
+from typing import List, Optional
 from deepl.util import _optional_import
 
 # Program name for integration with click.testing
@@ -51,7 +51,11 @@ def action_languages(translator: deepl.Translator, glossary: bool):
 
 
 def action_document(
-    translator: deepl.Translator, file: List[str], dest: str, **kwargs
+    translator: deepl.Translator,
+    file: List[str],
+    dest: str,
+    output_format: Optional[str],
+    **kwargs,
 ):
     """Action function for the document command."""
     if not os.path.exists(dest):
@@ -60,7 +64,12 @@ def action_document(
         raise Exception("Destination already exists, and is not a directory")
 
     for this_file in file:
-        output_path = os.path.join(dest, os.path.basename(this_file))
+        outfile_name = (
+            this_file
+            if not output_format
+            else (os.path.splitext(this_file)[0] + "." + output_format)
+        )
+        output_path = os.path.join(dest, os.path.basename(outfile_name))
         translator.translate_document_from_filepath(
             this_file, output_path, **kwargs
         )
@@ -369,6 +378,9 @@ def get_parser(prog_name):
     add_common_arguments(parser_document)
     parser_document.add_argument(
         "file", nargs="+", help="file(s) to be translated."
+    )
+    parser_document.add_argument(
+        "--output-format", type=str, default=None, help="output file extension"
     )
     parser_document.add_argument(
         "dest", help="destination directory to store translated files."

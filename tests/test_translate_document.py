@@ -125,6 +125,25 @@ def test_translate_document_formality(
     assert "Wie geht es dir?" == output_document_path.read_text()
 
 
+@needs_mock_server
+def test_document_output_format(
+    translator,
+    example_document_path,
+    output_dir_path,
+):
+    # Mock server supports only TXT and HTML files, so translate TXT->HTML
+    example_document_path.write_text(example_text["EN"])
+    output_document_path = output_dir_path / "example.html"
+    translator.translate_document_from_filepath(
+        example_document_path,
+        output_document_path,
+        **default_lang_args,
+    )
+
+    output = output_document_path.read_text()
+    assert example_text["DE"] == output
+
+
 def test_document_failure_during_translation(
     translator, example_document_path, output_document_path
 ):
