@@ -30,6 +30,7 @@ from .translator import (  # noqa
     Translator,
     Usage,
 )
+from .translator_async import TranslatorAsync  # noqa
 
 from .util import (  # noqa
     auth_key_is_free_account,
