@@ -1,6 +1,7 @@
 # Copyright 2022-2024 DeepL SE (https://www.deepl.com)
 # Use of this source code is governed by an MIT
 # license that can be found in the LICENSE file.
+from abc import abstractmethod
 from functools import lru_cache
 
 from . import version
@@ -303,6 +304,68 @@ class TranslatorBase:
             app_info_version,
         )
 
+    @abstractmethod
+    def translate_text(
+        self,
+        text: Union[str, Iterable[str]],
+        *,
+        source_lang: Union[str, Language, None] = None,
+        target_lang: Union[str, Language],
+        context: Optional[str] = None,
+        split_sentences: Union[str, SplitSentences, None] = None,
+        preserve_formatting: Optional[bool] = None,
+        formality: Union[str, Formality, None] = None,
+        glossary: Union[str, GlossaryInfo, None] = None,
+        tag_handling: Optional[str] = None,
+        outline_detection: Optional[bool] = None,
+        non_splitting_tags: Union[str, List[str], None] = None,
+        splitting_tags: Union[str, List[str], None] = None,
+        ignore_tags: Union[str, List[str], None] = None,
+    ):
+        """Translate text(s) into the target language.
+
+        :param text: Text to translate.
+        :type text: UTF-8 :class:`str`; string sequence (list, tuple, iterator,
+            generator)
+        :param source_lang: (Optional) Language code of input text, for example
+            "DE", "EN", "FR". If omitted, DeepL will auto-detect the input
+            language. If a glossary is used, source_lang must be specified.
+        :param target_lang: language code to translate text into, for example
+            "DE", "EN-US", "FR".
+        :param context: (Optional) Additional contextual text to influence
+            translations, that is not translated itself. Note: this is an alpha
+            feature: it may be deprecated at any time, or incur charges if it
+            becomes generally available. See the API documentation for more
+            information and example usage.
+        :param split_sentences: (Optional) Controls how the translation engine
+            should split input into sentences before translation, see
+            :class:`SplitSentences`.
+        :param preserve_formatting: (Optional) Set to True to prevent the
+            translation engine from correcting some formatting aspects, and
+            instead leave the formatting unchanged.
+        :param formality: (Optional) Desired formality for translation, as
+            Formality enum, "less", "more", "prefer_less", "prefer_more", or
+            "default".
+        :param glossary: (Optional) glossary or glossary ID to use for
+            translation. Must match specified source_lang and target_lang.
+        :param tag_handling: (Optional) Type of tags to parse before
+            translation, only "xml" and "html" are currently available.
+        :param outline_detection: (Optional) Set to False to disable automatic
+            tag detection.
+        :param non_splitting_tags: (Optional) XML tags that should not split a
+            sentence.
+        :type non_splitting_tags: List of XML tags or comma-separated-list of
+            tags.
+        :param splitting_tags: (Optional) XML tags that should split a
+            sentence.
+        :type splitting_tags: List of XML tags or comma-separated-list of tags.
+        :param ignore_tags: (Optional) XML tags containing text that should not
+            be translated.
+        :type ignore_tags: List of XML tags or comma-separated-list of tags.
+        :return: List of TextResult objects containing results, unless input
+            text was one string, then a single TextResult object is returned.
+        """
+
     def _translate_text_pre(
         self,
         text: Union[str, Iterable[str]],
@@ -336,24 +399,24 @@ class TranslatorBase:
 
         request = self._prepare_http_request("v2/translate")
 
-        request.data = self._check_language_and_formality(
+        request.json = self._check_language_and_formality(
             source_lang,
             target_lang,
             formality,
             glossary,
         )
-        request.data["text"] = text
+        request.json["text"] = text
 
         if context is not None:
-            request.data["context"] = context
+            request.json["context"] = context
         if split_sentences is not None:
-            request.data["split_sentences"] = str(split_sentences)
+            request.json["split_sentences"] = str(split_sentences)
         if preserve_formatting is not None:
-            request.data["preserve_formatting"] = bool(preserve_formatting)
+            request.json["preserve_formatting"] = bool(preserve_formatting)
         if tag_handling is not None:
-            request.data["tag_handling"] = tag_handling
+            request.json["tag_handling"] = tag_handling
         if outline_detection is not None:
-            request.data["outline_detection"] = bool(outline_detection)
+            request.json["outline_detection"] = bool(outline_detection)
 
         def join_tags(tag_argument: Union[str, Iterable[str]]) -> List[str]:
             if isinstance(tag_argument, str):
@@ -365,11 +428,11 @@ class TranslatorBase:
             ]
 
         if non_splitting_tags is not None:
-            request.data["non_splitting_tags"] = join_tags(non_splitting_tags)
+            request.json["non_splitting_tags"] = join_tags(non_splitting_tags)
         if splitting_tags is not None:
-            request.data["splitting_tags"] = join_tags(splitting_tags)
+            request.json["splitting_tags"] = join_tags(splitting_tags)
         if ignore_tags is not None:
-            request.data["ignore_tags"] = join_tags(ignore_tags)
+            request.json["ignore_tags"] = join_tags(ignore_tags)
 
         context = BaseContext()
         context.multi_input = multi_input
@@ -391,6 +454,197 @@ class TranslatorBase:
         multi_input = context.multi_input
 
         return output if multi_input else output[0]
+
+    # TODO translate_document_upload
+    # TODO _translate_document_upload_pre
+    # TODO _translate_document_upload_post
+    # TODO translate_document_get_status
+    # TODO _translate_document_get_status_pre
+    # TODO _translate_document_get_status_post
+    # TODO translate_document_download
+    # TODO _translate_document_download_pre
+    # TODO _translate_document_download_post
+
+    @abstractmethod
+    def get_source_languages(self, skip_cache=False) -> List[Language]:
+        """Request the list of available source languages.
+
+        :param skip_cache: Deprecated, and now has no effect as the
+            corresponding internal functionality has been removed. This
+            parameter will be removed in a future version.
+        :return: List of supported source languages.
+        """
+
+    def _get_source_languages_pre(self) -> tuple[HttpRequest, BaseContext]:
+        return (
+            self._prepare_http_request("v2/languages", method="GET"),
+            BaseContext(),
+        )
+
+    def _get_source_languages_post(
+        self, response: HttpResponse, context: BaseContext
+    ) -> List[Language]:
+        self._raise_for_status(response, context)
+        json = response.json
+        languages = json if (json and isinstance(json, list)) else []
+        return [
+            Language(
+                language["language"],
+                language["name"],
+            )
+            for language in languages
+        ]
+
+    @abstractmethod
+    def get_target_languages(self, skip_cache=False) -> List[Language]:
+        """Request the list of available target languages.
+
+        :param skip_cache: Deprecated, and now has no effect as the
+            corresponding internal functionality has been removed. This
+            parameter will be removed in a future version.
+        :return: List of supported target languages.
+        """
+
+    def _get_target_languages_pre(self) -> tuple[HttpRequest, BaseContext]:
+        return (
+            self._prepare_http_request(
+                "v2/languages", method="GET", data={"type": "target"}
+            ),
+            BaseContext(),
+        )
+
+    def _get_target_languages_post(
+        self, response: HttpResponse, context: BaseContext
+    ) -> List[Language]:
+        self._raise_for_status(response, context)
+        json = response.json
+        languages = json if (json and isinstance(json, list)) else []
+        return [
+            Language(
+                language["language"],
+                language["name"],
+                language.get("supports_formality", None),
+            )
+            for language in languages
+        ]
+
+    @abstractmethod
+    def get_glossary_languages(self) -> List[GlossaryLanguagePair]:
+        """Request the list of language pairs supported for glossaries."""
+
+    def _get_glossary_languages_pre(self) -> tuple[HttpRequest, BaseContext]:
+        return (
+            self._prepare_http_request(
+                "v2/glossary-language-pairs", method="GET"
+            ),
+            BaseContext(),
+        )
+
+    def _get_glossary_languages_post(
+        self, response: HttpResponse, context: BaseContext
+    ) -> List[GlossaryLanguagePair]:
+        self._raise_for_status(response, context)
+        json = response.json
+
+        supported_languages = (
+            json.get("supported_languages", [])
+            if (json and isinstance(json, dict))
+            else []
+        )
+        return [
+            GlossaryLanguagePair(
+                language_pair["source_lang"], language_pair["target_lang"]
+            )
+            for language_pair in supported_languages
+        ]
+
+    @abstractmethod
+    def get_usage(self) -> Usage:
+        """Requests the current API usage."""
+
+    def _get_usage_pre(self) -> tuple[HttpRequest, BaseContext]:
+        return (
+            self._prepare_http_request("v2/usage", method="GET"),
+            BaseContext(),
+        )
+
+    def _get_usage_post(
+        self, response: HttpResponse, context: BaseContext
+    ) -> Usage:
+        self._raise_for_status(response, context)
+
+        json = response.json
+        if not isinstance(json, dict):
+            json = {}
+        return Usage(json)
+
+    @abstractmethod
+    def create_glossary(
+        self,
+        name: str,
+        source_lang: Union[str, Language],
+        target_lang: Union[str, Language],
+        entries: Dict[str, str],
+    ) -> GlossaryInfo:
+        """Creates a glossary with given name for the source and target
+        languages, containing the entries in dictionary. The glossary may be
+        used in the translate_text functions.
+
+        Only certain language pairs are supported. The available language pairs
+        can be queried using get_glossary_languages(). Glossaries are not
+        regional specific: a glossary with target language EN may be used to
+        translate texts into both EN-US and EN-GB.
+
+        This function requires the glossary entries to be provided as a
+        dictionary of source-target terms. To create a glossary from a CSV file
+        downloaded from the DeepL website, see create_glossary_from_csv().
+
+        :param name: user-defined name to attach to glossary.
+        :param source_lang: Language of source terms.
+        :param target_lang: Language of target terms.
+        :param entries: dictionary of terms to insert in glossary, with the
+            keys and values representing source and target terms respectively.
+        :return: GlossaryInfo containing information about created glossary.
+
+        :raises ValueError: If the glossary name is empty, or entries are
+            empty or invalid.
+        :raises DeepLException: If source and target language pair are not
+            supported for glossaries.
+        """
+
+    def _create_glossary_pre(
+        self,
+        name: str,
+        source_lang: Union[str, Language],
+        target_lang: Union[str, Language],
+        entries_format: str,
+        entries: Union[str, bytes],
+    ) -> tuple[HttpRequest, BaseContext]:
+        # glossaries are only supported for base language types
+        source_lang = Language.remove_regional_variant(source_lang)
+        target_lang = Language.remove_regional_variant(target_lang)
+
+        if not name:
+            raise ValueError("glossary name must not be empty")
+
+        request_data = {
+            "name": name,
+            "source_lang": source_lang,
+            "target_lang": target_lang,
+            "entries_format": entries_format,
+            "entries": entries,
+        }
+
+        return (
+            self._prepare_http_request("v2/glossaries", json=request_data),
+            BaseContext(),
+        )
+
+    def _create_glossary_post(
+        self, response: HttpResponse, context: BaseContext
+    ) -> GlossaryInfo:
+        self._raise_for_status(response, context)
+        return GlossaryInfo.from_json(response.json)
 
     def set_app_info(self, app_info_name: str, app_info_version: str):
         self._set_user_agent(app_info_name, app_info_version)

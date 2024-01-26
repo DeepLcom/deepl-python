@@ -131,12 +131,12 @@ def server(config):
     return Server()
 
 
-def _make_translator(server, auth_key=None, proxy=None):
+def _make_translator(server, auth_key=None, proxy=None, use_async=False):
     """Returns a deepl.Translator for the specified server test fixture.
     The server auth_key is used unless specifically overridden."""
     if auth_key is None:
         auth_key = server.auth_key
-    translator = deepl.Translator(
+    translator = (deepl.TranslatorAsync if use_async else deepl.Translator)(
         auth_key, server_url=server.server_url, proxy=proxy
     )
 
@@ -158,6 +158,13 @@ def translator(server):
 
 
 @pytest.fixture
+def async_translator(server):
+    """Returns a deepl.TranslatorAsync to use in all tests taking a parameter
+    'translator'."""
+    return _make_translator(server, use_async=True)
+
+
+@pytest.fixture
 def translator_with_random_auth_key(server):
     """Returns a deepl.Translator with randomized authentication key,
     for use in mock-server tests."""
@@ -170,6 +177,15 @@ def translator_with_random_auth_key_and_proxy(server):
     for use in mock-server tests."""
     return _make_translator(
         server, auth_key=str(uuid.uuid1()), proxy=server.proxy
+    )
+
+
+@pytest.fixture
+def async_translator_with_random_auth_key_and_proxy(server):
+    """Returns a deepl.Translator with randomized authentication key,
+    for use in mock-server tests."""
+    return _make_translator(
+        server, auth_key=str(uuid.uuid1()), proxy=server.proxy, use_async=True
     )
 
 
