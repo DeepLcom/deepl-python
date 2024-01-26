@@ -155,7 +155,7 @@ class Translator(TranslatorBase):
     #
     #     return post(status_code, content, json)
 
-    def _create_glossary(
+    def _create_glossary_internal(
         self,
         name: str,
         source_lang: Union[str, Language],
@@ -181,7 +181,7 @@ class Translator(TranslatorBase):
         status, content, json = self._api_call(
             "v2/glossaries", json=request_data
         )
-        self._raise_for_status(status, content, json, glossary=True)
+        self._raise_for_status(status, json, glossary=True)
         return GlossaryInfo.from_json(json)
 
     def close(self):
@@ -423,7 +423,7 @@ class Translator(TranslatorBase):
         status, content, json = self._api_call(
             "v2/document", data=request_data, files=files
         )
-        self._raise_for_status(status, content, json)
+        self._raise_for_status(status, json)
 
         if not json:
             json = {}
@@ -449,7 +449,7 @@ class Translator(TranslatorBase):
 
         status_code, content, json = self._api_call(url, json=data)
 
-        self._raise_for_status(status_code, content, json)
+        self._raise_for_status(status_code, json)
 
         status = (
             json.get("status", None)
@@ -539,7 +539,7 @@ class Translator(TranslatorBase):
         assert isinstance(response, requests.Response)
 
         self._raise_for_status(
-            status_code, "<file>", json, downloading_document=True
+            status_code, json, downloading_document=True
         )
 
         if output_file:
@@ -598,14 +598,10 @@ class Translator(TranslatorBase):
         :raises DeepLException: If source and target language pair are not
             supported for glossaries.
         """
-        request, base_context = self._create_glossary_pre()
-        response = self._client.request_with_backoff(request)
-        return self._create_glossary_post(response, base_context)
-
         if not entries:
             raise ValueError("glossary entries must not be empty")
 
-        return self._create_glossary(
+        return self._create_glossary_internal(
             name,
             source_lang,
             target_lang,
@@ -654,37 +650,17 @@ class Translator(TranslatorBase):
 
         if not isinstance(entries, (bytes, str)):
             raise ValueError("Entries of the glossary are invalid")
-        return self._create_glossary(
+        return self._create_glossary_internal(
             name, source_lang, target_lang, "csv", entries
         )
 
+    @with_base_pre_and_post
     def get_glossary(self, glossary_id: str) -> GlossaryInfo:
-        """Retrieves GlossaryInfo for the glossary with specified ID.
+        raise NotImplementedError("replaced by decorator")
 
-        :param glossary_id: ID of glossary to retrieve.
-        :return: GlossaryInfo with information about specified glossary.
-        :raises GlossaryNotFoundException: If no glossary with given ID is
-            found.
-        """
-        status, content, json = self._api_call(
-            f"v2/glossaries/{glossary_id}", method="GET"
-        )
-        self._raise_for_status(status, content, json, glossary=True)
-        return GlossaryInfo.from_json(json)
-
+    @with_base_pre_and_post
     def list_glossaries(self) -> List[GlossaryInfo]:
-        """Retrieves GlossaryInfo for all available glossaries.
-
-        :return: list of GlossaryInfo for all available glossaries.
-        """
-        status, content, json = self._api_call("v2/glossaries", method="GET")
-        self._raise_for_status(status, content, json, glossary=True)
-        glossaries = (
-            json.get("glossaries", [])
-            if (json and isinstance(json, dict))
-            else []
-        )
-        return [GlossaryInfo.from_json(glossary) for glossary in glossaries]
+        raise NotImplementedError("replaced by decorator")
 
     def get_glossary_entries(self, glossary: Union[str, GlossaryInfo]) -> dict:
         """Retrieves the entries of the specified glossary and returns them as
@@ -707,7 +683,7 @@ class Translator(TranslatorBase):
             method="GET",
             headers={"Accept": "text/tab-separated-values"},
         )
-        self._raise_for_status(status, content, json, glossary=True)
+        self._raise_for_status(status, json, glossary=True)
         if not isinstance(content, str):
             raise DeepLException(
                 "Could not get the glossary content as a string",
@@ -731,4 +707,4 @@ class Translator(TranslatorBase):
             f"v2/glossaries/{glossary_id}",
             method="DELETE",
         )
-        self._raise_for_status(status, content, json, glossary=True)
+        self._raise_for_status(status, json, glossary=True)

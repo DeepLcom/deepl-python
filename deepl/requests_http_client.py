@@ -41,6 +41,8 @@ class RequestsHttpClient(IHttpClient):
     ):
         self._session = requests.Session()
         if proxy:
+            if isinstance(proxy, str):
+                proxy = {"http": proxy, "https": proxy}
             if not isinstance(proxy, dict):
                 raise ValueError(
                     "proxy may be specified as a URL string or dictionary "
