@@ -26,13 +26,19 @@ account you can translate up to 500,000 characters/month for free.
 The library can be installed from [PyPI][pypi-project] using pip:
 
 ```shell
-pip install --upgrade deepl
+pip install deepl
+```
+
+To install the dependencies needed for asynchronous functions, use:
+
+```shell
+pip install "deepl[async]"
 ```
 
 If you need to modify this source code, install the dependencies using poetry:
 
 ```shell
-poetry install
+poetry install --extras async
 ```
 
 On Ubuntu 22.04 an error might occur: `ModuleNotFoundError: No module named 

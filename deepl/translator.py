@@ -13,7 +13,8 @@ from deepl.api_data import (
     TextResult,
     Usage,
 )
-from . import http_client, util
+from .requests_http_client import RequestsHttpClient
+from . import http_client, util, translator_base
 from .exceptions import (
     DocumentNotReadyException,
     GlossaryNotFoundException,
@@ -23,6 +24,8 @@ from .exceptions import (
     AuthorizationException,
     DocumentTranslationException,
 )
+from .translator_base import TranslatorBase, HttpRequest, HttpResponse
+
 import http
 import http.client
 import json as json_module
@@ -33,6 +36,7 @@ import time
 from typing import (
     Any,
     BinaryIO,
+    Callable,
     Dict,
     Iterable,
     List,
@@ -44,7 +48,7 @@ from typing import (
 import urllib.parse
 
 
-class Translator:
+class Translator(TranslatorBase):
     """Wrapper for the DeepL API for language translation.
 
     You must create an instance of Translator to use the DeepL API.
@@ -71,13 +75,6 @@ class Translator:
     occurs.
     """
 
-    _DEEPL_SERVER_URL = "https://api.deepl.com"
-    _DEEPL_SERVER_URL_FREE = "https://api-free.deepl.com"
-
-    # HTTP status code used by DeepL API to indicate the character limit for
-    # this billing period has been reached.
-    _HTTP_STATUS_QUOTA_EXCEEDED = 456
-
     def __init__(
         self,
         auth_key: str,
@@ -88,21 +85,18 @@ class Translator:
         verify_ssl: Union[bool, str, None] = None,
         skip_language_check: bool = False,
     ):
-        if not auth_key:
-            raise ValueError("auth_key must not be empty")
-
-        if server_url is None:
-            server_url = (
-                self._DEEPL_SERVER_URL_FREE
-                if util.auth_key_is_free_account(auth_key)
-                else self._DEEPL_SERVER_URL
-            )
-
-        self._server_url = server_url
-        self._client = http_client.HttpClient(
-            proxy, send_platform_info, verify_ssl
+        super().__init__(
+            auth_key,
+            server_url=server_url,
+            send_platform_info=send_platform_info,
         )
-        self.headers = {"Authorization": f"DeepL-Auth-Key {auth_key}"}
+        self._client = RequestsHttpClient(proxy, verify_ssl)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
 
     def __del__(self):
         self.close()
@@ -122,23 +116,12 @@ class Translator:
         Makes a request to the API, and returns response as status code,
         content and JSON object.
         """
-        if data is not None and json is not None:
-            raise ValueError("cannot accept both json and data")
-
-        if data is None:
-            data = {}
-        url = urllib.parse.urljoin(self._server_url, url)
 
         util.log_info("Request to DeepL API", method=method, url=url)
         util.log_debug("Request details", data=data, json=json)
 
-        if headers is None:
-            headers = dict()
-        headers.update(
-            {k: v for k, v in self.headers.items() if k not in headers}
-        )
-
         status_code, content = self._client.request_with_backoff(
+            request,
             method,
             url,
             data=data,
@@ -161,134 +144,7 @@ class Translator:
         util.log_info("DeepL API response", url=url, status_code=status_code)
         util.log_debug("Response details", content=content_str)
 
-        return status_code, content, json
-
-    def _raise_for_status(
-        self,
-        status_code: int,
-        content: Union[str, requests.Response],
-        json: Any,
-        glossary: bool = False,
-        downloading_document: bool = False,
-    ):
-        message = ""
-        if json is not None and isinstance(json, dict) and "message" in json:
-            message += ", message: " + json["message"]
-        if json is not None and isinstance(json, dict) and "detail" in json:
-            message += ", detail: " + json["detail"]
-
-        if 200 <= status_code < 400:
-            return
-        elif status_code == http.HTTPStatus.FORBIDDEN:
-            raise AuthorizationException(
-                f"Authorization failure, check auth_key{message}",
-                http_status_code=status_code,
-            )
-        elif status_code == self._HTTP_STATUS_QUOTA_EXCEEDED:
-            raise QuotaExceededException(
-                f"Quota for this billing period has been exceeded{message}",
-                http_status_code=status_code,
-            )
-        elif status_code == http.HTTPStatus.NOT_FOUND:
-            if glossary:
-                raise GlossaryNotFoundException(
-                    f"Glossary not found{message}",
-                    http_status_code=status_code,
-                )
-            raise DeepLException(
-                f"Not found, check server_url{message}",
-                http_status_code=status_code,
-            )
-        elif status_code == http.HTTPStatus.BAD_REQUEST:
-            raise DeepLException(
-                f"Bad request{message}", http_status_code=status_code
-            )
-        elif status_code == http.HTTPStatus.TOO_MANY_REQUESTS:
-            raise TooManyRequestsException(
-                "Too many requests, DeepL servers are currently experiencing "
-                f"high load{message}",
-                should_retry=True,
-                http_status_code=status_code,
-            )
-        elif status_code == http.HTTPStatus.SERVICE_UNAVAILABLE:
-            if downloading_document:
-                raise DocumentNotReadyException(
-                    f"Document not ready{message}",
-                    should_retry=True,
-                    http_status_code=status_code,
-                )
-            else:
-                raise DeepLException(
-                    f"Service unavailable{message}",
-                    should_retry=True,
-                    http_status_code=status_code,
-                )
-        else:
-            status_name = (
-                http.client.responses[status_code]
-                if status_code in http.client.responses
-                else "Unknown"
-            )
-            content_str = content if isinstance(content, str) else content.text
-            raise DeepLException(
-                f"Unexpected status code: {status_code} {status_name}, "
-                f"content: {content_str}.",
-                should_retry=False,
-                http_status_code=status_code,
-            )
-
-    def _check_valid_languages(
-        self, source_lang: Optional[str], target_lang: str
-    ):
-        """Internal function to check given languages are valid."""
-        if target_lang == "EN":
-            raise DeepLException(
-                'target_lang="EN" is deprecated, please use "EN-GB" or "EN-US"'
-                "instead."
-            )
-        elif target_lang == "PT":
-            raise DeepLException(
-                'target_lang="PT" is deprecated, please use "PT-PT" or "PT-BR"'
-                "instead."
-            )
-
-    def _check_language_and_formality(
-        self,
-        source_lang: Union[str, Language, None],
-        target_lang: Union[str, Language],
-        formality: Union[str, Formality, None],
-        glossary: Union[str, GlossaryInfo, None] = None,
-    ) -> dict:
-        # target_lang and source_lang are case insensitive
-        target_lang = str(target_lang).upper()
-        if source_lang is not None:
-            source_lang = str(source_lang).upper()
-
-        if glossary is not None and source_lang is None:
-            raise ValueError("source_lang is required if using a glossary")
-
-        if isinstance(glossary, GlossaryInfo):
-            if (
-                Language.remove_regional_variant(target_lang)
-                != glossary.target_lang
-                or source_lang != glossary.source_lang
-            ):
-                raise ValueError(
-                    "source_lang and target_lang must match glossary"
-                )
-
-        self._check_valid_languages(source_lang, target_lang)
-
-        request_data = {"target_lang": target_lang}
-        if source_lang is not None:
-            request_data["source_lang"] = source_lang
-        if formality is not None:
-            request_data["formality"] = str(formality).lower()
-        if isinstance(glossary, GlossaryInfo):
-            request_data["glossary_id"] = glossary.glossary_id
-        elif glossary is not None:
-            request_data["glossary_id"] = glossary
-        return request_data
+        return post(status_code, content, json)
 
     def _create_glossary(
         self,
@@ -323,30 +179,8 @@ class Translator:
         if hasattr(self, "_client"):
             self._client.close()
 
-    def set_app_info(self, app_info_name: str, app_info_version: str):
-        self._client.set_app_info(app_info_name, app_info_version)
-        return self
-
-    @property
-    def server_url(self):
-        return self._server_url
-
     def translate_text(
-        self,
-        text: Union[str, Iterable[str]],
-        *,
-        source_lang: Union[str, Language, None] = None,
-        target_lang: Union[str, Language],
-        context: Optional[str] = None,
-        split_sentences: Union[str, SplitSentences, None] = None,
-        preserve_formatting: Optional[bool] = None,
-        formality: Union[str, Formality, None] = None,
-        glossary: Union[str, GlossaryInfo, None] = None,
-        tag_handling: Optional[str] = None,
-        outline_detection: Optional[bool] = None,
-        non_splitting_tags: Union[str, List[str], None] = None,
-        splitting_tags: Union[str, List[str], None] = None,
-        ignore_tags: Union[str, List[str], None] = None,
+        self, *args, **kwargs
     ) -> Union[TextResult, List[TextResult]]:
         """Translate text(s) into the target language.
 
@@ -391,76 +225,9 @@ class Translator:
         :return: List of TextResult objects containing results, unless input
             text was one string, then a single TextResult object is returned.
         """
-        if isinstance(text, str):
-            if len(text) == 0:
-                raise ValueError("text must not be empty")
-            text = [text]
-            multi_input = False
-        elif hasattr(text, "__iter__"):
-            multi_input = True
-            text = list(text)
-        else:
-            raise TypeError(
-                "text parameter must be a string or an iterable of strings"
-            )
-
-        request_data = self._check_language_and_formality(
-            source_lang,
-            target_lang,
-            formality,
-            glossary,
-        )
-        request_data["text"] = text
-
-        if context is not None:
-            request_data["context"] = context
-        if split_sentences is not None:
-            request_data["split_sentences"] = str(split_sentences)
-        if preserve_formatting is not None:
-            request_data["preserve_formatting"] = bool(preserve_formatting)
-        if tag_handling is not None:
-            request_data["tag_handling"] = tag_handling
-        if outline_detection is not None:
-            request_data["outline_detection"] = bool(outline_detection)
-
-        def join_tags(tag_argument: Union[str, Iterable[str]]) -> List[str]:
-            if isinstance(tag_argument, str):
-                tag_argument = [tag_argument]
-            return [
-                tag
-                for arg_string in tag_argument
-                for tag in arg_string.split(",")
-            ]
-
-        if non_splitting_tags is not None:
-            request_data["non_splitting_tags"] = join_tags(non_splitting_tags)
-        if splitting_tags is not None:
-            request_data["splitting_tags"] = join_tags(splitting_tags)
-        if ignore_tags is not None:
-            request_data["ignore_tags"] = join_tags(ignore_tags)
-
-        status, content, json = self._api_call(
-            "v2/translate", json=request_data
-        )
-
-        self._raise_for_status(status, content, json)
-
-        translations = (
-            json.get("translations", [])
-            if (json and isinstance(json, dict))
-            else []
-        )
-        output = []
-        for translation in translations:
-            text = translation.get("text", "") if translation else ""
-            lang = (
-                translation.get("detected_source_language", "")
-                if translation
-                else ""
-            )
-            output.append(TextResult(text, detected_source_lang=lang))
-
-        return output if multi_input else output[0]
+        request, base_context = self._translate_text_pre(*args, **kwargs)
+        response = self._client.request_with_backoff(request)
+        return self._translate_text_post(response, base_context)
 
     def translate_text_with_glossary(
         self,

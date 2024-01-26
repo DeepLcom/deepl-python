@@ -1,6 +1,7 @@
 # Copyright 2022 DeepL SE (https://www.deepl.com)
 # Use of this source code is governed by an MIT
 # license that can be found in the LICENSE file.
+import asyncio
 
 from .conftest import (
     example_text,
@@ -323,6 +324,27 @@ def test_usage_team_document_limit(
     assert not usage.document.limit_reached
     assert not usage.character.limit_reached
     assert usage.team_document.limit_reached
+
+
+def test_async(server):
+    with deepl.Translator(
+        server.auth_key, server_url=server.server_url
+    ) as translator:
+        text_result = translator.translate_text(
+            "Hello, world!", target_lang="de"
+        )
+        print(text_result.text)
+
+    async def async_func():
+        async with deepl.TranslatorAsync(
+            server.auth_key, server_url=server.server_url
+        ) as async_translator:
+            text_result = await async_translator.translate_text(
+                "Hello, world!", target_lang="de"
+            )
+            print(text_result.text)
+
+    asyncio.run(async_func())
 
 
 def _build_test_response():

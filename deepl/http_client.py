@@ -2,15 +2,13 @@
 # Use of this source code is governed by an MIT
 # license that can be found in the LICENSE file.
 
-from . import version
 from .exceptions import ConnectionException, DeepLException
 import http
-import platform
 import random
+import aiohttp
+import asyncio
 import requests  # type: ignore
-import traceback
 import time
-from functools import lru_cache
 from typing import Dict, Optional, Tuple, Union
 from .util import log_info
 from deepl import util
@@ -46,9 +44,15 @@ class _BackoffTimer:
     def get_time_until_deadline(self):
         return max(self._deadline - time.time(), 0.0)
 
+    async def asleep_until_deadline(self):
+        await asyncio.sleep(self.get_time_until_deadline())
+        self._update_deadline()
+
     def sleep_until_deadline(self):
         time.sleep(self.get_time_until_deadline())
+        self._update_deadline()
 
+    def _update_deadline(self):
         # Apply multiplier to current backoff time
         self._backoff = min(
             self._backoff * self.BACKOFF_MULTIPLIER, self.BACKOFF_MAX
@@ -62,6 +66,42 @@ class _BackoffTimer:
         self._num_retries += 1
 
 
+class HttpRequest:
+    def __init__(
+        self,
+        method: str,
+        url: str,
+        headers: dict,
+        files=None,
+        data: Optional[dict] = None,
+        params=None,
+        json=None,
+        stream: bool = False,
+    ):
+        self.method = method
+        self.url = url
+        headers.setdefault("User-Agent", user_agent)
+        self.headers = headers
+        self.files = files
+        self.data = data
+        self.params = params
+        self.json = json
+        self.stream = stream
+        # if use_async:
+        #     request = aiohttp.ClientRequest(method,
+        #                                     yarl.URL(url),
+        #                                     data=data,
+        #                                     headers=headers,
+        #                                     **kwargs)
+        # else:
+        #     request = requests.Request(
+        #         method, url, data=data, headers=headers, **kwargs
+        #     ).prepare()
+        pass
+
+    pass
+
+
 class HttpClient:
     def __init__(
         self,
@@ -69,10 +109,7 @@ class HttpClient:
         send_platform_info: bool = True,
         verify_ssl: Union[bool, str, None] = None,
     ):
-        self._session = requests.Session()
         if proxy:
-            if isinstance(proxy, str):
-                proxy = {"http": proxy, "https": proxy}
             if not isinstance(proxy, dict):
                 raise ValueError(
                     "proxy may be specified as a URL string or dictionary "
@@ -83,7 +120,13 @@ class HttpClient:
             self._session.verify = verify_ssl
         self._send_platform_info = send_platform_info
         self._app_info_name: Optional[str] = None
-        self._app_info_version: Optional[str] = None
+        self._app_info_version: Optional[
+            str
+        ] = None  # self._session = aiohttp.ClientSession() if use_async else requests.Session()
+
+        self._session = (
+            aiohttp.ClientSession() if use_async else requests.Session()
+        )
 
     def set_app_info(self, app_info_name: str, app_info_version: str):
         self._app_info_name = app_info_name
@@ -91,7 +134,10 @@ class HttpClient:
         return self
 
     def close(self):
-        self._session.close()
+        if self._use_async:
+            del self._session
+        else:
+            self._session.close()
 
     def request_with_backoff(
         self,
@@ -114,6 +160,11 @@ class HttpClient:
         while True:
             response: Optional[Tuple[int, Union[str, requests.Response]]]
             try:
+                # if self._use_async:
+                #     response = await self._internal_request(
+                #         request, stream=stream, timeout=backoff.get_timeout()
+                #     )
+                # else:
                 response = self._internal_request(
                     request, stream=stream, timeout=backoff.get_timeout()
                 )
@@ -140,6 +191,9 @@ class HttpClient:
                 f"{method} {url} after sleeping for "
                 f"{backoff.get_time_until_deadline():.2f} seconds."
             )
+            # if self._use_async:
+            #     await backoff.sleep_until_deadline(True)
+            # else:
             backoff.sleep_until_deadline()
 
     def request(
@@ -166,12 +220,15 @@ class HttpClient:
 
     def _internal_request(
         self,
-        request: requests.PreparedRequest,
+        request: HttpRequest,
         stream: bool,
         timeout: float = min_connection_timeout,
         **kwargs,
     ) -> Tuple[int, Union[str, requests.Response]]:
         try:
+            # if self._use_async:
+            #     response = await self._session.request(request.method, request.url, params=request.params)
+            # else:
             response = self._session.send(
                 request, stream=stream, timeout=timeout, **kwargs
             )
@@ -245,31 +302,3 @@ class HttpClient:
             raise DeepLException(
                 f"Error occurred while preparing request: {e}"
             ) from e
-
-
-@lru_cache(maxsize=4)
-def _generate_user_agent(
-    user_agent_str: Optional[str],
-    send_platform_info: bool,
-    app_info_name: Optional[str],
-    app_info_version: Optional[str],
-):
-    if user_agent_str:
-        library_info_str = user_agent_str
-    else:
-        library_info_str = f"deepl-python/{version.VERSION}"
-        if send_platform_info:
-            try:
-                library_info_str += (
-                    f" ({platform.platform()}) "
-                    f"python/{platform.python_version()} "
-                    f"requests/{requests.__version__}"
-                )
-            except Exception:
-                util.log_info(
-                    "Exception when querying platform information:\n"
-                    + traceback.format_exc()
-                )
-    if app_info_name and app_info_version:
-        library_info_str += f" {app_info_name}/{app_info_version}"
-    return library_info_str
