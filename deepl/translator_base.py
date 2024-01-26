@@ -57,7 +57,7 @@ class HttpRequest:
         method: str,
         url: str,
         headers: Dict[str, str],
-        data: Optional[dict],
+        data: Optional[dict], # TODO Maybe data is unnecessary
         json: Optional[dict],
     ):
         # TODO files, stream
@@ -74,7 +74,7 @@ class HttpResponse:
     ):
         self.status_code = status_code
         self.content = content
-        self.headers = headers
+        self.headers = headers  # TODO headers needs to be a case insensitive dict
 
         content_type = "Content-Type"
         if content_type in self.headers and self.headers[
@@ -94,14 +94,8 @@ class BaseContext:
     Used by TranslatorBase to include extra context among pre, status-check, and post functions.
     """
 
-    def __init__(
-        self,
-        glossary_management: bool = False,
-        downloading_document: bool = False,
-    ):
-        self.glossary_management = glossary_management
-        self.downloading_document = downloading_document
-
+    def __init__(        self,    ):
+        pass
 
 class TranslatorBase:
     """
@@ -165,7 +159,8 @@ class TranslatorBase:
     def _raise_for_status(
         self,
         response: HttpResponse,
-        context: BaseContext
+        glossary_management: bool = False,
+        downloading_document: bool = False,
         # status_code: int,
         # content: Union[str, requests.Response],
         # json: Any,
@@ -191,7 +186,7 @@ class TranslatorBase:
                 http_status_code=status_code,
             )
         elif status_code == http.HTTPStatus.NOT_FOUND:
-            if context.glossary_management:
+            if glossary_management:
                 raise GlossaryNotFoundException(
                     f"Glossary not found{message}",
                     http_status_code=status_code,
@@ -212,7 +207,7 @@ class TranslatorBase:
                 http_status_code=status_code,
             )
         elif status_code == http.HTTPStatus.SERVICE_UNAVAILABLE:
-            if context.downloading_document:
+            if downloading_document:
                 raise DocumentNotReadyException(
                     f"Document not ready{message}",
                     should_retry=True,
@@ -442,7 +437,7 @@ class TranslatorBase:
     def _translate_text_post(
         self, response: HttpResponse, context: BaseContext
     ) -> Union[TextResult, List[TextResult]]:
-        self._raise_for_status(response, context)
+        self._raise_for_status(response)
 
         translations = response.json.get("translations", [])
         output = []
@@ -484,7 +479,7 @@ class TranslatorBase:
     def _get_source_languages_post(
         self, response: HttpResponse, context: BaseContext
     ) -> List[Language]:
-        self._raise_for_status(response, context)
+        self._raise_for_status(response)
         json = response.json
         languages = json if (json and isinstance(json, list)) else []
         return [
@@ -516,7 +511,7 @@ class TranslatorBase:
     def _get_target_languages_post(
         self, response: HttpResponse, context: BaseContext
     ) -> List[Language]:
-        self._raise_for_status(response, context)
+        self._raise_for_status(response)
         json = response.json
         languages = json if (json and isinstance(json, list)) else []
         return [
@@ -543,7 +538,7 @@ class TranslatorBase:
     def _get_glossary_languages_post(
         self, response: HttpResponse, context: BaseContext
     ) -> List[GlossaryLanguagePair]:
-        self._raise_for_status(response, context)
+        self._raise_for_status(response)
         json = response.json
 
         supported_languages = (
@@ -571,7 +566,7 @@ class TranslatorBase:
     def _get_usage_post(
         self, response: HttpResponse, context: BaseContext
     ) -> Usage:
-        self._raise_for_status(response, context)
+        self._raise_for_status(response)
 
         json = response.json
         if not isinstance(json, dict):
@@ -643,8 +638,75 @@ class TranslatorBase:
     def _create_glossary_post(
         self, response: HttpResponse, context: BaseContext
     ) -> GlossaryInfo:
-        self._raise_for_status(response, context)
+        self._raise_for_status(response)
         return GlossaryInfo.from_json(response.json)
+
+    # TODO create_glossary
+
+    @abstractmethod
+    def get_glossary(self, glossary_id: str) -> GlossaryInfo:
+        """Retrieves GlossaryInfo for the glossary with specified ID.
+
+        :param glossary_id: ID of glossary to retrieve.
+        :return: GlossaryInfo with information about specified glossary.
+        :raises GlossaryNotFoundException: If no glossary with given ID is
+            found.
+        """
+
+    def _get_glossary_pre(self, glossary_id: str) -> tuple[HttpRequest, BaseContext]:
+        return (
+                self._prepare_http_request(f"v2/glossaries/{glossary_id}", method="GET"),
+                BaseContext(),
+            )
+    def _get_glossary_post(self, response: HttpResponse, context: BaseContext) -> GlossaryInfo:
+        self._raise_for_status(response, glossary_management=True)
+        return GlossaryInfo.from_json(response.json)
+
+
+    @abstractmethod
+    def list_glossaries(self) -> List[GlossaryInfo]:
+        """Retrieves GlossaryInfo for all available glossaries.
+
+        :return: list of GlossaryInfo for all available glossaries.
+        """
+
+    def _list_glossaries_pre(self) -> tuple[HttpRequest, BaseContext]:
+        return (
+            self._prepare_http_request("v2/glossaries", method="GET"),
+            BaseContext(),
+        )
+
+    def _list_glossaries_post(
+            self, response: HttpResponse, context: BaseContext
+    ) -> List[GlossaryInfo]:
+        self._raise_for_status(response, glossary_management=True)
+        json = response.json
+        glossaries = (
+            json.get("glossaries", [])
+            if (json and isinstance(json, dict))
+            else []
+        )
+        return [GlossaryInfo.from_json(glossary) for glossary in glossaries]
+
+    # TODO get_glossary_entries
+    # TODO delete_glossary
+
+
+        # def _get_usage_pre(self) -> tuple[HttpRequest, BaseContext]:
+        #     return (
+        #         self._prepare_http_request("v2/usage", method="GET"),
+        #         BaseContext(),
+        #     )
+        #
+        # def _get_usage_post(
+        #         self, response: HttpResponse, context: BaseContext
+        # ) -> Usage:
+        #     self._raise_for_status(response, context)
+        #
+        #     json = response.json
+        #     if not isinstance(json, dict):
+        #         json = {}
+        #     return Usage(json)
 
     def set_app_info(self, app_info_name: str, app_info_version: str):
         self._set_user_agent(app_info_name, app_info_version)
