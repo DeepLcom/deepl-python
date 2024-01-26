@@ -26,8 +26,6 @@ from .exceptions import (
 )
 from .translator_base import TranslatorBase, HttpRequest, HttpResponse
 
-import http
-import http.client
 import json as json_module
 import os
 import pathlib
@@ -45,7 +43,18 @@ from typing import (
     Tuple,
     Union,
 )
-import urllib.parse
+
+
+def with_base_pre_and_post(func):
+    pre_func = getattr(TranslatorBase, f"_{func.__name__}_pre")
+    post_func = getattr(TranslatorBase, f"_{func.__name__}_post")
+
+    def wrapped(self, *args, **kwargs):
+        request, base_context = pre_func(self, *args, **kwargs)
+        response = self._client.request_with_backoff(request)
+        return post_func(self, response, base_context)
+
+    return wrapped
 
 
 class Translator(TranslatorBase):
@@ -101,50 +110,50 @@ class Translator(TranslatorBase):
     def __del__(self):
         self.close()
 
-    def _api_call(
-        self,
-        url: str,
-        *,
-        method: str = "POST",
-        data: Optional[dict] = None,
-        json: Optional[dict] = None,
-        stream: bool = False,
-        headers: Optional[dict] = None,
-        **kwargs,
-    ) -> Tuple[int, Union[str, requests.Response], Any]:
-        """
-        Makes a request to the API, and returns response as status code,
-        content and JSON object.
-        """
-
-        util.log_info("Request to DeepL API", method=method, url=url)
-        util.log_debug("Request details", data=data, json=json)
-
-        status_code, content = self._client.request_with_backoff(
-            request,
-            method,
-            url,
-            data=data,
-            json=json,
-            stream=stream,
-            headers=headers,
-            **kwargs,
-        )
-
-        json = None
-        if isinstance(content, str):
-            content_str = content
-            try:
-                json = json_module.loads(content)
-            except json_module.JSONDecodeError:
-                pass
-        else:
-            content_str = content.text
-
-        util.log_info("DeepL API response", url=url, status_code=status_code)
-        util.log_debug("Response details", content=content_str)
-
-        return post(status_code, content, json)
+    # def _api_call(
+    #     self,
+    #     url: str,
+    #     *,
+    #     method: str = "POST",
+    #     data: Optional[dict] = None,
+    #     json: Optional[dict] = None,
+    #     stream: bool = False,
+    #     headers: Optional[dict] = None,
+    #     **kwargs,
+    # ) -> Tuple[int, Union[str, requests.Response], Any]:
+    #     """
+    #     Makes a request to the API, and returns response as status code,
+    #     content and JSON object.
+    #     """
+    #
+    #     util.log_info("Request to DeepL API", method=method, url=url)
+    #     util.log_debug("Request details", data=data, json=json)
+    #
+    #     status_code, content = self._client.request_with_backoff(
+    #         request,
+    #         method,
+    #         url,
+    #         data=data,
+    #         json=json,
+    #         stream=stream,
+    #         headers=headers,
+    #         **kwargs,
+    #     )
+    #
+    #     json = None
+    #     if isinstance(content, str):
+    #         content_str = content
+    #         try:
+    #             json = json_module.loads(content)
+    #         except json_module.JSONDecodeError:
+    #             pass
+    #     else:
+    #         content_str = content.text
+    #
+    #     util.log_info("DeepL API response", url=url, status_code=status_code)
+    #     util.log_debug("Response details", content=content_str)
+    #
+    #     return post(status_code, content, json)
 
     def _create_glossary(
         self,
@@ -179,54 +188,25 @@ class Translator(TranslatorBase):
         if hasattr(self, "_client"):
             self._client.close()
 
+    @with_base_pre_and_post
     def translate_text(
-        self, *args, **kwargs
+        self,
+        text: Union[str, Iterable[str]],
+        *,
+        source_lang: Union[str, Language, None] = None,
+        target_lang: Union[str, Language],
+        context: Optional[str] = None,
+        split_sentences: Union[str, SplitSentences, None] = None,
+        preserve_formatting: Optional[bool] = None,
+        formality: Union[str, Formality, None] = None,
+        glossary: Union[str, GlossaryInfo, None] = None,
+        tag_handling: Optional[str] = None,
+        outline_detection: Optional[bool] = None,
+        non_splitting_tags: Union[str, List[str], None] = None,
+        splitting_tags: Union[str, List[str], None] = None,
+        ignore_tags: Union[str, List[str], None] = None,
     ) -> Union[TextResult, List[TextResult]]:
-        """Translate text(s) into the target language.
-
-        :param text: Text to translate.
-        :type text: UTF-8 :class:`str`; string sequence (list, tuple, iterator,
-            generator)
-        :param source_lang: (Optional) Language code of input text, for example
-            "DE", "EN", "FR". If omitted, DeepL will auto-detect the input
-            language. If a glossary is used, source_lang must be specified.
-        :param target_lang: language code to translate text into, for example
-            "DE", "EN-US", "FR".
-        :param context: (Optional) Additional contextual text to influence
-            translations, that is not translated itself. Characters in the
-            `context` parameter are not counted toward billing. See the API
-            documentation for more information and example usage.
-        :param split_sentences: (Optional) Controls how the translation engine
-            should split input into sentences before translation, see
-            :class:`SplitSentences`.
-        :param preserve_formatting: (Optional) Set to True to prevent the
-            translation engine from correcting some formatting aspects, and
-            instead leave the formatting unchanged.
-        :param formality: (Optional) Desired formality for translation, as
-            Formality enum, "less", "more", "prefer_less", "prefer_more", or
-            "default".
-        :param glossary: (Optional) glossary or glossary ID to use for
-            translation. Must match specified source_lang and target_lang.
-        :param tag_handling: (Optional) Type of tags to parse before
-            translation, only "xml" and "html" are currently available.
-        :param outline_detection: (Optional) Set to False to disable automatic
-            tag detection.
-        :param non_splitting_tags: (Optional) XML tags that should not split a
-            sentence.
-        :type non_splitting_tags: List of XML tags or comma-separated-list of
-            tags.
-        :param splitting_tags: (Optional) XML tags that should split a
-            sentence.
-        :type splitting_tags: List of XML tags or comma-separated-list of tags.
-        :param ignore_tags: (Optional) XML tags containing text that should not
-            be translated.
-        :type ignore_tags: List of XML tags or comma-separated-list of tags.
-        :return: List of TextResult objects containing results, unless input
-            text was one string, then a single TextResult object is returned.
-        """
-        request, base_context = self._translate_text_pre(*args, **kwargs)
-        response = self._client.request_with_backoff(request)
-        return self._translate_text_post(response, base_context)
+        raise NotImplementedError("replaced by decorator")
 
     def translate_text_with_glossary(
         self,
@@ -570,77 +550,21 @@ class Translator(TranslatorBase):
         else:
             return response
 
+    @with_base_pre_and_post
     def get_source_languages(self, skip_cache=False) -> List[Language]:
-        """Request the list of available source languages.
+        raise NotImplementedError("replaced by decorator")
 
-        :param skip_cache: Deprecated, and now has no effect as the
-            corresponding internal functionality has been removed. This
-            parameter will be removed in a future version.
-        :return: List of supported source languages.
-        """
-        status, content, json = self._api_call("v2/languages", method="GET")
-        self._raise_for_status(status, content, json)
-        languages = json if (json and isinstance(json, list)) else []
-        return [
-            Language(
-                language["language"],
-                language["name"],
-            )
-            for language in languages
-        ]
-
+    @with_base_pre_and_post
     def get_target_languages(self, skip_cache=False) -> List[Language]:
-        """Request the list of available target languages.
+        raise NotImplementedError("replaced by decorator")
 
-        :param skip_cache: Deprecated, and now has no effect as the
-            corresponding internal functionality has been removed. This
-            parameter will be removed in a future version.
-        :return: List of supported target languages.
-        """
-        data = {"type": "target"}
-        status, content, json = self._api_call(
-            "v2/languages", method="GET", data=data
-        )
-        self._raise_for_status(status, content, json)
-        languages = json if (json and isinstance(json, list)) else []
-        return [
-            Language(
-                language["language"],
-                language["name"],
-                language.get("supports_formality", None),
-            )
-            for language in languages
-        ]
-
+    @with_base_pre_and_post
     def get_glossary_languages(self) -> List[GlossaryLanguagePair]:
-        """Request the list of language pairs supported for glossaries."""
-        status, content, json = self._api_call(
-            "v2/glossary-language-pairs", method="GET"
-        )
+        raise NotImplementedError("replaced by decorator")
 
-        self._raise_for_status(status, content, json)
-
-        supported_languages = (
-            json.get("supported_languages", [])
-            if (json and isinstance(json, dict))
-            else []
-        )
-        return [
-            GlossaryLanguagePair(
-                language_pair["source_lang"], language_pair["target_lang"]
-            )
-            for language_pair in supported_languages
-        ]
-
+    @with_base_pre_and_post
     def get_usage(self) -> Usage:
-        """Requests the current API usage."""
-        status, content, json = self._api_call("v2/usage", method="GET")
-
-        self._raise_for_status(status, content, json)
-
-        if not isinstance(json, dict):
-            json = {}
-        return Usage(json)
+        raise NotImplementedError("replaced by decorator")
 
     def create_glossary(
         self,
@@ -674,6 +598,10 @@ class Translator(TranslatorBase):
         :raises DeepLException: If source and target language pair are not
             supported for glossaries.
         """
+        request, base_context = self._create_glossary_pre()
+        response = self._client.request_with_backoff(request)
+        return self._create_glossary_post(response, base_context)
+
         if not entries:
             raise ValueError("glossary entries must not be empty")
 

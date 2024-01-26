@@ -36,6 +36,8 @@ python = ">=3.6.2,<4"
 requests = "^2"
 keyring = {version = "^23.4.1", python = ">=3.6,<4", optional = true}
 aiohttp = {version = "^3.8.3", optional = true}
+frozenlist = {version = "^1.4.1", python = ">=3.8,<4"}
+yarl = {version = "^1.9.4", python = ">=3.7,<4"}
 
 [tool.poetry.dev-dependencies]
 black = "^21.4b2"
@@ -48,8 +50,9 @@ mypy = [
 # pytest v7.2.0 addresses a vulnerability but unfortunately only supports Python 3.7+
 pytest = [
     {version = "^7.2.0", python = ">=3.7,<4"},
-    {version = "^6.2.3", python = "<3.7"},
+#    {version = "^6.2.3", python = "<3.7"},
 ]
+pytest-asyncio = {version = "^0.23.3", python = ">=3.8,<4"}
 coverage = [
     {extras = ["toml"], version = "^6.5.0", python = ">=3.7,<4"},
     {extras = ["toml"], version = "^5.5.0", python = "<3.7"},

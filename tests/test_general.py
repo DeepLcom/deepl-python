@@ -16,6 +16,8 @@ import pathlib
 import pytest
 import os
 
+pytest_plugins = ("pytest_asyncio",)
+
 
 def test_version():
     assert "1.18.0" == deepl.__version__
@@ -326,7 +328,8 @@ def test_usage_team_document_limit(
     assert usage.team_document.limit_reached
 
 
-def test_async(server):
+@pytest.mark.asyncio
+async def test_async(server):
     with deepl.Translator(
         server.auth_key, server_url=server.server_url
     ) as translator:
@@ -334,17 +337,26 @@ def test_async(server):
             "Hello, world!", target_lang="de"
         )
         print(text_result.text)
+        translator.get_source_languages()
 
-    async def async_func():
-        async with deepl.TranslatorAsync(
-            server.auth_key, server_url=server.server_url
-        ) as async_translator:
-            text_result = await async_translator.translate_text(
-                "Hello, world!", target_lang="de"
-            )
-            print(text_result.text)
+    async with deepl.TranslatorAsync(
+        server.auth_key, server_url=server.server_url
+    ) as async_translator:
+        text_result = await async_translator.translate_text(
+            "Hello, world!", target_lang="de"
+        )
+        print(text_result.text)
 
-    asyncio.run(async_func())
+    # async def async_func():
+    #     async with deepl.TranslatorAsync(
+    #         server.auth_key, server_url=server.server_url
+    #     ) as async_translator:
+    #         text_result = await async_translator.translate_text(
+    #             "Hello, world!", target_lang="de"
+    #         )
+    #         print(text_result.text)
+    #
+    # asyncio.run(async_func())
 
 
 def _build_test_response():

@@ -1,22 +1,30 @@
 # Copyright 2024 DeepL SE (https://www.deepl.com)
 # Use of this source code is governed by an MIT
 # license that can be found in the LICENSE file.
+from api_data import GlossaryLanguagePair, SplitSentences, Formality
+from deepl import Usage, GlossaryInfo, Language, TextResult
 from .aiohttp_http_client import AioHttpHttpClient
 from .iasync_http_client import IAsyncHttpClient
-from . import http_client, util
-from .translator_base import TranslatorBase, HttpRequest, HttpResponse
+from .translator_base import TranslatorBase
 from typing import (
-    Any,
-    BinaryIO,
-    Callable,
     Dict,
     Iterable,
     List,
     Optional,
-    TextIO,
-    Tuple,
     Union,
 )
+
+
+def with_base_pre_and_post(func):
+    pre_func = getattr(TranslatorBase, f"_{func.__name__}_pre")
+    post_func = getattr(TranslatorBase, f"_{func.__name__}_post")
+
+    async def wrapped(self, *args, **kwargs):
+        request, base_context = pre_func(self, *args, **kwargs)
+        response = await self._client.request_with_backoff(request)
+        return post_func(self, response, base_context)
+
+    return wrapped
 
 
 class TranslatorAsync(TranslatorBase):
@@ -71,7 +79,82 @@ class TranslatorAsync(TranslatorBase):
         if hasattr(self, "_client"):
             await self._client.close()
 
-    async def translate_text(self, *args, **kwargs):
-        request, base_context = self._translate_text_pre(*args, **kwargs)
-        response = await self._client.request_with_backoff(request)
-        return self._translate_text_post(response, base_context)
+    @with_base_pre_and_post
+    async def translate_text(
+        self,
+        text: Union[str, Iterable[str]],
+        *,
+        source_lang: Union[str, Language, None] = None,
+        target_lang: Union[str, Language],
+        context: Optional[str] = None,
+        split_sentences: Union[str, SplitSentences, None] = None,
+        preserve_formatting: Optional[bool] = None,
+        formality: Union[str, Formality, None] = None,
+        glossary: Union[str, GlossaryInfo, None] = None,
+        tag_handling: Optional[str] = None,
+        outline_detection: Optional[bool] = None,
+        non_splitting_tags: Union[str, List[str], None] = None,
+        splitting_tags: Union[str, List[str], None] = None,
+        ignore_tags: Union[str, List[str], None] = None,
+    ) -> Union[TextResult, List[TextResult]]:
+        raise NotImplementedError("replaced by decorator")
+
+    async def translate_text_with_glossary(
+        self,
+        text: Union[str, Iterable[str]],
+        glossary: GlossaryInfo,
+        target_lang: Union[str, Language, None] = None,
+        **kwargs,
+    ) -> Union[TextResult, List[TextResult]]:
+        if not isinstance(glossary, GlossaryInfo):
+            msg = (
+                "This function expects the glossary parameter to be an "
+                "instance of GlossaryInfo. Use get_glossary() to obtain a "
+                "GlossaryInfo using the glossary ID of an existing "
+                "glossary. Alternatively, use translate_text() and "
+                "specify the glossary ID using the glossary parameter. "
+            )
+            raise ValueError(msg)
+
+        if target_lang is None:
+            target_lang = glossary.target_lang
+            if target_lang == "EN":
+                target_lang = "EN-GB"
+
+        return await self.translate_text(
+            text,
+            source_lang=glossary.source_lang,
+            target_lang=target_lang,
+            glossary=glossary,
+            **kwargs,
+        )
+
+    @with_base_pre_and_post
+    async def get_usage(self) -> Usage:
+        raise NotImplementedError("replaced by decorator")
+
+    @with_base_pre_and_post
+    async def get_source_languages(self) -> List[Language]:
+        raise NotImplementedError("replaced by decorator")
+
+    @with_base_pre_and_post
+    async def get_target_languages(self) -> List[Language]:
+        raise NotImplementedError("replaced by decorator")
+
+    @with_base_pre_and_post
+    async def get_glossary_languages(self) -> List[GlossaryLanguagePair]:
+        raise NotImplementedError("replaced by decorator")
+
+    @with_base_pre_and_post
+    async def create_glossary(
+        self,
+        name: str,
+        source_lang: Union[str, Language],
+        target_lang: Union[str, Language],
+        entries: Dict[str, str],
+    ) -> GlossaryInfo:
+        raise NotImplementedError("replaced by decorator")
+
+    # @with_base_pre_and_post
+    # async def _create_glossary(self):
+    #     raise NotImplementedError("replaced by decorator")
