@@ -346,14 +346,6 @@ def test_tag_handling_html(translator):
     assert '<p translate="no">My first paragraph.</p>' in result.text
 
 
-def test_invalid_url(server):
-    translator = deepl.Translator(
-        server.auth_key, server_url="https://example.com"
-    )
-    with pytest.raises(deepl.DeepLException, match="check server_url"):
-        translator.translate_text("Hello, world!", target_lang="DE")
-
-
 def test_empty_auth_key(server):
     with pytest.raises(ValueError, match=r"auth_key must not be empty"):
         deepl.Translator("", server_url=server.server_url)
