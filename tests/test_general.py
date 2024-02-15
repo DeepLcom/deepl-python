@@ -2,7 +2,12 @@
 # Use of this source code is governed by an MIT
 # license that can be found in the LICENSE file.
 
-from .conftest import example_text, needs_mock_server, needs_mock_proxy_server
+from .conftest import (
+    example_text,
+    needs_mock_server,
+    needs_mock_proxy_server,
+    needs_real_server,
+)
 from requests import Response  # type: ignore
 from unittest.mock import patch, Mock
 import deepl
@@ -31,6 +36,34 @@ def test_example_translation(lang, translator):
         input_text, source_lang=source_lang, target_lang="EN-US"
     ).text.lower()
     assert "proton" in result_text
+
+
+@needs_real_server
+def test_mixed_direction_text(translator):
+    ar_ignore_part = "<ignore>يجب تجاهل هذا الجزء.</ignore>"
+    en_sentence_with_ar_ignore_part = (
+        "<p>This is a <b>short</b> <i>sentence</i>. "
+        f"{ar_ignore_part} This is another sentence."
+    )
+    en_result = translator.translate_text(
+        en_sentence_with_ar_ignore_part,
+        target_lang="en-US",
+        tag_handling="xml",
+        ignore_tags="ignore",
+    )
+    assert ar_ignore_part in en_result.text
+
+    en_ignore_part = "<ignore>This part should be ignored.</ignore>"
+    ar_sentence_with_en_ignore_part = (
+        f"<p>هذه <i>جملة</i> <b>قصيرة</b>. {en_ignore_part} هذه جملة أخرى.</p>"
+    )
+    ar_result = translator.translate_text(
+        ar_sentence_with_en_ignore_part,
+        target_lang="ar",
+        tag_handling="xml",
+        ignore_tags="ignore",
+    )
+    assert en_ignore_part in ar_result.text
 
 
 def test_translate_with_enums(translator):
