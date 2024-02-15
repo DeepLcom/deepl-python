@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 * New language available: Arabic (`'ar'`). Add language code constants and tests.
+  Arabic is currently supported only for text translation; document translation
+  support for Arabic is coming soon.
 
   Note: older library versions also support the new language, this update only adds new code constants.
 * Added a section in the readme on how to configure retry options in `http_client.py`
