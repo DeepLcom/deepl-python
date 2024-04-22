@@ -522,6 +522,24 @@ translator = deepl.Translator(..., verify_ssl=False)
 This option is passed to the underlying `requests` session as the `verify`
 option, see the [documentation for requests][requests-verify-ssl-docs].
 
+#### Configure automatic retries
+
+This SDK will automatically retry failed HTTP requests (if the failures could
+be transient, e.g. a HTTP 429 status code). This behaviour can be configured
+in `http_client.py`, for example by default the number of retries is 5. This
+can be changed to 3 as follows:
+
+```python
+import deepl
+
+deepl.http_client.max_network_retries = 3
+t = deepl.Translator(...)
+t.translate_text(...)
+```
+
+You can configure the timeout `min_connection_timeout` the same way, as well
+as set a custom `user_agent`, see the next section.
+
 #### Anonymous platform information
 
 By default, we send some basic information about the platform the client library is running on with each request, see [here for an explanation](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent). This data is completely anonymous and only used to improve our product, not track any individual users. If you do not wish to send this data, you can opt-out when creating your `deepl.Translator` object by setting the `send_platform_info` flag like so:
