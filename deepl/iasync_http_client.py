@@ -3,7 +3,7 @@
 # license that can be found in the LICENSE file.
 import asyncio
 from abc import ABC, abstractmethod
-from typing import Dict, Union, Optional
+from typing import Optional
 
 from . import backoff_timer
 from .exceptions import DeepLException, ConnectionException
@@ -14,20 +14,29 @@ from .util import log_info
 
 class IAsyncHttpClient(IHttpClient, ABC):
     @abstractmethod
-    async def send_async_request(
+    async def send_request_async(
         self, prepared_request: IPreparedRequest, timeout: float
     ) -> HttpResponse:
+        """
+        Async implementations should this instead of send_request.
+        """
         pass
 
     @abstractmethod
     async def close(self):
+        """
+        Async implementations may implement this, e.g. to clean up sessions.
+        """
         pass
 
-    async def request_with_backoff(self, request: HttpRequest) -> HttpResponse:
-        """Makes API request, retrying if necessary, and returns response.
+    async def request_with_backoff_async(
+        self, request: HttpRequest
+    ) -> HttpResponse:
+        """
+        Makes API request, retrying if necessary, and returns response.
+        """
 
-        Return and exceptions are the same as function request()."""
-
+        self._log_request(request)
         try:
             prepared_request = self.prepare_request(request)
         except Exception as e:
@@ -40,7 +49,7 @@ class IAsyncHttpClient(IHttpClient, ABC):
             response: Optional[HttpResponse]
             exception: Optional[ConnectionException]
             try:
-                response = await self.send_async_request(
+                response = await self.send_request_async(
                     prepared_request, timeout=backoff.get_timeout()
                 )
                 exception = None
@@ -56,6 +65,7 @@ class IAsyncHttpClient(IHttpClient, ABC):
                 response, exception, backoff.get_num_retries()
             ):
                 if response is not None:
+                    self._log_response(request, response)
                     return response
                 else:
                     raise exception  # type: ignore[misc]
@@ -74,9 +84,16 @@ class IAsyncHttpClient(IHttpClient, ABC):
 
         pass
 
+    def request_with_backoff(self, **kwargs):
+        raise NotImplementedError(
+            "IAsyncHttpClient implements request_with_backoff_async instead "
+            "of request_with_backoff"
+        )
+
     def send_request(
         self, prepared_request: IPreparedRequest, timeout: float
     ) -> HttpResponse:
         raise NotImplementedError(
-            "IAsyncHttpClient should implement send_async_request instead of send_request"
+            "IAsyncHttpClient implements send_request_async instead of "
+            "send_request"
         )

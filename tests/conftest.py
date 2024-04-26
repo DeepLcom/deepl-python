@@ -151,17 +151,21 @@ def _make_translator(server, auth_key=None, proxy=None, use_async=False):
 
 
 @pytest.fixture
-def translator(server):
+def translator(server) -> deepl.Translator:
     """Returns a deepl.Translator to use in all tests taking a parameter
     'translator'."""
     return _make_translator(server)
 
 
 @pytest.fixture
-def async_translator(server):
-    """Returns a deepl.TranslatorAsync to use in all tests taking a parameter
-    'translator'."""
-    return _make_translator(server, use_async=True)
+def async_translator_factory(server) -> Callable[[], deepl.TranslatorAsync]:
+    """Returns a factory to create a deepl.TranslatorAsync to use in all tests
+    taking a parameter 'translator'."""
+
+    def factory() -> deepl.TranslatorAsync:
+        return _make_translator(server, use_async=True)
+
+    return factory
 
 
 @pytest.fixture
