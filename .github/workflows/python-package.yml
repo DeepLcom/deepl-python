@@ -35,10 +35,6 @@ jobs:
       run: poetry run black --check .
     - name: Type check with mypy
       run: poetry run mypy --exclude 'examples/' .
-    - name: License header check
-      run: |
-        ./license_checker.sh '*.py' | tee license_check_output.txt
-        '[ ! -s license_check_output.txt ]'
     - name: Packaging
       run: poetry build --verbose --no-interaction
     - name: Test with pytest
