@@ -38,6 +38,8 @@ jobs:
     - name: Packaging
       run: poetry build --verbose --no-interaction
     - name: Test with pytest
+      env:
+        DEEPL_AUTH_KEY: ${{ secrets.DEEPL_AUTH_KEY }}
       run: |
         poetry run coverage run -m pytest --junit-xml test_report.xml
         poetry run coverage report
