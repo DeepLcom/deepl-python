@@ -1,10 +1,29 @@
-# Copyright 2022-2024 DeepL SE (https://www.deepl.com)
+# Copyright 2022 DeepL SE (https://www.deepl.com)
 # Use of this source code is governed by an MIT
 # license that can be found in the LICENSE file.
+import http
+import http.client
+import json as json_module
+import platform
+import traceback
+import urllib.parse
 from abc import abstractmethod
 from functools import lru_cache
+from typing import (
+    Any,
+    BinaryIO,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    TextIO,
+    Union,
+    Iterator,
+)
 
-from . import version
+import requests  # type: ignore
+from requests.structures import CaseInsensitiveDict
+
 from deepl.api_data import (
     DocumentHandle,
     DocumentStatus,
@@ -17,6 +36,7 @@ from deepl.api_data import (
     Usage,
 )
 from . import http_client, util
+from . import version
 from .exceptions import (
     DocumentNotReadyException,
     GlossaryNotFoundException,
@@ -26,55 +46,57 @@ from .exceptions import (
     AuthorizationException,
     DocumentTranslationException,
 )
-import http
-import http.client
-import json as json_module
-import os
-import pathlib
-import platform
-import traceback
-import requests  # type: ignore
-import time
-from typing import (
-    Any,
-    BinaryIO,
-    Callable,
-    Dict,
-    Iterable,
-    List,
-    Optional,
-    TextIO,
-    Tuple,
-    Union,
-    Type,
-)
-import urllib.parse
 
 
 class HttpRequest:
+    """
+    HttpRequest contains information to construct an HTTP request,
+    implementations of IHttpClient should implement prepare_request to
+    convert it into their implementation-specific model of requests.
+
+    :param method: HTTP method e.g. "GET".
+    :param url: Request URL e.g. "https://api.deepl.com/v2/translate"
+    :param headers: HTTP headers.
+    :param json: If not None, the request body to encode as JSON.
+    :param data: HTTP data to include as multipart-form
+    :param files: If not None, files to include as multipart-form
+    :param stream: If true, the response should be streamed, see
+        HttpResponse.iter_content()
+    """
+
     def __init__(
         self,
         method: str,
         url: str,
-        headers: Dict[str, str],
-        data: Optional[dict], # TODO Maybe data is unnecessary
+        headers: CaseInsensitiveDict[str, str],
         json: Optional[dict],
+        data: Optional[dict],
+        files: Optional[Dict[str, Any]],
+        stream: bool,
     ):
-        # TODO files, stream
         self.method = method
         self.url = url
         self.headers = headers
         self.data = data
         self.json = json
+        self.files = files
+        self.stream = stream
 
 
 class HttpResponse:
     def __init__(
-        self, status_code: int, content: Optional[str], headers: Dict[str, str]
+        self,
+        status_code: int,
+        text: Optional[str],
+        headers: dict[
+            str, str
+        ],  # Union[CaseInsensitiveDict[str, str], dict[str, str]],
+        raw_response: Any,
     ):
         self.status_code = status_code
-        self.content = content
-        self.headers = headers  # TODO headers needs to be a case insensitive dict
+        self.text = text
+        self.headers = CaseInsensitiveDict(headers)
+        self.raw_response = raw_response
 
         content_type = "Content-Type"
         if content_type in self.headers and self.headers[
@@ -82,20 +104,29 @@ class HttpResponse:
         ].startswith(
             "application/json"
         ):  # TODO improve json-compatible check
-            self.json = json_module.loads(self.content)
+            self.json = json_module.loads(self.text)
         else:
             self.json = None
 
-        # TODO Handle streams
+    @abstractmethod
+    def iter_content(self, chunk_size) -> Iterator:
+        """
+        Implementations should return an iterator that returns the content.
+        """
+        raise NotImplementedError()
 
 
 class BaseContext:
     """
-    Used by TranslatorBase to include extra context among pre, status-check, and post functions.
+    Used by TranslatorBase to include extra context among pre- and post-request
+    functions.
     """
 
-    def __init__(        self,    ):
+    def __init__(
+        self,
+    ):
         pass
+
 
 class TranslatorBase:
     """
@@ -141,29 +172,26 @@ class TranslatorBase:
         method: str = "POST",
         data: Optional[dict] = None,
         json: Optional[dict] = None,
+        files: Optional[dict[str, Any]] = None,
+        stream: bool = False,
     ) -> HttpRequest:
         if data is not None and json is not None:
             raise ValueError("cannot accept both json and data")
 
         url = urllib.parse.urljoin(self._server_url, url)
-        if data is None:
-            data = {}
 
         if headers is None:
             headers = {}
         headers.update(
             {k: v for k, v in self.headers.items() if k not in headers}
         )
-        return HttpRequest(method, url, headers, data, json)
+        return HttpRequest(method, url, headers, json, data, files, stream)
 
     def _raise_for_status(
         self,
         response: HttpResponse,
         glossary_management: bool = False,
         downloading_document: bool = False,
-        # status_code: int,
-        # content: Union[str, requests.Response],
-        # json: Any,
     ):
         message = ""
         if response.json is not None:
@@ -225,10 +253,11 @@ class TranslatorBase:
                 if status_code in http.client.responses
                 else "Unknown"
             )
+
             # TODO Handle streams below
-            content_str = (
-                response.content
-            )  # if isinstance(response.content, str) else response.content.text
+            content_str = response.text
+            # if isinstance(response.content, str) else response.content.text
+
             raise DeepLException(
                 f"Unexpected status code: {status_code} {status_name}, "
                 f"content: {content_str}.",
@@ -316,7 +345,7 @@ class TranslatorBase:
         non_splitting_tags: Union[str, List[str], None] = None,
         splitting_tags: Union[str, List[str], None] = None,
         ignore_tags: Union[str, List[str], None] = None,
-    ):
+    ) -> Union[TextResult, List[TextResult]]:
         """Translate text(s) into the target language.
 
         :param text: Text to translate.
@@ -360,6 +389,206 @@ class TranslatorBase:
         :return: List of TextResult objects containing results, unless input
             text was one string, then a single TextResult object is returned.
         """
+
+    @abstractmethod
+    def translate_text_with_glossary(
+        self,
+        text: Union[str, Iterable[str]],
+        glossary: GlossaryInfo,
+        target_lang: Union[str, Language, None] = None,
+        **kwargs,
+    ) -> Union[TextResult, List[TextResult]]:
+        """Translate text(s) using given glossary. The source and target
+        languages are assumed to match the glossary languages.
+
+        Note that if the glossary target language is English (EN), the text
+        will be translated into British English (EN-GB). To instead translate
+        into American English specify target_lang="EN-US".
+
+        :param text: Text to translate.
+        :type text: UTF-8 :class:`str`; string sequence (list, tuple, iterator,
+            generator)
+        :param glossary: glossary to use for translation.
+        :type glossary: :class:`GlossaryInfo`.
+        :param target_lang: override target language of glossary.
+        :return: List of TextResult objects containing results, unless input
+            text was one string, then a single TextResult object is returned.
+        """
+
+    @abstractmethod
+    def translate_document_upload(
+        self,
+        input_document: Union[TextIO, BinaryIO, str, bytes, Any],
+        *,
+        source_lang: Optional[str] = None,
+        target_lang: str,
+        formality: Union[str, Formality, None] = None,
+        glossary: Union[str, GlossaryInfo, None] = None,
+        filename: Optional[str] = None,
+        output_format: Optional[str] = None,
+    ) -> DocumentHandle:
+        """Upload document to be translated and return handle associated with
+        request.
+
+        :param input_document: Document to translate as a file-like object, or
+            string or bytes containing file content.
+        :param source_lang: (Optional) Language code of input document, for
+            example "DE", "EN", "FR". If omitted, DeepL will auto-detect the
+            input language.
+        :param target_lang: Language code to translate document into, for
+            example "DE", "EN-US", "FR".
+        :param formality: (Optional) Desired formality for translation, as
+            Formality enum, "less", "more", "prefer_less", or "prefer_more".
+        :param glossary: (Optional) glossary or glossary ID to use for
+            translation. Must match specified source_lang and target_lang.
+        :param filename: (Optional) Filename including extension, only required
+            if uploading string or bytes containing file content.
+        :param output_format: (Optional) Desired output file extension, if
+            it differs from the input file format.
+        :return: DocumentHandle with ID and key identifying document.
+        """
+
+    @abstractmethod
+    def translate_document_get_status(
+        self, handle: DocumentHandle
+    ) -> DocumentStatus:
+        """Gets the status of the document translation request associated with
+         given handle.
+
+        :param handle: DocumentHandle to the request to check.
+        :return: DocumentStatus containing the request status.
+
+        :raises DocumentTranslationException: If an error occurs during
+            querying the document, the exception includes the document handle.
+        """
+
+    @abstractmethod
+    def translate_document_download(
+        self,
+        handle: DocumentHandle,
+        output_file: Union[TextIO, BinaryIO, Any, None] = None,
+        chunk_size: int = 1,
+    ) -> Optional[Any]:
+        """Downloads the translated document for the request associated with
+        given handle and returns a response object for streaming the data. Call
+        iter_content() on the response object to read streamed file data.
+        Alternatively, a file-like object may be given as output_file where the
+        complete file will be downloaded and written to.
+
+        :param handle: DocumentHandle associated with request.
+        :param output_file: (Optional) File-like object to store downloaded
+            document. If not provided, use iter_content() on the returned
+            response object to read streamed file data.
+        :param chunk_size: (Optional) Size of chunk in bytes for streaming.
+            Only used if output_file is specified.
+        :return: None if output_file is specified, otherwise the
+            raw response object will be returned.
+        """
+
+    @abstractmethod
+    def get_source_languages(self, skip_cache=False) -> List[Language]:
+        """Request the list of available source languages.
+
+        :param skip_cache: Deprecated, and now has no effect as the
+            corresponding internal functionality has been removed. This
+            parameter will be removed in a future version.
+        :return: List of supported source languages.
+        """
+
+    @abstractmethod
+    def get_target_languages(self, skip_cache=False) -> List[Language]:
+        """Request the list of available target languages.
+
+        :param skip_cache: Deprecated, and now has no effect as the
+            corresponding internal functionality has been removed. This
+            parameter will be removed in a future version.
+        :return: List of supported target languages.
+        """
+
+    @abstractmethod
+    def get_glossary_languages(self) -> List[GlossaryLanguagePair]:
+        """Request the list of language pairs supported for glossaries."""
+
+    @abstractmethod
+    def get_usage(self) -> Usage:
+        """Requests the current API usage."""
+
+    @abstractmethod
+    def create_glossary(
+        self,
+        name: str,
+        source_lang: Union[str, Language],
+        target_lang: Union[str, Language],
+        entries: Dict[str, str],
+    ) -> GlossaryInfo:
+        """Creates a glossary with given name for the source and target
+        languages, containing the entries in dictionary. The glossary may be
+        used in the translate_text functions.
+
+        Only certain language pairs are supported. The available language pairs
+        can be queried using get_glossary_languages(). Glossaries are not
+        regional specific: a glossary with target language EN may be used to
+        translate texts into both EN-US and EN-GB.
+
+        This function requires the glossary entries to be provided as a
+        dictionary of source-target terms. To create a glossary from a CSV file
+        downloaded from the DeepL website, see create_glossary_from_csv().
+
+        :param name: user-defined name to attach to glossary.
+        :param source_lang: Language of source terms.
+        :param target_lang: Language of target terms.
+        :param entries: dictionary of terms to insert in glossary, with the
+            keys and values representing source and target terms respectively.
+        :return: GlossaryInfo containing information about created glossary.
+
+        :raises ValueError: If the glossary name is empty, or entries are
+            empty or invalid.
+        :raises DeepLException: If source and target language pair are not
+            supported for glossaries.
+        """
+
+    @abstractmethod
+    def get_glossary(self, glossary_id: str) -> GlossaryInfo:
+        """Retrieves GlossaryInfo for the glossary with specified ID.
+
+        :param glossary_id: ID of glossary to retrieve.
+        :return: GlossaryInfo with information about specified glossary.
+        :raises GlossaryNotFoundException: If no glossary with given ID is
+            found.
+        """
+
+    @abstractmethod
+    def list_glossaries(self) -> List[GlossaryInfo]:
+        """Retrieves GlossaryInfo for all available glossaries.
+
+        :return: list of GlossaryInfo for all available glossaries.
+        """
+
+    @abstractmethod
+    def get_glossary_entries(self, glossary: Union[str, GlossaryInfo]) -> dict:
+        """Retrieves the entries of the specified glossary and returns them as
+        a dictionary.
+
+        :param glossary: GlossaryInfo or ID of glossary to retrieve.
+        :return: dictionary of glossary entries.
+        :raises GlossaryNotFoundException: If no glossary with given ID is
+            found.
+        :raises DeepLException: If the glossary could not be retrieved
+            in the right format.
+        """
+
+    @abstractmethod
+    def delete_glossary(self, glossary: Union[str, GlossaryInfo]) -> None:
+        """Deletes specified glossary.
+
+        :param glossary: GlossaryInfo or ID of glossary to delete.
+        :raises GlossaryNotFoundException: If no glossary with given ID is
+            found.
+        """
+
+    def set_app_info(self, app_info_name: str, app_info_version: str):
+        self._set_user_agent(app_info_name, app_info_version)
+        return self
 
     def _translate_text_pre(
         self,
@@ -450,25 +679,167 @@ class TranslatorBase:
 
         return output if multi_input else output[0]
 
-    # TODO translate_document_upload
-    # TODO _translate_document_upload_pre
-    # TODO _translate_document_upload_post
-    # TODO translate_document_get_status
-    # TODO _translate_document_get_status_pre
-    # TODO _translate_document_get_status_post
-    # TODO translate_document_download
-    # TODO _translate_document_download_pre
-    # TODO _translate_document_download_post
+    def _translate_text_with_glossary_pre(
+        self,
+        text: Union[str, Iterable[str]],
+        glossary: GlossaryInfo,
+        target_lang: Union[str, Language, None] = None,
+        **kwargs,
+    ) -> tuple[HttpRequest, BaseContext]:
+        if not isinstance(glossary, GlossaryInfo):
+            msg = (
+                "This function expects the glossary parameter to be an "
+                "instance of GlossaryInfo. Use get_glossary() to obtain a "
+                "GlossaryInfo using the glossary ID of an existing "
+                "glossary. Alternatively, use translate_text() and "
+                "specify the glossary ID using the glossary parameter. "
+            )
+            raise ValueError(msg)
 
-    @abstractmethod
-    def get_source_languages(self, skip_cache=False) -> List[Language]:
-        """Request the list of available source languages.
+        if target_lang is None:
+            target_lang = glossary.target_lang
+            if target_lang == "EN":
+                target_lang = "EN-GB"
 
-        :param skip_cache: Deprecated, and now has no effect as the
-            corresponding internal functionality has been removed. This
-            parameter will be removed in a future version.
-        :return: List of supported source languages.
-        """
+        return self._translate_text_pre(
+            text,
+            source_lang=glossary.source_lang,
+            target_lang=target_lang,
+            glossary=glossary,
+            **kwargs,
+        )
+
+    def _translate_text_with_glossary_post(
+        self, response: HttpResponse, context: BaseContext
+    ) -> Union[TextResult, List[TextResult]]:
+        return self._translate_text_post(response, context)
+
+    def _translate_document_upload_pre(
+        self,
+        input_document: Union[TextIO, BinaryIO, str, bytes, Any],
+        *,
+        source_lang: Optional[str] = None,
+        target_lang: str,
+        formality: Union[str, Formality, None] = None,
+        glossary: Union[str, GlossaryInfo, None] = None,
+        filename: Optional[str] = None,
+        output_format: Optional[str] = None,
+    ) -> tuple[HttpRequest, BaseContext]:
+        request = self._prepare_http_request("v2/document")
+        request.data = self._check_language_and_formality(
+            source_lang, target_lang, formality, glossary
+        )
+        if output_format:
+            request.data["output_format"] = output_format
+
+        if isinstance(input_document, (str, bytes)):
+            if filename is None:
+                raise ValueError(
+                    "filename is required if uploading file content as string "
+                    "or bytes"
+                )
+            request.files = {"file": (filename, input_document)}
+        else:
+            request.files = {"file": input_document}
+        return request, BaseContext()
+
+    def _translate_document_upload_post(
+        self, response: HttpResponse, context: BaseContext
+    ) -> DocumentHandle:
+        self._raise_for_status(response)
+        json = response.json
+
+        if not json:
+            json = {}
+        return DocumentHandle(
+            json.get("document_id", ""), json.get("document_key", "")
+        )
+
+    def _translate_document_get_status_pre(
+        self, handle: DocumentHandle
+    ) -> tuple[HttpRequest, BaseContext]:
+        request = self._prepare_http_request(
+            f"v2/document/{handle.document_id}",
+            json={"document_key": handle.document_key},
+        )
+        context = BaseContext()
+        context.handle = handle
+        return request, context
+
+    def _translate_document_get_status_post(
+        self, response: HttpResponse, context: BaseContext
+    ) -> DocumentStatus:
+        self._raise_for_status(response)
+        json = response.json
+        handle = context.handle
+
+        status = (
+            json.get("status", None)
+            if (json and isinstance(json, dict))
+            else None
+        )
+        if not status:
+            raise DocumentTranslationException(
+                "Querying document status gave an empty response", handle
+            )
+        seconds_remaining = (
+            json.get("seconds_remaining", None)
+            if (json and isinstance(json, dict))
+            else None
+        )
+        billed_characters = (
+            json.get("billed_characters", None)
+            if (json and isinstance(json, dict))
+            else None
+        )
+        error_message = (
+            json.get("error_message", None)
+            if (json and isinstance(json, dict))
+            else None
+        )
+        return DocumentStatus(
+            status, seconds_remaining, billed_characters, error_message
+        )
+
+    def _translate_document_download_pre(
+        self,
+        handle: DocumentHandle,
+        output_file: Union[TextIO, BinaryIO, Any, None] = None,
+        chunk_size: int = 1,
+    ) -> tuple[HttpRequest, BaseContext]:
+        request = self._prepare_http_request(
+            f"v2/document/{handle.document_id}/result",
+            json={"document_key": handle.document_key},
+            stream=True,
+        )
+        context = BaseContext()
+        context.output_file = output_file
+        context.chunk_size = chunk_size
+        return request, context
+
+    def _translate_document_download_post(
+        self, response: HttpResponse, context: BaseContext
+    ) -> Optional[Any]:
+        output_file = context.output_file
+        chunk_size = context.chunk_size
+        # TODO: once we drop py3.6 support, replace this with @overload
+        # annotations in `_api_call` and chained private functions.
+        # See for example https://stackoverflow.com/a/74070166/4926599
+        # In addition, drop the type: ignore annotation on the
+        # `import requests` / `from requests`
+
+        # assert isinstance(response, requests.Response)
+        # TODO ^ How do we replace this? Is it still needed with async change?
+
+        self._raise_for_status(response, downloading_document=True)
+
+        if output_file:
+            chunks = response.iter_content(chunk_size=chunk_size)
+            for chunk in chunks:
+                output_file.write(chunk)
+            return None
+        else:
+            return response.raw_response
 
     def _get_source_languages_pre(self) -> tuple[HttpRequest, BaseContext]:
         return (
@@ -489,16 +860,6 @@ class TranslatorBase:
             )
             for language in languages
         ]
-
-    @abstractmethod
-    def get_target_languages(self, skip_cache=False) -> List[Language]:
-        """Request the list of available target languages.
-
-        :param skip_cache: Deprecated, and now has no effect as the
-            corresponding internal functionality has been removed. This
-            parameter will be removed in a future version.
-        :return: List of supported target languages.
-        """
 
     def _get_target_languages_pre(self) -> tuple[HttpRequest, BaseContext]:
         return (
@@ -522,11 +883,6 @@ class TranslatorBase:
             )
             for language in languages
         ]
-
-    @abstractmethod
-    def get_glossary_languages(self) -> List[GlossaryLanguagePair]:
-        """Request the list of language pairs supported for glossaries."""
-
     def _get_glossary_languages_pre(self) -> tuple[HttpRequest, BaseContext]:
         return (
             self._prepare_http_request(
@@ -553,10 +909,6 @@ class TranslatorBase:
             for language_pair in supported_languages
         ]
 
-    @abstractmethod
-    def get_usage(self) -> Usage:
-        """Requests the current API usage."""
-
     def _get_usage_pre(self) -> tuple[HttpRequest, BaseContext]:
         return (
             self._prepare_http_request("v2/usage", method="GET"),
@@ -573,41 +925,49 @@ class TranslatorBase:
             json = {}
         return Usage(json)
 
-    @abstractmethod
-    def create_glossary(
+    def _create_glossary_pre(
         self,
         name: str,
         source_lang: Union[str, Language],
         target_lang: Union[str, Language],
         entries: Dict[str, str],
+    ) -> tuple[HttpRequest, BaseContext]:
+        if not entries:
+            raise ValueError("glossary entries must not be empty")
+
+        return self._create_glossary_pre_common(
+            name,
+            source_lang,
+            target_lang,
+            "tsv",
+            util.convert_dict_to_tsv(entries),
+        )
+
+    def _create_glossary_post(
+        self, response: HttpResponse, context: BaseContext
     ) -> GlossaryInfo:
-        """Creates a glossary with given name for the source and target
-        languages, containing the entries in dictionary. The glossary may be
-        used in the translate_text functions.
+        self._raise_for_status(response)
+        return GlossaryInfo.from_json(response.json)
 
-        Only certain language pairs are supported. The available language pairs
-        can be queried using get_glossary_languages(). Glossaries are not
-        regional specific: a glossary with target language EN may be used to
-        translate texts into both EN-US and EN-GB.
+    def _create_glossary_from_csv_pre(
+        self,
+        name: str,
+        source_lang: Union[str, Language],
+        target_lang: Union[str, Language],
+        csv_data: Union[TextIO, BinaryIO, str, bytes, Any],
+    ) -> tuple[HttpRequest, BaseContext]:
+        entries = (
+            csv_data if isinstance(csv_data, (str, bytes)) else csv_data.read()
+        )
 
-        This function requires the glossary entries to be provided as a
-        dictionary of source-target terms. To create a glossary from a CSV file
-        downloaded from the DeepL website, see create_glossary_from_csv().
+        if not isinstance(entries, (bytes, str)):
+            raise ValueError("Entries of the glossary are invalid")
 
-        :param name: user-defined name to attach to glossary.
-        :param source_lang: Language of source terms.
-        :param target_lang: Language of target terms.
-        :param entries: dictionary of terms to insert in glossary, with the
-            keys and values representing source and target terms respectively.
-        :return: GlossaryInfo containing information about created glossary.
+        return self._create_glossary_pre_common(
+            name, source_lang, target_lang, "csv", entries
+        )
 
-        :raises ValueError: If the glossary name is empty, or entries are
-            empty or invalid.
-        :raises DeepLException: If source and target language pair are not
-            supported for glossaries.
-        """
-
-    def _create_glossary_pre(
+    def _create_glossary_pre_common(
         self,
         name: str,
         source_lang: Union[str, Language],
@@ -629,46 +989,31 @@ class TranslatorBase:
             "entries_format": entries_format,
             "entries": entries,
         }
-
         return (
             self._prepare_http_request("v2/glossaries", json=request_data),
             BaseContext(),
         )
 
-    def _create_glossary_post(
+    def _create_glossary_from_csv_post(
         self, response: HttpResponse, context: BaseContext
     ) -> GlossaryInfo:
-        self._raise_for_status(response)
-        return GlossaryInfo.from_json(response.json)
+        return self._create_glossary_post(response, context)
 
-    # TODO create_glossary
-
-    @abstractmethod
-    def get_glossary(self, glossary_id: str) -> GlossaryInfo:
-        """Retrieves GlossaryInfo for the glossary with specified ID.
-
-        :param glossary_id: ID of glossary to retrieve.
-        :return: GlossaryInfo with information about specified glossary.
-        :raises GlossaryNotFoundException: If no glossary with given ID is
-            found.
-        """
-
-    def _get_glossary_pre(self, glossary_id: str) -> tuple[HttpRequest, BaseContext]:
+    def _get_glossary_pre(
+        self, glossary_id: str
+    ) -> tuple[HttpRequest, BaseContext]:
         return (
-                self._prepare_http_request(f"v2/glossaries/{glossary_id}", method="GET"),
-                BaseContext(),
-            )
-    def _get_glossary_post(self, response: HttpResponse, context: BaseContext) -> GlossaryInfo:
+            self._prepare_http_request(
+                f"v2/glossaries/{glossary_id}", method="GET"
+            ),
+            BaseContext(),
+        )
+
+    def _get_glossary_post(
+        self, response: HttpResponse, context: BaseContext
+    ) -> GlossaryInfo:
         self._raise_for_status(response, glossary_management=True)
         return GlossaryInfo.from_json(response.json)
-
-
-    @abstractmethod
-    def list_glossaries(self) -> List[GlossaryInfo]:
-        """Retrieves GlossaryInfo for all available glossaries.
-
-        :return: list of GlossaryInfo for all available glossaries.
-        """
 
     def _list_glossaries_pre(self) -> tuple[HttpRequest, BaseContext]:
         return (
@@ -677,7 +1022,7 @@ class TranslatorBase:
         )
 
     def _list_glossaries_post(
-            self, response: HttpResponse, context: BaseContext
+        self, response: HttpResponse, context: BaseContext
     ) -> List[GlossaryInfo]:
         self._raise_for_status(response, glossary_management=True)
         json = response.json
@@ -688,28 +1033,53 @@ class TranslatorBase:
         )
         return [GlossaryInfo.from_json(glossary) for glossary in glossaries]
 
-    # TODO get_glossary_entries
-    # TODO delete_glossary
+    def _get_glossary_entries_pre(
+        self, glossary: Union[str, GlossaryInfo]
+    ) -> tuple[HttpRequest, BaseContext]:
+        if isinstance(glossary, GlossaryInfo):
+            glossary_id = glossary.glossary_id
+        else:
+            glossary_id = glossary
 
+        return (
+            self._prepare_http_request(
+                f"v2/glossaries/{glossary_id}/entries",
+                method="GET",
+                headers={"Accept": "text/tab-separated-values"},
+            ),
+            BaseContext(),
+        )
 
-        # def _get_usage_pre(self) -> tuple[HttpRequest, BaseContext]:
-        #     return (
-        #         self._prepare_http_request("v2/usage", method="GET"),
-        #         BaseContext(),
-        #     )
-        #
-        # def _get_usage_post(
-        #         self, response: HttpResponse, context: BaseContext
-        # ) -> Usage:
-        #     self._raise_for_status(response, context)
-        #
-        #     json = response.json
-        #     if not isinstance(json, dict):
-        #         json = {}
-        #     return Usage(json)
+    def _get_glossary_entries_post(
+        self, response: HttpResponse, context: BaseContext
+    ) -> dict:
+        self._raise_for_status(response, glossary_management=True)
+        if not isinstance(response.text, str):
+            raise DeepLException(
+                "Could not get the glossary content as a string",
+                http_status_code=response.status_code,
+            )
+        return util.convert_tsv_to_dict(response.text)
 
-    def set_app_info(self, app_info_name: str, app_info_version: str):
-        self._set_user_agent(app_info_name, app_info_version)
+    def _delete_glossary_pre(
+        self, glossary: Union[str, GlossaryInfo]
+    ) -> tuple[HttpRequest, BaseContext]:
+        if isinstance(glossary, GlossaryInfo):
+            glossary_id = glossary.glossary_id
+        else:
+            glossary_id = glossary
+
+        return (
+            self._prepare_http_request(
+                f"v2/glossaries/{glossary_id}", method="DELETE"
+            ),
+            BaseContext(),
+        )
+
+    def _delete_glossary_post(
+        self, response: HttpResponse, context: BaseContext
+    ) -> None:
+        self._raise_for_status(response, glossary_management=True)
 
     @property
     def server_url(self):

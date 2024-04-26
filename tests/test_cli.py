@@ -23,6 +23,7 @@ def runner(server):
         "DEEPL_SERVER_URL": server.server_url,
         "DEEPL_AUTH_KEY": server.auth_key,
     }
+    print(f"env: {env}")
     return CliRunner(env=env)
 
 

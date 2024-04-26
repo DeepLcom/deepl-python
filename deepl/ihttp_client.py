@@ -1,18 +1,18 @@
-# Copyright 2022-2024 DeepL SE (https://www.deepl.com)
+# Copyright 2022 DeepL SE (https://www.deepl.com)
 # Use of this source code is governed by an MIT
 # license that can be found in the LICENSE file.
+import http
 import time
 from abc import abstractmethod, ABC
+from typing import Optional
+
+from deepl import util
 
 from . import http_client
 from .backoff_timer import BackoffTimer
-from .translator_base import HttpRequest, HttpResponse
 from .exceptions import ConnectionException, DeepLException
-import http
-from typing import Dict, Optional, Tuple, Union, Any
+from .translator_base import HttpRequest, HttpResponse
 from .util import log_info
-from deepl import util
-import json as json_module
 
 
 class IPreparedRequest(ABC):
@@ -24,8 +24,8 @@ class IHttpClient(ABC):
     @abstractmethod
     def prepare_request(self, request: HttpRequest) -> IPreparedRequest:
         """
-        Implementations should prepare the given request suitable for their purposes.
-        Any exceptions can be thrown, they will be rethrown up.
+        Implementations should prepare the given request suitable for their
+        purposes. Any exceptions can be thrown, they will be rethrown.
         """
         pass
 
@@ -34,20 +34,30 @@ class IHttpClient(ABC):
         self, prepared_request: IPreparedRequest, timeout: float
     ) -> HttpResponse:
         """
-        Implementations should send the given prepared request, respecting the given timeout.
+        Implementations should send the given prepared request, respecting the
+        given timeout. The response should be stored as an HttpResponse.
 
-        Sending the request should be retryable: the prepared request must not be consumed by
-        this operation. This is particularly relevant when streaming file data.
+        Sending the request should be retryable: the prepared request must not
+        be consumed by this operation. This is particularly relevant when
+        streaming file data.
 
-        Any failures should throw a deepl.ConnectionException with should_retry set sensibly.
+        Any failures should throw a deepl.ConnectionException with should_retry
+        set sensibly, for example failures due to transient conditions should
+        be retried.
         """
         pass
 
     def request_with_backoff(self, request: HttpRequest) -> HttpResponse:
         """Makes API request, retrying if necessary, and returns response.
 
-        Return and exceptions are the same as function request()."""
+        Return and exceptions are the same as function request().
 
+        Response is returned as HTTP status code and either content string (if
+        stream is False) or response (if stream is True).
+
+        If no response is received will raise ConnectionException."""
+
+        self._log_request(request)
         try:
             prepared_request = self.prepare_request(request)
         except Exception as e:
@@ -76,6 +86,7 @@ class IHttpClient(ABC):
                 response, exception, backoff.get_num_retries()
             ):
                 if response is not None:
+                    self._log_response(request, response)
                     return response
                 else:
                     raise exception  # type: ignore[misc]
@@ -92,27 +103,19 @@ class IHttpClient(ABC):
             )
             time.sleep(backoff.get_time_until_wakeup())
 
-    # def request(
-    #     self,
-    #     method: str,
-    #     url: str,
-    #     data: Optional[dict],
-    #     json: Optional[dict],
-    #     headers: dict,
-    #     stream: bool = False,
-    #     **kwargs,
-    # ) -> Tuple[int, Union[str, requests.Response]]:
-    #     """Makes API request and returns response content.
-    #
-    #     Response is returned as HTTP status code and either content string (if
-    #     stream is False) or response (if stream is True).
-    #
-    #     If no response is received will raise ConnectionException."""
-    #
-    #     request = self._prepare_request(
-    #         method, url, data, json, headers, **kwargs
-    #     )
-    #     return self._internal_request(request, stream)
+    def _log_request(self, request: HttpRequest):
+        util.log_info(
+            "Request to DeepL API", method=request.method, url=request.url
+        )
+        util.log_debug("Request details", data=request.data, json=request.json)
+
+    def _log_response(self, request: HttpRequest, response: HttpResponse):
+        util.log_info(
+            "DeepL API response",
+            url=request.url,
+            status_code=response.status_code,
+        )
+        util.log_debug("Response details", content=response.text)
 
     def _should_retry(
         self,

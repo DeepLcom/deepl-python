@@ -2,7 +2,8 @@
 # Use of this source code is governed by an MIT
 # license that can be found in the LICENSE file.
 
-from typing import Union, Dict
+import json as json_module
+from typing import Union, Dict, Iterator
 
 import requests
 
@@ -22,15 +23,36 @@ class RequestPreparedRequest(IPreparedRequest):
         elif request.json is not None:
             # This is fine, see official docs
             # https://requests.readthedocs.io/en/latest/user/quickstart/#more-complicated-post-requests
-            data = json_module.dumps(json)  # type: ignore[assignment]
+            data = json_module.dumps(request.json)  # type: ignore[assignment]
             request.headers["Content-Type"] = "application/json"
         self.prepared_request = requests.Request(
             request.method,
             request.url,
             data=data,
             headers=request.headers,
+            files=request.files,
             **kwargs,
         ).prepare()
+        self.stream = request.stream
+
+
+class RequestsResponse(HttpResponse):
+    def iter_content(self, chunk_size) -> Iterator:
+        return self.raw_response.iter_content(chunk_size)
+
+    def __init__(self, response: requests.Response, stream: bool):
+        if stream:
+            super().__init__(
+                response.status_code, None, response.headers, response
+            )
+        else:
+            try:
+                response.encoding = "UTF-8"
+                super().__init__(
+                    response.status_code, response.text, response.headers, None
+                )
+            finally:
+                response.close()
 
 
 class RequestsHttpClient(IHttpClient):
@@ -64,28 +86,13 @@ class RequestsHttpClient(IHttpClient):
         self, prepared_request: IPreparedRequest, timeout: float
     ) -> HttpResponse:
         prepared_request: RequestPreparedRequest
-        stream = False  #  TODO prepared_request.request.stream
         try:
             response = self._session.send(
                 prepared_request.prepared_request,
-                stream=stream,
+                stream=prepared_request.stream,
                 timeout=timeout,
             )
-            if stream:
-                return HttpResponse(
-                    response.status_code, None, dict(response.headers.items())
-                )  # TODO handle streams
-            else:
-                try:
-                    response.encoding = "UTF-8"
-                    return HttpResponse(
-                        response.status_code,
-                        response.text,
-                        dict(response.headers.items()),
-                    )
-                finally:
-                    response.close()
-
+            return RequestsResponse(response, stream=prepared_request.stream)
         except requests.exceptions.ConnectionError as e:
             message = f"Connection failed: {e}"
             raise ConnectionException(message, should_retry=True) from e
