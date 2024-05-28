@@ -1,0 +1,227 @@
+name: Python
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  schedule:
+    - cron: '10 0 * * *'
+
+env:
+  PIP_CACHE_DIR: "${{ github.workspace }}/.cache/pip"
+  XDG_CACHE_HOME: "${{ github.workspace }}/.cache"
+  POETRY_VIRTUALENVS_IN_PROJECT: "true"
+  REQUESTS_CA_BUNDLE: "/etc/ssl/certs/ca-certificates.crt"
+  SECRET_DETECTION_JSON_REPORT_FILE: "gitleaks.json"
+
+jobs:
+  black:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install dependencies
+        run: |
+          python3 -m venv .venv
+          source .venv/bin/activate
+          pip install --upgrade pip
+          pip install poetry==1.4.2
+          poetry install -vv -E keyring
+      - name: Run black check
+        run: |
+          source .venv/bin/activate
+          poetry run black --check .
+
+  flake8:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install dependencies
+        run: |
+          python3 -m venv .venv
+          source .venv/bin/activate
+          pip install --upgrade pip
+          pip install poetry==1.4.2
+          poetry install -vv -E keyring
+      - name: Run flake8 check
+        run: |
+          source .venv/bin/activate
+          poetry run flake8 deepl tests
+
+  license_check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Run license check
+        run: |
+          ./license_checker.sh '*.py' | tee license_check_output.txt
+          [ ! -s license_check_output.txt ]
+
+  mypy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install dependencies
+        run: |
+          python3 -m venv .venv
+          source .venv/bin/activate
+          pip install --upgrade pip
+          pip install poetry==1.4.2
+          poetry install -vv -E keyring
+      - name: Run mypy check
+        run: |
+          source .venv/bin/activate
+          poetry run mypy --exclude 'examples/' .
+
+  secret_detection:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install and run secret detection
+        run: |
+          wget https://github.com/gitleaks/gitleaks/releases/download/v8.18.4/gitleaks_8.18.4_linux_x64.tar.gz
+          tar -xzf gitleaks_8.18.4_linux_x64.tar.gz
+          EXITCODE=0
+          ./gitleaks detect -r ${SECRET_DETECTION_JSON_REPORT_FILE} --source . --log-opts="--all --full-history" || EXITCODE=$?
+          if [[ $EXITCODE -ne 0 ]]; then
+            exit $EXITCODE
+          fi
+      - name: Upload secret detection artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: secret-detection-results
+          path: gitleaks.json
+
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install dependencies
+        run: |
+          python3 -m venv .venv
+          source .venv/bin/activate
+          pip install --upgrade pip
+          pip install poetry==1.4.2
+          poetry install -vv -E keyring
+      - name: Build package
+        run: |
+          source .venv/bin/activate
+          poetry build --verbose --no-interaction
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: dist/
+
+# Test and `pypi upload` stage are disabled/missing for now. Code needs to be tested
+
+#######################################################
+# test:
+#   runs-on: ${{ matrix.config.docker-image }}
+#   strategy:
+#     matrix:
+#       config:
+#         - docker-image: python:3.6
+#           use-mock-server: use mock server
+#           use-old-poetry-version: use old poetry version
+#         - docker-image: python:3.7
+#           use-mock-server: use mock server
+#         - docker-image: python:3.8
+#           use-mock-server: use mock server
+#         - docker-image: python:3.9
+#           use-mock-server: use mock server
+#         - docker-image: python:3.10
+#           use-mock-server: use mock server
+#         - docker-image: python:3.11
+#           use-mock-server: use mock server
+#         - docker-image: python:3.11
+#         - docker-image: python:3.6
+#           use-mock-server: use mock server
+#           use-old-poetry-version: use old poetry version
+#           extra-poetry-add-argument: requests@2.0
+#         - docker-image: python:3.9
+#           use-mock-server: use mock server
+#           extra-poetry-add-argument: requests@2.0
+#         # Set minimum possible requests and urllib3 versions to work with Python 3.11
+#         - docker-image: python:3.11
+#           use-mock-server: use mock server
+#           extra-poetry-add-argument: requests@2.20 urllib3@1.23
+#   steps:
+#     - name: Checkout
+#       uses: actions/checkout@v2
+#     - name: Run tests
+#       run: |
+#         if [[ ! -z "${{ matrix.config.extra-poetry-add-argument }}" ]]; then
+#           echo "Running poetry add ${{ matrix.config.extra-poetry-add-argument }}"
+#           poetry add ${{ matrix.config.extra-poetry-add-argument }}
+#         fi
+#         if [[ ! -z "${{ matrix.config.use-mock-server }}" ]]; then
+#           echo "Using mock server"
+#           export DEEPL_SERVER_URL=http://deepl-mock:3000
+#           export DEEPL_MOCK_SERVER_PORT=3000
+#           export DEEPL_PROXY_URL=http://deepl-mock:3001
+#           export DEEPL_MOCK_PROXY_SERVER_PORT=3001
+#         fi
+#         poetry run coverage run -m pytest --junit-xml test_report.xml
+#         poetry run coverage report
+#         poetry run coverage xml
+#     - name: Upload test results
+#       uses: actions/upload-artifact@v2
+#       with:
+#         name: test-results
+#         path: test_report.xml
+
+# mustache_example:
+#   runs-on: ubuntu-latest
+#   steps:
+#     - name: Checkout
+#       uses: actions/checkout@v2
+#     - name: Install dependencies
+#       run: |
+#         python3 -m venv .venv
+#         source .venv/bin/activate
+#         pip install --upgrade pip
+#         pip install poetry==1.4.2
+#         poetry install -vv -E keyring
+#     - name: Run mustache example
+#       run: |
+#         cd examples/mustache
+#         pip install deepl
+#         python . --help
+#         python . --from en --to de "Hello {{user}}, your balance is {{{balance}}} dollars." > mustache_result.txt
+#         cat mustache_result.txt
+#         grep -q "{{user}}" mustache_result.txt
+#         grep -q "{{{balance}}}" mustache_result.txt
+
+# basic_usage_example:
+#   runs-on: ubuntu-latest
+#   steps:
+#     - name: Checkout
+#       uses: actions/checkout@v2
+#     - name: Install dependencies
+#       run: |
+#         python3 -m venv .venv
+#         source .venv/bin/activate
+#         pip install --upgrade pip
+#         pip install poetry==1.4.2
+#         poetry install -vv -E keyring
+#     - name: Run basic usage example
+#       run: |
+#         poetry build --verbose --no-interaction
+#         cd examples/basic_usage
+#         python3 -m venv .examplevenv
+#         source .examplevenv/bin/activate
+#         pip install ../../dist/deepl-*.tar.gz
+#         set -o pipefail
+#         python . 2>&1 | tee basic_usage_result.txt
+#         grep -q "Success" basic_usage_result.txt
+#         pip install mypy
+#         mypy .
