@@ -155,9 +155,8 @@ arguments are:
   containing the glossary ID, or a `GlossaryInfo` as returned by
   `get_glossary()`.
 - `context`: specifies additional context to influence translations, that is not
-  translated itself. Note this is an **alpha feature**: it may be deprecated at
-  any time, or incur charges if it becomes generally available.
-  See the [API documentation][api-docs-context-param] for more information and
+  translated itself. Characters in the `context` parameter are not counted toward billing.
+  See the [API documentation][api-docs-context-param] for more information and 
   example usage.
 - `tag_handling`: type of tags to parse before translation, options are `'html'`
   and `'xml'`.
