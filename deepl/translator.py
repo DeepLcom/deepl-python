@@ -359,10 +359,9 @@ class Translator:
         :param target_lang: language code to translate text into, for example
             "DE", "EN-US", "FR".
         :param context: (Optional) Additional contextual text to influence
-            translations, that is not translated itself. Note: this is an alpha
-            feature: it may be deprecated at any time, or incur charges if it
-            becomes generally available. See the API documentation for more
-            information and example usage.
+            translations, that is not translated itself. Characters in the
+            `context` parameter are not counted toward billing. See the API
+            documentation for more information and example usage.
         :param split_sentences: (Optional) Controls how the translation engine
             should split input into sentences before translation, see
             :class:`SplitSentences`.
