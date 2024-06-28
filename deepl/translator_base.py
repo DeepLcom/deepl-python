@@ -19,6 +19,7 @@ from typing import (
     TextIO,
     Union,
     Iterator,
+    Callable,
 )
 
 import requests  # type: ignore
@@ -60,8 +61,10 @@ class HttpRequest:
     :param json: If not None, the request body to encode as JSON.
     :param data: HTTP data to include as multipart-form
     :param files: If not None, files to include as multipart-form
-    :param stream: If true, the response should be streamed, see
-        HttpResponse.iter_content()
+    :param stream: If true, the response body should not be read immediately as
+        it will be handled subsequently, see HttpResponse.raw_response()
+    :param stream_chunks: If true, the response body should be streamed to the
+        given callable.
     """
 
     def __init__(
@@ -73,6 +76,7 @@ class HttpRequest:
         data: Optional[dict],
         files: Optional[Dict[str, Any]],
         stream: bool,
+        stream_chunks: Optional[Callable[[bytes], None]],
     ):
         self.method = method
         self.url = url
@@ -81,6 +85,7 @@ class HttpRequest:
         self.json = json
         self.files = files
         self.stream = stream
+        self.stream_chunks = stream_chunks
 
 
 class HttpResponse:
@@ -88,28 +93,42 @@ class HttpResponse:
         self,
         status_code: int,
         text: Optional[str],
-        headers: dict[
-            str, str
-        ],  # Union[CaseInsensitiveDict[str, str], dict[str, str]],
-        raw_response: Any,
+        headers: dict[str, str],
     ):
-        self.status_code = status_code
-        self.text = text
-        self.headers = CaseInsensitiveDict(headers)
-        self.raw_response = raw_response
+        self._status_code = status_code
+        self._text = text
+        self._headers = CaseInsensitiveDict(headers)
 
-        content_type = "Content-Type"
-        if content_type in self.headers and self.headers[
-            content_type
-        ].startswith(
-            "application/json"
-        ):  # TODO improve json-compatible check
-            self.json = json_module.loads(self.text)
-        else:
-            self.json = None
+        try:
+            self._json = json_module.loads(self._text) if self._text else None
+        except json_module.JSONDecodeError:
+            self._json = None
+
+    @property
+    def status_code(self) -> int:
+        return self._status_code
+
+    @property
+    def text(self) -> Optional[str]:
+        return self._text
+
+    @property
+    def headers(self) -> CaseInsensitiveDict[str]:
+        return self._headers
+
+    @property
+    def json(self) -> Optional[Any]:
+        return self._json
 
     @abstractmethod
-    def iter_content(self, chunk_size) -> Iterator:
+    def raw_response(self) -> Any:
+        """
+        TODO
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
+    def iter_content(self, chunk_size) -> Iterator[bytes]:
         """
         Implementations should return an iterator that returns the content.
         """
@@ -174,6 +193,7 @@ class TranslatorBase:
         json: Optional[dict] = None,
         files: Optional[dict[str, Any]] = None,
         stream: bool = False,
+        stream_chunks: Optional[Callable[[bytes], None]] = None,
     ) -> HttpRequest:
         if data is not None and json is not None:
             raise ValueError("cannot accept both json and data")
@@ -185,7 +205,9 @@ class TranslatorBase:
         headers.update(
             {k: v for k, v in self.headers.items() if k not in headers}
         )
-        return HttpRequest(method, url, headers, json, data, files, stream)
+        return HttpRequest(
+            method, url, headers, json, data, files, stream, stream_chunks
+        )
 
     def _raise_for_status(
         self,
@@ -357,10 +379,9 @@ class TranslatorBase:
         :param target_lang: language code to translate text into, for example
             "DE", "EN-US", "FR".
         :param context: (Optional) Additional contextual text to influence
-            translations, that is not translated itself. Note: this is an alpha
-            feature: it may be deprecated at any time, or incur charges if it
-            becomes generally available. See the API documentation for more
-            information and example usage.
+            translations, that is not translated itself. Characters in the
+            `context` parameter are not counted toward billing. See the API
+            documentation for more information and example usage.
         :param split_sentences: (Optional) Controls how the translation engine
             should split input into sentences before translation, see
             :class:`SplitSentences`.
@@ -810,36 +831,23 @@ class TranslatorBase:
         request = self._prepare_http_request(
             f"v2/document/{handle.document_id}/result",
             json={"document_key": handle.document_key},
-            stream=True,
+            stream=output_file is None,
+            stream_chunks=output_file.write if output_file else None,
         )
         context = BaseContext()
         context.output_file = output_file
-        context.chunk_size = chunk_size
         return request, context
 
     def _translate_document_download_post(
         self, response: HttpResponse, context: BaseContext
     ) -> Optional[Any]:
         output_file = context.output_file
-        chunk_size = context.chunk_size
-        # TODO: once we drop py3.6 support, replace this with @overload
-        # annotations in `_api_call` and chained private functions.
-        # See for example https://stackoverflow.com/a/74070166/4926599
-        # In addition, drop the type: ignore annotation on the
-        # `import requests` / `from requests`
-
-        # assert isinstance(response, requests.Response)
-        # TODO ^ How do we replace this? Is it still needed with async change?
-
         self._raise_for_status(response, downloading_document=True)
 
         if output_file:
-            chunks = response.iter_content(chunk_size=chunk_size)
-            for chunk in chunks:
-                output_file.write(chunk)
             return None
         else:
-            return response.raw_response
+            return response.raw_response()
 
     def _get_source_languages_pre(self) -> tuple[HttpRequest, BaseContext]:
         return (
@@ -883,6 +891,7 @@ class TranslatorBase:
             )
             for language in languages
         ]
+
     def _get_glossary_languages_pre(self) -> tuple[HttpRequest, BaseContext]:
         return (
             self._prepare_http_request(

@@ -23,6 +23,14 @@ class IAsyncHttpClient(IHttpClient, ABC):
         pass
 
     @abstractmethod
+    async def prepare_request(self, request: HttpRequest) -> IPreparedRequest:
+        """
+        Implementations should prepare the given request suitable for their
+        purposes. Any exceptions can be thrown, they will be rethrown.
+        """
+        pass
+
+    @abstractmethod
     async def close(self):
         """
         Async implementations may implement this, e.g. to clean up sessions.
@@ -38,7 +46,7 @@ class IAsyncHttpClient(IHttpClient, ABC):
 
         self._log_request(request)
         try:
-            prepared_request = self.prepare_request(request)
+            prepared_request = await self.prepare_request(request)
         except Exception as e:
             raise DeepLException(
                 f"Error occurred while preparing request: {e}"

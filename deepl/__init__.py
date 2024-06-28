@@ -19,7 +19,7 @@ from .exceptions import (  # noqa
 
 from . import http_client  # noqa
 
-from .translator import (  # noqa
+from .api_data import (
     DocumentHandle,
     DocumentStatus,
     Formality,
@@ -27,10 +27,23 @@ from .translator import (  # noqa
     Language,
     SplitSentences,
     TextResult,
-    Translator,
     Usage,
 )
-from .translator_async import TranslatorAsync  # noqa
+
+from .translator import Translator
+
+
+try:
+    import asyncio
+    import aiohttp
+    have_async = True
+except ImportError:
+    asyncio = None
+    aiohttp = None
+    have_async = False
+
+if have_async:
+    from .translator_async import TranslatorAsync  # noqa
 
 from .util import (  # noqa
     auth_key_is_free_account,

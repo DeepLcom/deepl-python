@@ -57,7 +57,7 @@ before_script:
       pip install poetry==1.4.2
     fi
   - poetry --version
-  - poetry install -vv -E keyring
+  - poetry install -vv -E keyring ${POETRY_INSTALL_EXTRAS}
 
 # stage: check ----------------------
 
@@ -169,6 +169,12 @@ package:
         USE_OLD_POETRY_VERSION: "use old poetry version"
       - DOCKER_IMAGE: "python:3.9"
         EXTRA_POETRY_ADD_ARGUMENT: "requests@2.0"
+        USE_MOCK_SERVER: "use mock server"
+      - DOCKER_IMAGE: "python:3.8"
+        POETRY_INSTALL_EXTRAS: "-E async"
+        USE_MOCK_SERVER: "use mock server"
+      - DOCKER_IMAGE: "python:3.11"
+        POETRY_INSTALL_EXTRAS: "-E async"
         USE_MOCK_SERVER: "use mock server"
       - DOCKER_IMAGE: "python:3.11"
         # Set minimum possible requests and urllib3 versions to work with Python 3.11

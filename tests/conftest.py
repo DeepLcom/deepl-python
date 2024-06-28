@@ -158,7 +158,7 @@ def translator(server) -> deepl.Translator:
 
 
 @pytest.fixture
-def async_translator_factory(server) -> Callable[[], deepl.TranslatorAsync]:
+def async_translator_factory(server) -> Callable[[], "deepl.TranslatorAsync"]:
     """Returns a factory to create a deepl.TranslatorAsync to use in all tests
     taking a parameter 'translator'."""
 
@@ -393,6 +393,11 @@ needs_mock_proxy_server = pytest.mark.skipif(
 needs_real_server = pytest.mark.skipif(
     not (Config().mock_server_port is None),
     reason="this test requires a real server",
+)
+# Decorate test functions with "@needs_async" to skip them if async unavailable
+needs_async = pytest.mark.skipif(
+    not deepl.have_async,
+    reason="this test requires async extensions",
 )
 
 

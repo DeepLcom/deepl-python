@@ -96,7 +96,7 @@ class Translator(TranslatorBase):
         )
 
         if http_client:
-            self._client = http_client # TODO proxy, verify_ssl?
+            self._client = http_client  # TODO proxy, verify_ssl?
         else:
             self._client = RequestsHttpClient(proxy, verify_ssl)
 
@@ -314,6 +314,10 @@ class Translator(TranslatorBase):
         raise NotImplementedError("replaced by decorator")
 
     @with_base_pre_and_post
+    def get_usage(self) -> Usage:
+        raise NotImplementedError("replaced by decorator")
+
+    @with_base_pre_and_post
     def get_source_languages(self, skip_cache=False) -> List[Language]:
         raise NotImplementedError("replaced by decorator")
 
@@ -323,10 +327,6 @@ class Translator(TranslatorBase):
 
     @with_base_pre_and_post
     def get_glossary_languages(self) -> List[GlossaryLanguagePair]:
-        raise NotImplementedError("replaced by decorator")
-
-    @with_base_pre_and_post
-    def get_usage(self) -> Usage:
         raise NotImplementedError("replaced by decorator")
 
     @with_base_pre_and_post

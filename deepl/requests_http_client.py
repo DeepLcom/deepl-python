@@ -33,23 +33,25 @@ class RequestPreparedRequest(IPreparedRequest):
             files=request.files,
             **kwargs,
         ).prepare()
-        self.stream = request.stream
+        self.stream = request.stream or (request.stream_chunks is not None)
 
 
 class RequestsResponse(HttpResponse):
-    def iter_content(self, chunk_size) -> Iterator:
-        return self.raw_response.iter_content(chunk_size)
+    def iter_content(self, chunk_size) -> Iterator[bytes]:
+        return self._raw_response.iter_content(chunk_size)
+
+    def raw_response(self) -> requests.Response:
+        return self._raw_response
 
     def __init__(self, response: requests.Response, stream: bool):
+        self._raw_response = response
         if stream:
-            super().__init__(
-                response.status_code, None, response.headers, response
-            )
+            super().__init__(response.status_code, None, response.headers)
         else:
             try:
                 response.encoding = "UTF-8"
                 super().__init__(
-                    response.status_code, response.text, response.headers, None
+                    response.status_code, response.text, response.headers
                 )
             finally:
                 response.close()
@@ -92,7 +94,18 @@ class RequestsHttpClient(IHttpClient):
                 stream=prepared_request.stream,
                 timeout=timeout,
             )
+
+            if (
+                200 <= response.status_code < 400
+                and prepared_request.request.stream_chunks
+            ):
+                chunks = response.iter_content()
+                for chunk in chunks:
+                    prepared_request.request.stream_chunks(chunk)
+                response.close()
+
             return RequestsResponse(response, stream=prepared_request.stream)
+
         except requests.exceptions.ConnectionError as e:
             message = f"Connection failed: {e}"
             raise ConnectionException(message, should_retry=True) from e
