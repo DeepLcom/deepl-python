@@ -96,9 +96,10 @@ There are additional optional arguments to control translation, see
 [Text translation options](#text-translation-options) below.
 
 `translate_text()` returns a `TextResult`, or a list of `TextResult`s
-corresponding to your input text(s). `TextResult` has two properties: `text` is
-the translated text, and `detected_source_lang` is the detected source language
-code.
+corresponding to your input text(s). `TextResult` has the following properties:
+- `text` is the translated text,
+- `detected_source_lang` is the detected source language code,
+- `billed_characters` is the number of characters billed for the translation. 
 
 ```python
 # Translate text into a target language, in this case, French:
@@ -107,12 +108,15 @@ print(result.text)  # "Bonjour, le monde !"
 
 # Translate multiple texts into British English
 result = translator.translate_text(
-    ["お元気ですか？", "¿Cómo estás?"], target_lang="EN-GB"
+    ["お元気ですか？", "¿Cómo estás?"],
+    target_lang="EN-GB",
 )
 print(result[0].text)  # "How are you?"
 print(result[0].detected_source_lang)  # "JA" the language code for Japanese
+print(result[0].billed_characters)  # 7 - the number of characters in the source text "お元気ですか？"
 print(result[1].text)  # "How are you?"
 print(result[1].detected_source_lang)  # "ES" the language code for Spanish
+print(result[1].billed_characters)  # 12 - the number of characters in the source text "¿Cómo estás?"
 
 # Translate into German with less and more Formality:
 print(

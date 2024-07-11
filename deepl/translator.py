@@ -411,6 +411,10 @@ class Translator:
         )
         request_data["text"] = text
 
+        # Always send show_billed_characters=true, remove when the API default
+        # is changed to true
+        request_data["show_billed_characters"] = True
+
         if context is not None:
             request_data["context"] = context
         if split_sentences is not None:
@@ -452,12 +456,17 @@ class Translator:
         output = []
         for translation in translations:
             text = translation.get("text", "") if translation else ""
-            lang = (
+            detected_source_language = (
                 translation.get("detected_source_language", "")
                 if translation
                 else ""
             )
-            output.append(TextResult(text, detected_source_lang=lang))
+            billed_characters = util.get_int_safe(
+                translation, "billed_characters"
+            )
+            output.append(
+                TextResult(text, detected_source_language, billed_characters)
+            )
 
         return output if multi_input else output[0]
 

@@ -14,6 +14,7 @@ def test_single_text(translator):
     assert example_text["DE"] == result.text
     assert "EN" == result.detected_source_lang
     assert example_text["DE"] == str(result)
+    assert result.billed_characters == len(example_text["EN"])
 
 
 def test_string_list(translator):

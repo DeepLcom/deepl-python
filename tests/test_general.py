@@ -32,10 +32,11 @@ def test_example_translation(lang, translator):
 
     input_text = example_text[lang]
     source_lang = deepl.Language.remove_regional_variant(lang)
-    result_text = translator.translate_text(
+    result = (translator.translate_text(
         input_text, source_lang=source_lang, target_lang="EN-US"
-    ).text.lower()
-    assert "proton" in result_text
+    ))
+    assert "proton" in result.text.lower()
+    assert result.billed_characters == len(input_text)
 
 
 @needs_real_server

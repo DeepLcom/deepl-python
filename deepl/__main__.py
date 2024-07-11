@@ -78,6 +78,7 @@ def action_document(
 def action_text(
     translator: deepl.Translator,
     show_detected_source: bool = False,
+    show_billed_characters: Optional[bool] = None,
     **kwargs,
 ):
     """Action function for the text command."""
@@ -88,6 +89,13 @@ def action_text(
     for output in output_list:
         if show_detected_source:
             print(f"Detected source language: {output.detected_source_lang}")
+        if show_billed_characters:
+            text_value = (
+                "unknown"
+                if output.billed_characters is None
+                else output.billed_characters
+            )
+            print(f"Billed characters: {text_value}")
         print(output.text)
 
 
@@ -310,6 +318,12 @@ def get_parser(prog_name):
         "--preserve-formatting",
         action="store_true",
         help="leave original formatting unchanged during translation",
+    )
+    parser_text.add_argument(
+        "--show-billed-characters",
+        dest="show_billed_characters",
+        action="store_true",
+        help="print billed characters for each text",
     )
     parser_text.add_argument(
         "text",

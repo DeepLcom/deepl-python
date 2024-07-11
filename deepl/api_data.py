@@ -12,9 +12,15 @@ from deepl import util
 class TextResult:
     """Holds the result of a text translation request."""
 
-    def __init__(self, text: str, detected_source_lang: str):
+    def __init__(
+        self,
+        text: str,
+        detected_source_lang: str,
+        billed_characters: int,
+    ):
         self.text = text
         self.detected_source_lang = detected_source_lang
+        self.billed_characters = billed_characters
 
     def __str__(self):
         return self.text
