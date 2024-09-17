@@ -330,8 +330,11 @@ def _build_test_response():
     response = Mock(spec=Response)
     response.status_code = 200
     response.text = (
-        '{"translations": [{"detected_source_language": "EN", '
-        '"text": "protonstråle"}]}'
+        '{"translations": [{'
+        '"detected_source_language": "EN", '
+        '"text": "protonstråle", '
+        f'"billed_characters": {len(example_text["EN"])}'
+        "}]}"
     )
     response.headers = {
         "Content-Type": "application/json",
