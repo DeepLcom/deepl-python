@@ -461,9 +461,7 @@ class Translator:
                 if translation
                 else ""
             )
-            billed_characters = util.get_int_safe(
-                translation, "billed_characters"
-            )
+            billed_characters = int(translation.get("billed_characters"))
             output.append(
                 TextResult(text, detected_source_language, billed_characters)
             )
