@@ -17,6 +17,24 @@ def test_single_text(translator):
     assert result.billed_characters == len(example_text["EN"])
 
 
+@pytest.mark.parametrize(
+    "model_type",
+    [model_type for model_type in deepl.ModelType],
+)
+def test_model_type(translator, model_type):
+    result = translator.translate_text(
+        example_text["EN"], target_lang="DE", model_type=model_type
+    )
+    # TODO: use `removeprefix()` when we only support py3.8+
+    expected_model_type = str(model_type)
+    prefix_to_remove = "prefer_"
+    if expected_model_type.startswith(prefix_to_remove):
+        expected_model_type = expected_model_type[
+            len(prefix_to_remove) :  # noqa: E203
+        ]
+    assert expected_model_type == result.model_type_used
+
+
 def test_string_list(translator):
     texts = [example_text["FR"], example_text["EN"]]
     result = translator.translate_text(texts, target_lang="DE")

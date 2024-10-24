@@ -79,6 +79,7 @@ def action_text(
     translator: deepl.Translator,
     show_detected_source: bool = False,
     show_billed_characters: Optional[bool] = None,
+    show_model_type_used: Optional[bool] = None,
     **kwargs,
 ):
     """Action function for the text command."""
@@ -93,9 +94,17 @@ def action_text(
             text_value = (
                 "unknown"
                 if output.billed_characters is None
-                else output.billed_characters
+                else str(output.billed_characters)
             )
             print(f"Billed characters: {text_value}")
+        if show_model_type_used:
+            text_value = (
+                "unknown"
+                if output.model_type_used is None
+                else output.model_type_used
+            )
+            print(f"Model type used: {text_value}")
+
         print(output.text)
 
 
@@ -324,6 +333,19 @@ def get_parser(prog_name):
         dest="show_billed_characters",
         action="store_true",
         help="print billed characters for each text",
+    )
+    parser_text.add_argument(
+        "--show-model-type-used",
+        dest="show_model_type_used",
+        action="store_true",
+        help="print the model type used for each text",
+    )
+    parser_text.add_argument(
+        "--model-type",
+        type=str,
+        choices=[enum.value for enum in deepl.ModelType],
+        default=None,
+        help="control model used for translation, see API for information",
     )
     parser_text.add_argument(
         "text",

@@ -25,6 +25,7 @@ from .translator import (  # noqa
     Formality,
     GlossaryInfo,
     Language,
+    ModelType,
     SplitSentences,
     TextResult,
     Translator,

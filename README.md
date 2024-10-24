@@ -99,7 +99,9 @@ There are additional optional arguments to control translation, see
 corresponding to your input text(s). `TextResult` has the following properties:
 - `text` is the translated text,
 - `detected_source_lang` is the detected source language code,
-- `billed_characters` is the number of characters billed for the translation. 
+- `billed_characters` is the number of characters billed for the translation.
+- `model_type_used` indicates the translation model used, but is `None` unless
+  the `model_type` option is specified. 
 
 ```python
 # Translate text into a target language, in this case, French:
@@ -162,6 +164,14 @@ arguments are:
   translated itself. Characters in the `context` parameter are not counted toward billing.
   See the [API documentation][api-docs-context-param] for more information and 
   example usage.
+- `model_type`: specifies the type of translation model to use, options are:
+  - `'quality_optimized'` (`ModelType.QUALITY_OPTIMIZED`): use a translation
+    model that maximizes translation quality, at the cost of response time. 
+    This option may be unavailable for some language pairs.
+  - `'prefer_quality_optimized'` (`ModelType.PREFER_QUALITY_OPTIMIZED`): use 
+    the highest-quality translation model for the given language pair.
+  - `'latency_optimized'` (`ModelType.LATENCY_OPTIMIZED`): use a translation
+    model that minimizes response time, at the cost of translation quality.
 - `tag_handling`: type of tags to parse before translation, options are `'html'`
   and `'xml'`.
 

@@ -17,10 +17,12 @@ class TextResult:
         text: str,
         detected_source_lang: str,
         billed_characters: int,
+        model_type_used: Optional[str] = None,
     ):
         self.text = text
         self.detected_source_lang = detected_source_lang
         self.billed_characters = billed_characters
+        self.model_type_used = model_type_used
 
     def __str__(self):
         return self.text
@@ -418,6 +420,21 @@ class SplitSentences(Enum):
     ALL = "1"
     NO_NEWLINES = "nonewlines"
     DEFAULT = ALL
+
+    def __str__(self):
+        return self.value
+
+
+class ModelType(Enum):
+    """Options for model_type parameter.
+
+    Sets whether the translation engine should use a newer model type that
+    offers higher quality translations at the cost of translation time.
+    """
+
+    QUALITY_OPTIMIZED = "quality_optimized"
+    LATENCY_OPTIMIZED = "latency_optimized"
+    PREFER_QUALITY_OPTIMIZED = "prefer_quality_optimized"
 
     def __str__(self):
         return self.value

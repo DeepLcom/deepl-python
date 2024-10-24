@@ -8,6 +8,7 @@ from deepl.api_data import (
     Formality,
     GlossaryInfo,
     GlossaryLanguagePair,
+    ModelType,
     Language,
     SplitSentences,
     TextResult,
@@ -347,6 +348,7 @@ class Translator:
         non_splitting_tags: Union[str, List[str], None] = None,
         splitting_tags: Union[str, List[str], None] = None,
         ignore_tags: Union[str, List[str], None] = None,
+        model_type: Union[str, ModelType, None] = None,
     ) -> Union[TextResult, List[TextResult]]:
         """Translate text(s) into the target language.
 
@@ -387,6 +389,8 @@ class Translator:
         :param ignore_tags: (Optional) XML tags containing text that should not
             be translated.
         :type ignore_tags: List of XML tags or comma-separated-list of tags.
+        :param model_type: (Optional) Controls whether the translation engine
+            should use a potentially slower model to achieve higher quality.
         :return: List of TextResult objects containing results, unless input
             text was one string, then a single TextResult object is returned.
         """
@@ -425,6 +429,8 @@ class Translator:
             request_data["tag_handling"] = tag_handling
         if outline_detection is not None:
             request_data["outline_detection"] = bool(outline_detection)
+        if model_type is not None:
+            request_data["model_type"] = str(model_type)
 
         def join_tags(tag_argument: Union[str, Iterable[str]]) -> List[str]:
             if isinstance(tag_argument, str):
@@ -462,8 +468,14 @@ class Translator:
                 else ""
             )
             billed_characters = int(translation.get("billed_characters"))
+            model_type_used = translation.get("model_type_used")
             output.append(
-                TextResult(text, detected_source_language, billed_characters)
+                TextResult(
+                    text,
+                    detected_source_language,
+                    billed_characters,
+                    model_type_used,
+                )
             )
 
         return output if multi_input else output[0]

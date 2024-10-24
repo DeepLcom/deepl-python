@@ -129,11 +129,14 @@ def test_languages(runner):
 
 def test_text(runner):
     result = runner.invoke(
-        main_function, 'text --to DE "proton beam" --show-detected-source'
+        main_function,
+        'text --to DE "proton beam" --show-detected-source '
+        "--show-model-type-used --model-type quality_optimized",
     )
     assert result.exit_code == 0, f"exit: {result.exit_code}\n {result.output}"
     assert example_text["DE"] in result.output
     assert "Detected source" in result.output
+    assert "Model type used: quality_optimized" in result.output
 
     # Test text options
     extra_options = [
@@ -154,6 +157,10 @@ def test_text(runner):
         (
             "--non-splitting-tags a,b --non-splitting-tags c",
             "'non_splitting_tags': ['a', 'b', 'c']",
+        ),
+        (
+            "--model-type quality_optimized",
+            "'model_type': 'quality_optimized'",
         ),
     ]
     for args, search_str in extra_options:
