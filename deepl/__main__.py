@@ -113,6 +113,19 @@ def action_text(
         print(output.text)
 
 
+def action_rephrase(
+    translator: deepl.Translator,
+    **kwargs,
+):
+    """Action function for the rephrase command."""
+    improvement = translator.rephrase_text(**kwargs)
+    output_list = (
+        improvement if isinstance(improvement, List) else [improvement]
+    )
+    for output in output_list:
+        print(output.text)
+
+
 def action_glossary(
     translator: deepl.Translator,
     subcommand: str,
@@ -311,7 +324,10 @@ def get_parser(prog_name):
 
     # create the parser for the "text" command
     parser_text = subparsers.add_parser(
-        "text", help="translate text(s)", description="translate text(s)"
+        "text",
+        help="translate text(s)",
+        description="translate text(s)",
+        aliases=["translate"],
     )
     add_common_arguments(parser_text)
     parser_text.add_argument(
@@ -408,6 +424,31 @@ def get_parser(prog_name):
         action="append",
         metavar="tag",
         help="specify tags containing text that should not be translated",
+    )
+
+    # create the parser for the "rephrase" command
+    parser_rephrase = subparsers.add_parser(
+        "rephrase", help="rephrase text(s)", description="rephrase text(s)"
+    )
+    parser_rephrase.add_argument(
+        "--to",
+        "--target-lang",
+        dest="target_lang",
+        required=True,
+        help="language into which the text should be rewritten",
+    )
+    parser_rephrase.add_argument(
+        "text",
+        nargs="+",
+        type=str,
+        help="text to be rewritten. Wrap text in quotes to prevent the shell "
+        'from splitting sentences into words. Alternatively, use "-" to read '
+        "from standard-input.",
+    )
+    parser_rephrase.add_argument(
+        "--show-detected-source",
+        action="store_true",
+        help="print detected source language for each text",
     )
 
     # create the parser for the "document" command
@@ -608,7 +649,7 @@ def main(args=None, prog_name=None):
             send_platform_info=not args.noplatforminfo,
         )
 
-        if args.command == "text":
+        if args.command in ["text", "translate", "rephrase"]:
             if len(args.text) == 1 and args.text[0] == "-":
                 args.text = [sys.stdin.read()]
 

@@ -6,6 +6,8 @@ from .version import VERSION as __version__  # noqa
 
 __author__ = "DeepL SE <python-api@deepl.com>"
 
+from .deepl_client import DeepLClient
+
 from .exceptions import (  # noqa
     AuthorizationException,
     ConnectionException,
@@ -42,6 +44,7 @@ from .util import (  # noqa
 __all__ = [
     "__version__",
     "__author__",
+    "DeepLClient",
     "DocumentHandle",
     "DocumentStatus",
     "Formality",

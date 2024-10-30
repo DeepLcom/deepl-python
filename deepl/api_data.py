@@ -28,6 +28,20 @@ class TextResult:
         return self.text
 
 
+class WriteResult:
+    """Holds the result of a text improvement request."""
+
+    def __init__(
+        self, text: str, detected_source_language: str, target_language: str
+    ):
+        self.text = text
+        self.detected_source_language = detected_source_language
+        self.target_language = target_language
+
+    def __str__(self):
+        return self.text
+
+
 class DocumentHandle:
     """Handle to an in-progress document translation.
 
