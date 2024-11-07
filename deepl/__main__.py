@@ -83,6 +83,11 @@ def action_text(
     **kwargs,
 ):
     """Action function for the text command."""
+
+    if show_model_type_used and kwargs.get("model_type") is None:
+        # specify model_type so API includes model_type_used response parameter
+        kwargs["model_type"] = deepl.ModelType.LATENCY_OPTIMIZED
+
     translation = translator.translate_text(**kwargs)
     output_list = (
         translation if isinstance(translation, List) else [translation]
