@@ -5,6 +5,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [Unreleased]
+### Added
+* Added `model_type` option to `translate_text()` to use models with higher
+  translation quality (available for some language pairs), or better latency.
+  Options are `'quality_optimized'`, `'latency_optimized'`, and  `'prefer_quality_optimized'`
+* Added the `model_type_used` field to `translate_text()` response, that
+  indicates the translation model used when the `model_type` option is
+  specified. 
+
+
 ## [1.19.1] - 2024-09-17
 ### Fixed
 * Fixed typing issues, black-formatting and a test case failure.
@@ -304,6 +314,7 @@ Version increased to avoid conflicts with old packages on PyPI.
 Initial version.
 
 
+[Unreleased]: https://github.com/DeepLcom/deepl-python/compare/v1.19.1...HEAD
 [1.19.1]: https://github.com/DeepLcom/deepl-python/compare/v1.19.0...v1.19.1
 [1.19.0]: https://github.com/DeepLcom/deepl-python/compare/v1.18.0...v1.19.0
 [1.18.0]: https://github.com/DeepLcom/deepl-python/compare/v1.17.0...v1.18.0
