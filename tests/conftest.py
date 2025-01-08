@@ -150,11 +150,39 @@ def _make_translator(server, auth_key=None, proxy=None):
     return translator
 
 
+def _make_deepl_client(server, auth_key=None, proxy=None):
+    """Returns a deepl.DeepLClient for the specified server test fixture.
+    The server auth_key is used unless specifically overridden."""
+    if auth_key is None:
+        auth_key = server.auth_key
+    deepl_client = deepl.DeepLClient(
+        auth_key, server_url=server.server_url, proxy=proxy
+    )
+
+    # If the server test fixture has custom headers defined, update the
+    # translator headers and replace with the server headers dictionary.
+    # Note: changing the underlying object is necessary because some tests
+    # make changes to the headers during tests.
+    if server.headers:
+        server.headers.update(deepl_client.headers)
+        deepl_client.headers = server.headers
+    return deepl_client
+
+
 @pytest.fixture
 def translator(server):
     """Returns a deepl.Translator to use in all tests taking a parameter
     'translator'."""
     return _make_translator(server)
+
+
+# TODO Replace all uses of `translator` above with this and delete the
+# duplicated code.
+@pytest.fixture
+def deepl_client(server):
+    """Returns a deepl.DeepLClient to use in all tests taking a parameter
+    'deepl_client'."""
+    return _make_deepl_client(server)
 
 
 @pytest.fixture
