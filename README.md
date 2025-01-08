@@ -4,11 +4,11 @@
 [![Supported Python versions](https://img.shields.io/pypi/pyversions/deepl.svg)](https://pypi.org/project/deepl/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blueviolet.svg)](https://github.com/DeepLcom/deepl-python/blob/main/LICENSE)
 
-The [DeepL API][api-docs] is a language translation API that allows other
-computer programs to send texts and documents to DeepL's servers and receive
-high-quality translations. This opens a whole universe of opportunities for
-developers: any translation product you can imagine can now be built on top of
-DeepL's best-in-class translation technology.
+The [DeepL API][api-docs] is a language AI API that allows other computer programs
+to send texts and documents to DeepL's servers and receive high-quality
+translations and improvements to the text. This opens a whole universe of
+opportunities for developers: any translation product you can imagine can now
+be built on top of DeepL's best-in-class translation technology.
 
 The DeepL Python library offers a convenient way for applications written in
 Python to interact with the DeepL API. We intend to support all API functions
@@ -19,7 +19,7 @@ after they’re added to the API.
 
 To use the DeepL Python Library, you'll need an API authentication key. To get a
 key, [please create an account here][create-account]. With a DeepL API Free
-account you can translate up to 500,000 characters/month for free.
+account you can consume up to 500,000 characters/month for free.
 
 ## Installation
 
@@ -53,7 +53,7 @@ To continue using this library, you should update to Python 3.8+.
 
 ## Usage
 
-Import the package and construct a `Translator`. The first argument is a string
+Import the package and construct a `DeepLClient`. The first argument is a string
 containing your API authentication key as found in your
 [DeepL Pro Account][pro-account].
 
@@ -63,9 +63,9 @@ Be careful not to expose your key, for example when sharing source code.
 import deepl
 
 auth_key = "f63c02c5-f056-..."  # Replace with your key
-translator = deepl.Translator(auth_key)
+deepl_client = deepl.DeepLClient(auth_key)
 
-result = translator.translate_text("Hello, world!", target_lang="FR")
+result = deepl_client.translate_text("Hello, world!", target_lang="FR")
 print(result.text)  # "Bonjour, le monde !"
 ```
 
@@ -73,7 +73,7 @@ This example is for demonstration purposes only. In production code, the
 authentication key should not be hard-coded, but instead fetched from a
 configuration file or environment variable.
 
-`Translator` accepts additional options, see [Configuration](#configuration)
+`DeepLClient` accepts additional options, see [Configuration](#configuration)
 for more information.
 
 ### Translating text
@@ -105,11 +105,11 @@ corresponding to your input text(s). `TextResult` has the following properties:
 
 ```python
 # Translate text into a target language, in this case, French:
-result = translator.translate_text("Hello, world!", target_lang="FR")
+result = deepl_client.translate_text("Hello, world!", target_lang="FR")
 print(result.text)  # "Bonjour, le monde !"
 
 # Translate multiple texts into British English
-result = translator.translate_text(
+result = deepl_client.translate_text(
     ["お元気ですか？", "¿Cómo estás?"],
     target_lang="EN-GB",
 )
@@ -122,12 +122,12 @@ print(result[1].billed_characters)  # 12 - the number of characters in the sourc
 
 # Translate into German with less and more Formality:
 print(
-    translator.translate_text(
+    deepl_client.translate_text(
         "How are you?", target_lang="DE", formality="less"
     )
 )  # 'Wie geht es dir?'
 print(
-    translator.translate_text(
+    deepl_client.translate_text(
         "How are you?", target_lang="DE", formality="more"
     )
 )  # 'Wie geht es Ihnen?'
@@ -191,6 +191,61 @@ The following options are only used if `tag_handling` is `'xml'`:
 For a detailed explanation of the XML handling options, see the
 [API documentation][api-docs-xml-handling].
 
+### Improving text (Write API)
+
+You can use the Write API to improve or rephrase text. This is implemented in
+the `rephrase_text()` method. The first argument is a string containing the text
+you want to translate, or a list of strings if you want to translate multiple texts.
+
+`target_lang` optionally specifies the target language, e.g. when you want to change
+the variant of a text (for example, you can send an english text to the write API and
+use `target_lang` to turn it into British or American English). Please note that the
+Write API itself does NOT translate. If you wish to translate and improve a text, you
+will need to make multiple calls in a chain.
+
+Language codes are the same as for translating text.
+
+Example call:
+
+```python
+result = deepl_client.rephrase_text("A rainbouw has seven colours.", target_lang="EN-US")
+print(result.text)
+```
+
+Additionally, you can optionally specify a style OR a tone (not both at once) that the
+improvement should be in. The following styles are supported (`default` will be used if
+nothing is selected):
+
+- `academic`
+- `business`
+- `casual`
+- `default`
+- `simple`
+
+The following tones are supported (`default` will be used if nothing is selected):
+
+- `confident`
+- `default`
+- `diplomatic`
+- `enthusiastic`
+- `friendly`
+
+You can also prefix any non-default style or tone with `prefer_` (`prefer_academic`, etc.),
+in which case the style/tone will only be applied if the language supports it. If you do not
+use `prefer_`, requests with `target_lang`s or detected languages that do not support
+styles and tones will fail. The current list of supported languages can be found in our
+[API documentation][api-docs]. We plan to also expose this information via an API endpoint
+in the future.
+
+You can use the predefined constants in the library to use a style:
+
+```python
+result = deepl_client.rephrase_text(
+    "A rainbouw has seven colours.", target_lang="EN-US", style=WritingStyle.BUSINESS.value
+)
+print(result.text)
+```
+
 ### Translating documents
 
 To translate documents, you may call either `translate_document()` using file IO
@@ -210,7 +265,7 @@ input_path = "/path/to/Instruction Manual.docx"
 output_path = "/path/to/Bedienungsanleitung.docx"
 try:
     # Using translate_document_from_filepath() with file paths 
-    translator.translate_document_from_filepath(
+    deepl_client.translate_document_from_filepath(
         input_path,
         output_path,
         target_lang="DE",
@@ -219,7 +274,7 @@ try:
 
     # Alternatively you can use translate_document() with file IO objects
     with open(input_path, "rb") as in_file, open(output_path, "wb") as out_file:
-        translator.translate_document(
+        deepl_client.translate_document(
             in_file,
             out_file,
             target_lang="DE",
@@ -283,7 +338,7 @@ count.
 ```python
 # Create an English to German glossary with two terms:
 entries = {"artist": "Maler", "prize": "Gewinn"}
-my_glossary = translator.create_glossary(
+my_glossary = deepl_client.create_glossary(
     "My glossary",
     source_lang="EN",
     target_lang="DE",
@@ -307,7 +362,7 @@ bytes containing file content:
 # consider using encoding='utf-8-sig' instead.
 with open('/path/to/glossary_file.csv', 'r',  encoding='utf-8') as csv_file:
     csv_data = csv_file.read()  # Read the file contents as a string
-    my_csv_glossary = translator.create_glossary_from_csv(
+    my_csv_glossary = deepl_client.create_glossary_from_csv(
         "CSV glossary",
         source_lang="EN",
         target_lang="DE",
@@ -333,13 +388,13 @@ Functions to get, list, and delete stored glossaries are also provided:
 ```python
 # Retrieve a stored glossary using the ID
 glossary_id = "559192ed-8e23-..."
-my_glossary = translator.get_glossary(glossary_id)
+my_glossary = deepl_client.get_glossary(glossary_id)
 
 # Find and delete glossaries named 'Old glossary'
-glossaries = translator.list_glossaries()
+glossaries = deepl_client.list_glossaries()
 for glossary in glossaries:
     if glossary.name == "Old glossary":
-        translator.delete_glossary(glossary)
+        deepl_client.delete_glossary(glossary)
 ```
 
 #### Listing entries in a stored glossary
@@ -352,7 +407,7 @@ To list the entries contained within a stored glossary, use
 ID:
 
 ```python
-entries = translator.get_glossary_entries(my_glossary)
+entries = deepl_client.get_glossary_entries(my_glossary)
 print(entries)  # "{'artist': 'Maler', 'prize': 'Gewinn'}"
 ```
 
@@ -364,13 +419,13 @@ specify the `source_lang` argument (it is required when using a glossary):
 
 ```python
 text = "The artist was awarded a prize."
-with_glossary = translator.translate_text(
+with_glossary = deepl_client.translate_text(
     text, source_lang="EN", target_lang="DE", glossary=my_glossary,
 )
 print(with_glossary)  # "Der Maler wurde mit einem Gewinn ausgezeichnet."
 
 # For comparison, the result without a glossary:
-without_glossary = translator.translate_text(text, target_lang="DE")
+without_glossary = deepl_client.translate_text(text, target_lang="DE")
 print(without_glossary)  # "Der Künstler wurde mit einem Preis ausgezeichnet."
 ```
 
@@ -378,7 +433,7 @@ Using a stored glossary for document translation is the same: set the `glossary`
 argument and specify the `source_lang` argument:
 
 ```python
-translator.translate_document(
+deepl_client.translate_document(
     in_file, out_file, source_lang="EN", target_lang="DE", glossary=my_glossary,
 )
 ```
@@ -404,7 +459,7 @@ that checks if the usage has reached the limit. The top level `Usage` object has
 the `any_limit_reached` property to check all usage subtypes.
 
 ```python
-usage = translator.get_usage()
+usage = deepl_client.get_usage()
 if usage.any_limit_reached:
     print('Translation limit reached.')
 if usage.character.valid:
@@ -427,11 +482,11 @@ optional `formality` parameter.
 
 ```python
 print("Source languages:")
-for language in translator.get_source_languages():
+for language in deepl_client.get_source_languages():
     print(f"{language.name} ({language.code})")  # Example: "German (DE)"
 
 print("Target languages:")
-for language in translator.get_target_languages():
+for language in deepl_client.get_target_languages():
     if language.supports_formality:
         print(f"{language.name} ({language.code}) supports formality")
         # Example: "Italian (IT) supports formality"
@@ -448,7 +503,7 @@ of `GlossaryLanguagePair` objects. Each has `source_lang` and `target_lang`
 properties indicating that that pair of language codes is supported.
 
 ```python
-glossary_languages = translator.get_glossary_languages()
+glossary_languages = deepl_client.get_glossary_languages()
 for language_pair in glossary_languages:
     print(f"{language_pair.source_lang} to {language_pair.target_lang}")
     # Example: "EN to DE", "DE to EN", etc.
@@ -464,10 +519,10 @@ target language English (`"EN"`) supports translations to both American English
 ### Writing a Plugin
 
 If you use this library in an application, please identify the application with
-`deepl.Translator.set_app_info`, which needs the name and version of the app:
+`deepl.DeepLClient.set_app_info`, which needs the name and version of the app:
 
 ```python
-translator = deepl.Translator(...).set_app_info("sample_python_plugin", "1.0.2")
+deepl_client = deepl.DeepLClient(...).set_app_info("sample_python_plugin", "1.0.2")
 ```
 
 This information is passed along when the library makes calls to the DeepL API.
@@ -499,23 +554,23 @@ logging.getLogger('deepl').setLevel(logging.DEBUG)
 #### Server URL configuration
 
 You can override the URL of the DeepL API by specifying the `server_url`
-argument when constructing a `deepl.Translator`. This may be useful for testing
+argument when constructing a `deepl.DeepLClient`. This may be useful for testing
 purposes. You **do not** need to specify the URL to distinguish API Free and API
 Pro accounts, the library selects the correct URL automatically.
 
 ```python
 server_url = "http://user:pass@localhost:3000"
-translator = deepl.Translator(..., server_url=server_url)
+deepl_client = deepl.DeepLClient(..., server_url=server_url)
 ```
 
 #### Proxy configuration
 
 You can configure a proxy by specifying the `proxy` argument when constructing a
-`deepl.Translator`:
+`deepl.DeepLClient`:
 
 ```python
 proxy = "http://user:pass@10.10.1.10:3128"
-translator = deepl.Translator(..., proxy=proxy)
+deepl_client = deepl.DeepLClient(..., proxy=proxy)
 ```
 
 The proxy argument is passed to the underlying `requests` session, see the
@@ -525,11 +580,11 @@ proxy URLs is also accepted.
 #### Override SSL verification
 
 You can control how `requests` performs SSL verification by specifying the 
-`verify_ssl` option when constructing a `deepl.Translator`, for example to
+`verify_ssl` option when constructing a `deepl.DeepLClient`, for example to
 disable SSL certificate verification:
 
 ```python
-translator = deepl.Translator(..., verify_ssl=False)
+deepl_client = deepl.DeepLClient(..., verify_ssl=False)
 ```
 
 This option is passed to the underlying `requests` session as the `verify`
@@ -546,8 +601,8 @@ can be changed to 3 as follows:
 import deepl
 
 deepl.http_client.max_network_retries = 3
-t = deepl.Translator(...)
-t.translate_text(...)
+c = deepl.DeepLClient(...)
+c.translate_text(...)
 ```
 
 You can configure the timeout `min_connection_timeout` the same way, as well
@@ -555,17 +610,17 @@ as set a custom `user_agent`, see the next section.
 
 #### Anonymous platform information
 
-By default, we send some basic information about the platform the client library is running on with each request, see [here for an explanation](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent). This data is completely anonymous and only used to improve our product, not track any individual users. If you do not wish to send this data, you can opt-out when creating your `deepl.Translator` object by setting the `send_platform_info` flag like so:
+By default, we send some basic information about the platform the client library is running on with each request, see [here for an explanation](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent). This data is completely anonymous and only used to improve our product, not track any individual users. If you do not wish to send this data, you can opt-out when creating your `deepl.DeepLClient` object by setting the `send_platform_info` flag like so:
 
 ```python
-translator = deepl.Translator(..., send_platform_info=False)
+deepl_client = deepl.DeepLClient(..., send_platform_info=False)
 ```
 
-You can also customize the `user_agent` by setting its value explicitly before constructing your `deepl.Translator` object.
+You can also customize the `user_agent` by setting its value explicitly before constructing your `deepl.DeepLClient` object.
 
 ```python
 deepl.http_client.user_agent = 'my custom user agent'
-translator = deepl.Translator(os.environ["DEEPL_AUTH_KEY"])
+deepl_client = deepl.DeepLClient(os.environ["DEEPL_AUTH_KEY"])
 ```
 
 ## Command Line Interface
