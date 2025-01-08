@@ -452,3 +452,49 @@ class ModelType(Enum):
 
     def __str__(self):
         return self.value
+
+
+class WritingStyle(Enum):
+    """Options for the `style` parameter of the Write API.
+    Sets the style the improved text should be in. Note that currently, only
+    a style OR a tone is supported.
+
+    When using a style starting with `prefer_`, the style will only be used
+    if the chosen or detected language supports it.
+    """
+
+    ACADEMIC = "academic"
+    BUSINESS = "business"
+    CASUAL = "casual"
+    DEFAULT = "default"
+    PREFER_ACADEMIC = "prefer_academic"
+    PREFER_BUSINESS = "prefer_business"
+    PREFER_CASUAL = "prefer_casual"
+    PREFER_SIMPLE = "prefer_simple"
+    SIMPLE = "simple"
+
+    def __str__(self):
+        return self.value
+
+
+class WritingTone(Enum):
+    """Options for the `tone` parameter of the Write API.
+    Sets the tone the improved text should be in. Note that currently, only
+    a style OR a tone is supported.
+
+    When using a tone starting with `prefer_`, the tone will only be used
+    if the chosen or detected language supports it.
+    """
+
+    CONFIDENT = "confident"
+    DEFAULT = "default"
+    DIPLOMATIC = "diplomatic"
+    ENTHUSIASTIC = "enthusiastic"
+    FRIENDLY = "friendly"
+    PREFER_CONFIDENT = "prefer_confident"
+    PREFER_DIPLOMATIC = "prefer_diplomatic"
+    PREFER_ENTHUSIASTIC = "prefer_enthusiastic"
+    PREFER_FRIENDLY = "prefer_friendly"
+
+    def __str__(self):
+        return self.value

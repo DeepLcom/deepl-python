@@ -40,7 +40,9 @@ class DeepLClient(Translator):
         self,
         text: Union[str, Iterable[str]],
         *,
-        target_lang: Union[str, Language],
+        target_lang: Union[None, str, Language] = None,
+        style: Optional[str] = None,
+        tone: Optional[str] = None,
     ) -> Union[WriteResult, List[WriteResult]]:
         """Improve the text(s) and optionally convert them to the variant of
         the `target_lang` (requires source lang to match target_lang, excluding
@@ -51,6 +53,10 @@ class DeepLClient(Translator):
             generator)
         :param target_lang: language code the final text should be in, for
             example "DE", "EN-US", "FR".
+        :param style: Writing style to be used for the improvement. Either
+            style OR tone can be used.
+        :param tone: Tone to be used for the improvement. Either style OR tone
+            can be used.
         :return: List of WriteResult objects containing results, unless input
             text was one string, then a single WriteResult object is returned.
         """
@@ -68,7 +74,13 @@ class DeepLClient(Translator):
                 "text parameter must be a string or an iterable of strings"
             )
 
-        request_data = {"target_lang": target_lang, "text": text}
+        request_data: dict = {"text": text}
+        if target_lang:
+            request_data["target_lang"] = target_lang
+        if style:
+            request_data["writing_style"] = style
+        if tone:
+            request_data["tone"] = tone
 
         status, content, json = self._api_call(
             "v2/write/rephrase", json=request_data
