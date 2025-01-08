@@ -22,22 +22,22 @@ keyring_key_folder = "deepl"
 keyring_key_name = env_auth_key
 
 
-def action_usage(translator: deepl.Translator):
+def action_usage(deepl_client: deepl.DeepLClient):
     """Action function for the usage command."""
-    usage_result = translator.get_usage()
+    usage_result = deepl_client.get_usage()
     print(usage_result)
 
 
-def action_languages(translator: deepl.Translator, glossary: bool):
+def action_languages(deepl_client: deepl.DeepLClient, glossary: bool):
     """Action function for the languages command."""
     if glossary:
-        glossary_languages = translator.get_glossary_languages()
+        glossary_languages = deepl_client.get_glossary_languages()
         print("Language pairs supported for glossaries: (source, target)")
         for language_pair in glossary_languages:
             print(f"{language_pair.source_lang}, {language_pair.target_lang}")
     else:
-        source_languages = translator.get_source_languages()
-        target_languages = translator.get_target_languages()
+        source_languages = deepl_client.get_source_languages()
+        target_languages = deepl_client.get_target_languages()
 
         print("Source languages available:")
         for language in source_languages:
@@ -51,7 +51,7 @@ def action_languages(translator: deepl.Translator, glossary: bool):
 
 
 def action_document(
-    translator: deepl.Translator,
+    deepl_client: deepl.DeepLClient,
     file: List[str],
     dest: str,
     output_format: Optional[str],
@@ -70,13 +70,13 @@ def action_document(
             else (os.path.splitext(this_file)[0] + "." + output_format)
         )
         output_path = os.path.join(dest, os.path.basename(outfile_name))
-        translator.translate_document_from_filepath(
+        deepl_client.translate_document_from_filepath(
             this_file, output_path, **kwargs
         )
 
 
 def action_text(
-    translator: deepl.Translator,
+    deepl_client: deepl.DeepLClient,
     show_detected_source: bool = False,
     show_billed_characters: Optional[bool] = None,
     show_model_type_used: Optional[bool] = None,
@@ -88,7 +88,7 @@ def action_text(
         # specify model_type so API includes model_type_used response parameter
         kwargs["model_type"] = deepl.ModelType.LATENCY_OPTIMIZED
 
-    translation = translator.translate_text(**kwargs)
+    translation = deepl_client.translate_text(**kwargs)
     output_list = (
         translation if isinstance(translation, List) else [translation]
     )
@@ -114,11 +114,11 @@ def action_text(
 
 
 def action_rephrase(
-    translator: deepl.Translator,
+    deepl_client: deepl.DeepLClient,
     **kwargs,
 ):
     """Action function for the rephrase command."""
-    improvement = translator.rephrase_text(**kwargs)
+    improvement = deepl_client.rephrase_text(**kwargs)
     output_list = (
         improvement if isinstance(improvement, List) else [improvement]
     )
@@ -127,17 +127,17 @@ def action_rephrase(
 
 
 def action_glossary(
-    translator: deepl.Translator,
+    deepl_client: deepl.DeepLClient,
     subcommand: str,
     **kwargs,
 ):
     # Call action function corresponding to command with remaining args
-    globals()[f"action_glossary_{subcommand}"](translator, **kwargs)
+    globals()[f"action_glossary_{subcommand}"](deepl_client, **kwargs)
     pass
 
 
 def action_glossary_create(
-    translator: deepl.Translator, entry_list, file, csv, **kwargs
+    deepl_client: deepl.DeepLClient, entry_list, file, csv, **kwargs
 ):
     term_separator = None
     if file:
@@ -158,7 +158,7 @@ def action_glossary_create(
             )
 
     if csv:
-        glossary = translator.create_glossary_from_csv(
+        glossary = deepl_client.create_glossary_from_csv(
             csv_data=content, **kwargs
         )
     else:
@@ -166,7 +166,7 @@ def action_glossary_create(
             entry_dict = deepl.convert_tsv_to_dict(content, term_separator)
         else:
             entry_dict = deepl.convert_tsv_to_dict(content)
-        glossary = translator.create_glossary(entries=entry_dict, **kwargs)
+        glossary = deepl_client.create_glossary(entries=entry_dict, **kwargs)
 
     print(f"Created {glossary}")
     print_glossaries([glossary])
@@ -208,26 +208,26 @@ def print_glossaries(glossaries):
         )
 
 
-def action_glossary_list(translator: deepl.Translator):
-    glossaries = translator.list_glossaries()
+def action_glossary_list(deepl_client: deepl.DeepLClient):
+    glossaries = deepl_client.list_glossaries()
     print_glossaries(glossaries)
 
 
-def action_glossary_get(translator: deepl.Translator, **kwargs):
-    glossary = translator.get_glossary(**kwargs)
+def action_glossary_get(deepl_client: deepl.DeepLClient, **kwargs):
+    glossary = deepl_client.get_glossary(**kwargs)
     print_glossaries([glossary])
 
 
-def action_glossary_entries(translator: deepl.Translator, glossary_id):
-    glossary_entries = translator.get_glossary_entries(glossary=glossary_id)
+def action_glossary_entries(deepl_client: deepl.DeepLClient, glossary_id):
+    glossary_entries = deepl_client.get_glossary_entries(glossary=glossary_id)
     print(deepl.convert_dict_to_tsv(glossary_entries))
 
 
 def action_glossary_delete(
-    translator: deepl.Translator, glossary_id_list: str
+    deepl_client: deepl.DeepLClient, glossary_id_list: str
 ):
     for glossary_id in glossary_id_list:
-        translator.delete_glossary(glossary_id)
+        deepl_client.delete_glossary(glossary_id)
         print(f"Glossary with ID {glossary_id} successfully deleted.")
 
 
@@ -641,7 +641,7 @@ def main(args=None, prog_name=None):
 
         # Note: the get_languages() call to verify language codes is skipped
         #       because the CLI makes one API call per execution.
-        translator = deepl.Translator(
+        deepl_client = deepl.DeepLClient(
             auth_key=auth_key,
             server_url=server_url,
             proxy=proxy_url,
@@ -671,7 +671,7 @@ def main(args=None, prog_name=None):
         args = vars(args)
         # Call action function corresponding to command with remaining args
         command = args.pop("command")
-        globals()[f"action_{command}"](translator, **args)
+        globals()[f"action_{command}"](deepl_client, **args)
 
     except Exception as exception:
         sys.stderr.write(f"Error: {exception}\n")
