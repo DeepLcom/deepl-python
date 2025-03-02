@@ -6,13 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
-<!-- * add to here -->
-### Changed
-<!-- * add to here -->
+* Added support for the /v3 Glossary APIs in the client library while providing backwards
+  compatability for the previous /v2 Glossary endpoints. Please refer to the README for 
+  usage instructions.
+
 
 ## [1.21.1] - 2025-03-12
 ### Added
 * (beta) optional parameter to specify timeout for document translation calls
+
 
 ## [1.21.0] - 2025-01-15
 ### Added
@@ -332,6 +334,7 @@ Version increased to avoid conflicts with old packages on PyPI.
 
 ## [0.1.0] - 2021-07-26
 Initial version.
+
 
 <!-- Unreleased shoud never be deleted -->
 [Unreleased]: https://github.com/DeepLcom/deepl-python/compare/v1.21.1...HEAD

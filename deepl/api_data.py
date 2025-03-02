@@ -4,9 +4,9 @@
 
 import datetime
 from enum import Enum
-from typing import List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 
-from deepl import util
+from deepl.util import get_int_safe, parse_timestamp
 
 
 class TextResult:
@@ -124,90 +124,6 @@ class DocumentStatus:
         return self._error_message
 
 
-class GlossaryInfo:
-    """Information about a glossary, excluding the entry list.
-
-    :param glossary_id: Unique ID assigned to the glossary.
-    :param name: User-defined name assigned to the glossary.
-    :param ready: True iff the glossary may be used for translations.
-    :param source_lang: Source language code of the glossary.
-    :param target_lang: Target language code of the glossary.
-    :param creation_time: Timestamp when the glossary was created.
-    :param entry_count: The number of entries contained in the glossary.
-    """
-
-    def __init__(
-        self,
-        glossary_id: str,
-        name: str,
-        ready: bool,
-        source_lang: str,
-        target_lang: str,
-        creation_time: datetime.datetime,
-        entry_count: int,
-    ):
-        self._glossary_id = glossary_id
-        self._name = name
-        self._ready = ready
-        self._source_lang = source_lang
-        self._target_lang = target_lang
-        self._creation_time = creation_time
-        self._entry_count = entry_count
-
-    def __str__(self) -> str:
-        return f'Glossary "{self.name}" ({self.glossary_id})'
-
-    @staticmethod
-    def from_json(json) -> "GlossaryInfo":
-        """Create GlossaryInfo from the given API JSON object."""
-        # Workaround for bugs in strptime() in Python 3.6
-        creation_time = json["creation_time"]
-        if ":" == creation_time[-3:-2]:
-            creation_time = creation_time[:-3] + creation_time[-2:]
-        if "Z" == creation_time[-1:]:
-            creation_time = creation_time[:-1] + "+0000"
-
-        return GlossaryInfo(
-            json["glossary_id"],
-            json["name"],
-            bool(json["ready"]),
-            str(json["source_lang"]).upper(),
-            str(json["target_lang"]).upper(),
-            datetime.datetime.strptime(
-                creation_time, "%Y-%m-%dT%H:%M:%S.%f%z"
-            ),
-            int(json["entry_count"]),
-        )
-
-    @property
-    def glossary_id(self) -> str:
-        return self._glossary_id
-
-    @property
-    def name(self) -> str:
-        return self._name
-
-    @property
-    def ready(self) -> bool:
-        return self._ready
-
-    @property
-    def source_lang(self) -> str:
-        return self._source_lang
-
-    @property
-    def target_lang(self) -> str:
-        return self._target_lang
-
-    @property
-    def creation_time(self) -> datetime.datetime:
-        return self._creation_time
-
-    @property
-    def entry_count(self) -> int:
-        return self._entry_count
-
-
 class Usage:
     """Holds the result of a usage request.
 
@@ -220,8 +136,8 @@ class Usage:
 
     class Detail:
         def __init__(self, json: Optional[dict], prefix: str):
-            self._count = util.get_int_safe(json, f"{prefix}_count")
-            self._limit = util.get_int_safe(json, f"{prefix}_limit")
+            self._count = get_int_safe(json, f"{prefix}_count")
+            self._limit = get_int_safe(json, f"{prefix}_limit")
 
         @property
         def count(self) -> Optional[int]:
@@ -392,6 +308,268 @@ class GlossaryLanguagePair:
     def target_lang(self) -> str:
         """Returns the code of the target language."""
         return self._target_lang
+
+
+class MultilingualGlossaryDictionaryEntries:
+    def __init__(
+        self,
+        source_lang: str,
+        target_lang: str,
+        entries: Dict[str, str],
+    ):
+        self._source_lang = source_lang
+        self._target_lang = target_lang
+        self._entries = entries
+
+    def __str__(self) -> str:
+        return (
+            "MultilingualGlossaryDictionaryEntries: Source Language "
+            f"{self._source_lang}, Target Language {self._target_lang} "
+            f"Contents: {self._entries}"
+        )
+
+    @staticmethod
+    def from_json(json) -> "MultilingualGlossaryDictionaryEntries":
+        """Create MultilingualGlossaryDictionaryEntries from the given
+        API JSON object.
+        """
+        return MultilingualGlossaryDictionaryEntries(
+            str(json["source_lang"]),
+            str(json["target_lang"]),
+            json["entries"],
+        )
+
+    def to_json(self):
+        """Create API JSON object from
+        MultilingualGlossaryDictionaryEntries
+        """
+        return {
+            "source_lang": self._source_lang,
+            "target_lang": self._target_lang,
+            "entries": self._entries,
+        }
+
+    @property
+    def source_lang(self) -> str:
+        return self._source_lang
+
+    @property
+    def target_lang(self) -> str:
+        return self._target_lang
+
+    @property
+    def entries(self) -> Dict[str, str]:
+        return self._entries
+
+
+class MultilingualGlossaryDictionaryEntriesResponse:
+    def __init__(
+        self, dictionaries: List[MultilingualGlossaryDictionaryEntries]
+    ):
+        self._dictionaries = dictionaries
+
+    def __str__(self) -> str:
+        return (
+            "MultilingualGlossaryDictionaryEntriesResponse: "
+            f"Contents {self._dictionaries}"
+        )
+
+    @staticmethod
+    def from_json(json) -> "MultilingualGlossaryDictionaryEntriesResponse":
+        """Create MultilingualGlossaryDictionaryEntriesResponse from the given
+        API JSON object.
+        """
+        glossary_dicts = list(json["dictionaries"])
+        serialized_dicts = list(
+            map(
+                lambda glossary_dict: MultilingualGlossaryDictionaryEntries.from_json(  # noqa: E501
+                    glossary_dict
+                ),
+                glossary_dicts,
+            )
+        )
+        return MultilingualGlossaryDictionaryEntriesResponse(serialized_dicts)
+
+    @property
+    def dictionaries(self) -> List[MultilingualGlossaryDictionaryEntries]:
+        return self._dictionaries
+
+
+class MultilingualGlossaryDictionaryInfo:
+    def __init__(self, source_lang: str, target_lang: str, entry_count: int):
+        self._source_lang = source_lang
+        self._target_lang = target_lang
+        self._entry_count = entry_count
+
+    @staticmethod
+    def from_json(json) -> "MultilingualGlossaryDictionaryInfo":
+        """Create MultilingualGlossaryDictionaryInfo from the given API JSON
+        object."""
+        return MultilingualGlossaryDictionaryInfo(
+            str(json["source_lang"]).upper(),
+            str(json["target_lang"]).upper(),
+            int(json["entry_count"]),
+        )
+
+    @property
+    def source_lang(self) -> str:
+        return self._source_lang
+
+    @property
+    def target_lang(self) -> str:
+        return self._target_lang
+
+    @property
+    def entry_count(self) -> int:
+        return self._entry_count
+
+
+class MultilingualGlossaryInfo:
+    """Information about a multilingual glossary, excluding the entry list.
+    Used by the /v3/glossaries API endpoints
+
+    :param glossary_id: Unique ID assigned to the glossary.
+    :param name: User-defined name assigned to the glossary.
+    :param creation_time: Timestamp when the glossary was created.
+    :param dictionaries: Dictionaries contained in this glossary. Each
+        dictionary contains its language pair and the number of entries.
+    """
+
+    def __init__(
+        self,
+        glossary_id: str,
+        name: str,
+        creation_time: datetime.datetime,
+        dictionaries: List[MultilingualGlossaryDictionaryInfo],
+    ):
+        self._glossary_id = glossary_id
+        self._name = name
+        self._creation_time = creation_time
+        self._dictionaries = dictionaries
+
+    def __str__(self) -> str:
+        return f'MultilingualGlossary "{self.name}" ({self.glossary_id})'
+
+    @staticmethod
+    def from_json(json) -> "MultilingualGlossaryInfo":
+        """Create MultilingualGlossaryInfo from the given API JSON object."""
+        return MultilingualGlossaryInfo(
+            json["glossary_id"],
+            json["name"],
+            parse_timestamp(json["creation_time"]),
+            list(
+                map(
+                    lambda entry: MultilingualGlossaryDictionaryInfo.from_json(
+                        entry
+                    ),
+                    json["dictionaries"],
+                )
+            ),
+        )
+
+    @staticmethod
+    def to_json(self) -> dict:
+        """Create API JSON object from MultilingualGlossaryInfo."""
+        return {
+            "glossary_id": self._glossary_id,
+            "name": self._name,
+            "creation_time": self._creation_time,
+            "dictionaries": self._dictionaries,
+        }
+
+    @property
+    def glossary_id(self) -> str:
+        return self._glossary_id
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+    @property
+    def dictionaries(self) -> List[MultilingualGlossaryDictionaryInfo]:
+        return self._dictionaries
+
+    @property
+    def creation_time(self) -> datetime.datetime:
+        return self._creation_time
+
+
+class GlossaryInfo:
+    """Information about a glossary, excluding the entry list. GlossaryInfo
+    is compatible with the /v2 glossary endpoints and can only support
+    mono-lingual glossaries (e.g. a glossary with only one source and
+    target language defined).
+
+    :param glossary_id: Unique ID assigned to the glossary.
+    :param name: User-defined name assigned to the glossary.
+    :param ready: True iff the glossary may be used for translations.
+    :param source_lang: Source language code of the glossary.
+    :param target_lang: Target language code of the glossary.
+    :param creation_time: Timestamp when the glossary was created.
+    :param entry_count: The number of entries contained in the glossary.
+    """
+
+    def __init__(
+        self,
+        glossary_id: str,
+        name: str,
+        ready: bool,
+        source_lang: str,
+        target_lang: str,
+        creation_time: datetime.datetime,
+        entry_count: int,
+    ):
+        self._glossary_id = glossary_id
+        self._name = name
+        self._ready = ready
+        self._source_lang = source_lang
+        self._target_lang = target_lang
+        self._creation_time = creation_time
+        self._entry_count = entry_count
+
+    def __str__(self) -> str:
+        return f'Glossary "{self.name}" ({self.glossary_id})'
+
+    @staticmethod
+    def from_json(json) -> "GlossaryInfo":
+        """Create GlossaryInfo from the given API JSON object."""
+        return GlossaryInfo(
+            json["glossary_id"],
+            json["name"],
+            bool(json["ready"]),
+            str(json["source_lang"]).upper(),
+            str(json["target_lang"]).upper(),
+            parse_timestamp(json["creation_time"]),
+            int(json["entry_count"]),
+        )
+
+    @property
+    def glossary_id(self) -> str:
+        return self._glossary_id
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+    @property
+    def ready(self) -> bool:
+        return self._ready
+
+    @property
+    def source_lang(self) -> str:
+        return self._source_lang
+
+    @property
+    def target_lang(self) -> str:
+        return self._target_lang
+
+    @property
+    def creation_time(self) -> datetime.datetime:
+        return self._creation_time
+
+    @property
+    def entry_count(self) -> int:
+        return self._entry_count
 
 
 class Formality(Enum):

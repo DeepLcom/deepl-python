@@ -229,13 +229,12 @@ class HttpClient:
                     self._app_info_version,
                 ),
             )
-
             # TODO review when minimum Python version is raised
             if tuple(map(int, requests.__version__.split("."))) >= (2, 4, 2):
                 kwargs["json"] = json
             elif json is not None:
                 # This is fine, see official docs
-                # https://requests.readthedocs.io/en/latest/user/quickstart/#more-complicated-post-requests
+                # https://requests.readthedocs.io/en/latest/user/quickstart/#more-complicated-post-requests # noqa: E501
                 data = json_module.dumps(json)  # type: ignore[assignment]
                 headers["Content-Type"] = "application/json"
             return requests.Request(

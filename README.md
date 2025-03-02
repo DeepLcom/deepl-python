@@ -323,46 +323,70 @@ Glossaries allow you to customize your translations using user-defined terms.
 Multiple glossaries can be stored with your account, each with a user-specified
 name and a uniquely-assigned ID.
 
+#### v2 versus v3 glossary APIs
+
+The newest version of the glossary APIs are the `/v3` endpoints, allowing both
+editing functionality plus support for multilingual glossaries. New methods and
+objects have been created to support interacting with these new glossaries. 
+Due to this  new functionality, users are recommended to utilize these 
+multilingual glossary methods. However, to continue using the `v2` glossary API 
+endpoints, please continue to use the existing endpoints in the `translator.py` 
+(e.g. `create_glossary()`, `get_glossary()`, etc).
+
+To migrate to use the new multilingual glossary methods from the current 
+monolingual glossary methods, please refer to 
+[this migration guide](upgrade_to_multilingual_glossaries.md).
+
+The following sections describe how to interact with multilingual glossaries 
+using the new functionality:
+
 #### Creating a glossary
 
-You can create a glossary with your desired terms and name using
-`create_glossary()`. Each glossary applies to a single source-target language
-pair. Note: Glossaries are only supported for some language pairs, see
+You can create a multi-lingual glossary with your desired terms and name using
+`create_multilingual_glossary()`. Glossaries created via the /v3 endpoints can now 
+support multiple source-target language pairs. Note: Glossaries are only 
+supported for some language pairs, see
 [Listing available glossary languages](#listing-available-glossary-languages)
 for more information. The entries should be specified as a dictionary.
 
 If successful, the glossary is created and stored with your DeepL account, and
-a `GlossaryInfo` object is returned including the ID, name, languages and entry
-count.
+a `MultilingualGlossaryInfo` object is returned including the ID, name, and glossary
+dictionaries. The glossary dictionaries would be an array of 
+`MultilingualGlossaryDictionaryInfo` objects, each containing its own languages and 
+entry count.
 
 ```python
-# Create an English to German glossary with two terms:
+# Create a glossary with an English to German dictionary containing two terms:
 entries = {"artist": "Maler", "prize": "Gewinn"}
-my_glossary = deepl_client.create_glossary(
+dictionaries = [MultilingualGlossaryDictionaryEntries("EN", "DE", entries)]
+my_glossary = deepl_client.create_multilingual_glossary(
     "My glossary",
-    source_lang="EN",
-    target_lang="DE",
-    entries=entries,
+    dictionaries
 )
+my_glossary_dict = my_glossary.dictionaries[0]
 print(
     f"Created '{my_glossary.name}' ({my_glossary.glossary_id}) "
-    f"{my_glossary.source_lang}->{my_glossary.target_lang} "
-    f"containing {my_glossary.entry_count} entries"
+    f"with {len(my_glossary.dictionaries)} dictionary where "
+    f"its language pair is {my_glossary_dict.source_lang}->"
+    f"{my_glossary_dict.target_lang} containing "
+    f"{my_glossary.entry_count} entries"
 )
-# Example: Created 'My glossary' (559192ed-8e23-...) EN->DE containing 2 entries
+# Example: Created 'My glossary' (559192ed-8e23-...) with 1 dictionary where
+# its language pair is EN->DE containing 2 entries
 ```
 
 You can also upload a glossary downloaded from the DeepL website using
-`create_glossary_from_csv()`. Instead of supplying the entries as a dictionary,
-specify the CSV data as `csv_data` either as a file-like object or string or
-bytes containing file content:
+`create_multilingual_glossary_from_csv()`. Instead of supplying the entries as a 
+dictionary within a MultilingualGlossaryDictionaryEntries object, you can specify 
+the CSV data as `csv_data` either as a file-like object or string or bytes 
+containing file content:
 
 ```python
 # Open the CSV file assuming UTF-8 encoding. If your file contains a BOM,
 # consider using encoding='utf-8-sig' instead.
 with open('/path/to/glossary_file.csv', 'r',  encoding='utf-8') as csv_file:
     csv_data = csv_file.read()  # Read the file contents as a string
-    my_csv_glossary = deepl_client.create_glossary_from_csv(
+    my_csv_glossary = deepl_client.create_multilingual_glossary_from_csv(
         "CSV glossary",
         source_lang="EN",
         target_lang="DE",
@@ -373,49 +397,134 @@ with open('/path/to/glossary_file.csv', 'r',  encoding='utf-8') as csv_file:
 The [API documentation][api-docs-csv-format] explains the expected CSV format in
 detail.
 
-#### Getting, listing and deleting stored glossaries
+#### Getting, listing, and deleting stored glossaries
 
 Functions to get, list, and delete stored glossaries are also provided:
 
-- `get_glossary()` takes a glossary ID and returns a `GlossaryInfo` object for a
-  stored glossary, or raises an exception if no such glossary is found.
-- `list_glossaries()` returns a list of `GlossaryInfo` objects corresponding to
-  all of your stored glossaries.
-- `delete_glossary()` takes a glossary ID or `GlossaryInfo` object and deletes
-  the stored glossary from the server, or raises an exception if no such
-  glossary is found.
+- `get_multilingual_glossary()` takes a glossary ID and returns a 
+  `MultilingualGlossaryInfo` object for a stored glossary, or raises an 
+  exception if no such glossary is found.
+- `list_multilingual_glossaries()` returns a list of `MultilingualGlossaryInfo` objects 
+  corresponding to all of your stored glossaries.
+- `delete_multilingual_glossary()` takes a glossary ID or `MultilingualGlossaryInfo` 
+  object and deletes the stored glossary from the server, or raises an 
+  exception if no such glossary is found.
+- `delete_multilingual_glossary_dictionary()` takes a glossary ID or `GlossaryInfo` object to 
+  identify the glossary. Additionally takes in a source and target language or a 
+  `MultilingualGlossaryDictionaryInfo` object and deletes the stored dictionary
+   from the server, or raises an exception if no such glossary dictionary is found.
 
 ```python
 # Retrieve a stored glossary using the ID
 glossary_id = "559192ed-8e23-..."
-my_glossary = deepl_client.get_glossary(glossary_id)
+my_glossary = deepl_client.get_multilingual_glossary(glossary_id)
+
+# Delete a glossary dictionary from a stored glossary
+deepl_client.delete_multilingual_glossary_dictionary(my_glossary, my_glossary.dictionaries[0])
 
 # Find and delete glossaries named 'Old glossary'
-glossaries = deepl_client.list_glossaries()
+glossaries = deepl_client.list_multilingual_glossaries()
 for glossary in glossaries:
     if glossary.name == "Old glossary":
-        deepl_client.delete_glossary(glossary)
+        deepl_client.delete_multilingual_glossary(glossary)
 ```
 
 #### Listing entries in a stored glossary
 
-The `GlossaryInfo` object does not contain the glossary entries, but instead
-only the number of entries in the `entry_count` property.
+The `MultilingualGlossaryInfo` object does not contain the glossary entries, but
+instead only the number of entries in the `entry_count` property.
 
 To list the entries contained within a stored glossary, use
-`get_glossary_entries()` providing either the `GlossaryInfo` object or glossary
-ID:
+`get_multilingual_glossary_entries()` providing either the `MultilingualGlossaryInfo` object or glossary
+ID and either a `MultilingualGlossaryDictionaryInfo` or source and target language pair:
 
 ```python
-entries = deepl_client.get_glossary_entries(my_glossary)
-print(entries)  # "{'artist': 'Maler', 'prize': 'Gewinn'}"
+entries = deepl_client.get_multilingual_glossary_entries(my_glossary, "EN", "DE")
+print(entries.dictionaries[0])  # "{'artist': 'Maler', 'prize': 'Gewinn'}"
+```
+
+#### Editing a glossary
+
+Functions to edit stored glossaries are also provided:
+
+- `update_multilingual_glossary_dictionary()` takes a glossary ID or `MultilingualGlossaryInfo`
+  object, plus a source language, target language, and a dictionary of entries.
+  It will then either update the list of entries for that dictionary (either 
+  inserting new entires or replacing the target phrase for any existing 
+  entries) or will insert a new glossary dictionary if that language pair is 
+  not currently in the stored glossary.
+- `replace_multilingual_glossary_dictionary()` takes a glossary ID or `MultilingualGlossaryInfo`
+  object, plus a source language, target language, and a dictionary of entries.
+  It will then either set the entries to the parameter value, completely 
+  replacing any pre-existing entries for that language pair.
+- `update_multilingual_glossary_name()` takes a glossary ID or `MultilingualGlossaryInfo`
+  object, plus the new name of the glossary. 
+
+```python
+# Update glossary dictionary
+entries = {"artist": "Maler", "hello": "guten tag"}
+dictionaries = [MultilingualGlossaryDictionaryEntries("EN", "DE", entries)]
+my_glossary = deepl_client.create_multilingual_glossary(
+    "My glossary",
+    dictionaries
+)
+new_entries = {"hello": "hallo", "prize": "Gewinn"}
+glossary_dict = MultilingualGlossaryDictionaryEntries("EN", "DE", new_entries)
+updated_glossary = deepl_client.update_multilingual_glossary_dictionary(
+    my_glossary,
+    glossary_dict
+)
+
+entries_response = deepl_client.get_multilingual_glossary_entries(my_glossary, "EN", "DE")
+print(entries_response.dictionaries[0])  # "{'artist': 'Maler', 'hello': 'hallo', 'prize': 'Gewinn'}"
+
+# Update a glossary dictionary from CSV
+# Open the CSV file assuming UTF-8 encoding. If your file contains a BOM,
+# consider using encoding='utf-8-sig' instead.
+with open('/path/to/glossary_file.csv', 'r',  encoding='utf-8') as csv_file:
+    csv_data = csv_file.read()  # Read the file contents as a string
+    my_csv_glossary = deepl_client.update_multilingual_glossary_dictionary_from_csv(
+        glossary="4c81ffb4-2e...",
+        source_lang="EN",
+        target_lang="DE",
+        csv_data=csv_data,
+    )
+
+# Replace glossary dictionary
+replacement_entries = {"goodbye": "Auf Wiedersehen"}
+glossary_dict = MultilingualGlossaryDictionaryEntries("EN", "DE", replacement_entries)
+updated_glossary = deepl_client.replace_multilingual_glossary_dictionary(
+  my_glossary,
+  glossary_dict)
+entries_response = deepl_client.get_multilingual_glossary_entries(my_glossary, "EN", "DE")
+print(entries_response.dictionaries[0])  # "{'goodbye': 'Auf Wiedersehen'}"
+
+# Replace a glossary dictionary from CSV
+# Open the CSV file assuming UTF-8 encoding. If your file contains a BOM,
+# consider using encoding='utf-8-sig' instead.
+with open('/path/to/glossary_file.csv', 'r',  encoding='utf-8') as csv_file:
+    csv_data = csv_file.read()  # Read the file contents as a string
+    my_csv_glossary = deepl_client.replace_multilingual_glossary_dictionary_from_csv(
+        glossary="4c81ffb4-2e...",
+        source_lang="EN",
+        target_lang="DE",
+        csv_data=csv_data,
+    )
+
+# Update the glossary name
+updated_glossary = deepl_client.update_multilingual_glossary_name(
+  my_glossary,
+  "My new glossary name"
+)
+print(updated_glossary.name) # 'My new glossary name'
 ```
 
 #### Using a stored glossary
 
 You can use a stored glossary for text translation by setting the `glossary`
-argument to either the glossary ID or `GlossaryInfo` object. You must also
-specify the `source_lang` argument (it is required when using a glossary):
+argument to either the glossary ID or `GlossaryInfo`/`MultilingualGlossaryInfo` object.
+You must also specify the `source_lang` argument (it is required when using a
+glossary):
 
 ```python
 text = "The artist was awarded a prize."

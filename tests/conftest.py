@@ -5,9 +5,13 @@
 import deepl
 import os
 import pathlib
+from deepl.api_data import (
+    MultilingualGlossaryDictionaryEntries,
+    MultilingualGlossaryInfo,
+)
 from pydantic import BaseSettings
 import pytest
-from typing import Callable, Optional
+from typing import Callable, List, Optional
 from typing_extensions import Protocol
 import uuid
 
@@ -259,6 +263,35 @@ class ManagedGlossary:
             pass
 
 
+class ManagedMultilingualGlossary:
+    """
+    Utility content-manager class to create a test glossary and ensure its
+    deletion at the end of a test.
+    """
+
+    def __init__(
+        self,
+        deepl_client,
+        glossary_name: str,
+        dictionaries: List[MultilingualGlossaryDictionaryEntries],
+    ):
+        self.deepl_client = deepl_client
+        self._created_glossary = deepl_client.create_multilingual_glossary(
+            glossary_name, dictionaries
+        )
+
+    def __enter__(self) -> MultilingualGlossaryInfo:
+        return self._created_glossary
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        try:
+            self.deepl_client.delete_multilingual_glossary(
+                self._created_glossary.glossary_id
+            )
+        except deepl.DeepLException:
+            pass
+
+
 class CreateManagedGlossaryFunc(Protocol):
     """Helper class for type hints."""
 
@@ -272,10 +305,21 @@ class CreateManagedGlossaryFunc(Protocol):
         pass
 
 
+class CreateManagedMultilingualGlossaryFunc(Protocol):
+    """Helper class for type hints."""
+
+    def __call__(
+        self,
+        dictionaries: List[MultilingualGlossaryDictionaryEntries],
+        glossary_name_suffix: str = "",
+    ) -> ManagedMultilingualGlossary:
+        pass
+
+
 @pytest.fixture
 def glossary_manager(translator, glossary_name) -> CreateManagedGlossaryFunc:
     """
-    Fixture function that may be used to create context-managed test
+    Fixture function that may be used to create context-managed test v2
     glossaries, named using the current test. May be called multiple times in
     a test to create multiple glossaries, ideally with a different suffix for
     each glossary.
@@ -302,6 +346,37 @@ def glossary_manager(translator, glossary_name) -> CreateManagedGlossaryFunc:
             source_lang,
             target_lang,
             entries,
+        )
+
+    return create_managed_glossary
+
+
+@pytest.fixture
+def multilingual_glossary_manager(
+    deepl_client, glossary_name
+) -> CreateManagedMultilingualGlossaryFunc:
+    """
+    Fixture function that may be used to create context-managed test
+    glossaries, named using the current test. May be called multiple times in
+    a test to create multiple glossaries, ideally with a different suffix for
+    each glossary.
+
+    Usage example:
+        def test_example(glossary_manager):
+            with glossary_manager(
+                entries={"a": "b"}, glossary_name_suffix="1"
+            ) as glossary1:
+                ...
+    """
+
+    def create_managed_glossary(
+        dictionaries: List[MultilingualGlossaryDictionaryEntries],
+        glossary_name_suffix: str = "",
+    ):
+        return ManagedMultilingualGlossary(
+            deepl_client,
+            f"{glossary_name}{glossary_name_suffix}",
+            dictionaries,
         )
 
     return create_managed_glossary

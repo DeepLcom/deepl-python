@@ -1,10 +1,13 @@
 # Copyright 2022 DeepL SE (https://www.deepl.com)
 # Use of this source code is governed by an MIT
 # license that can be found in the LICENSE file.
+import csv
+import datetime
 import importlib
+import io
 import itertools
 import logging
-from typing import Dict, Optional
+from typing import Any, BinaryIO, Dict, Optional, TextIO, Union
 
 logger = logging.getLogger("deepl")
 
@@ -137,3 +140,57 @@ def convert_dict_to_tsv(
     return "\n".join(
         f"{s.strip()}\t{t.strip()}" for s, t in entry_dict.items()
     )
+
+
+def convert_csv_to_dict(
+    csv_data: Union[TextIO, BinaryIO, str, bytes, Any],
+    skip_checks: bool = False,
+) -> Dict[str, str]:
+    """Converts the given comma-separated values (CSV) string to an entries
+    dictionary for use in a glossary. Each line should contain a source and
+    target term separated by a comma or a source term, target term, source
+    language code, and target language code all separated by commas.
+    Empty lines are ignored.
+
+    :param tsv: string containing CSV to parse.
+    :param skip_checks: set to True to override entry validation.
+    :return: dictionary containing parsed entries.
+    """
+    entries_dict = {}
+    csv_string = (
+        csv_data if isinstance(csv_data, (str, bytes)) else csv_data.read()
+    )
+
+    if not isinstance(csv_string, (bytes, str)):
+        raise ValueError("Entries of the glossary are invalid")
+
+    if isinstance(csv_string, bytes):
+        csv_string = csv_string.decode("utf-8")
+
+    if isinstance(csv_string, str):
+        csv_string = io.StringIO(csv_string)
+
+    reader = csv.reader(csv_string)
+
+    for line, index in zip(reader, itertools.count(1)):
+        if not line:
+            continue
+        source, target = line[0].strip(), line[1].strip()
+        if source in entries_dict:
+            raise ValueError(
+                f'Entry {index} duplicates source term "{source}"'
+            )
+        if not skip_checks:
+            validate_glossary_term(source)
+            validate_glossary_term(target)
+        entries_dict[source] = target
+    return entries_dict
+
+
+def parse_timestamp(creation_time: str) -> datetime.datetime:
+    # Workaround for bugs in strptime() in Python 3.6
+    if ":" == creation_time[-3:-2]:
+        creation_time = creation_time[:-3] + creation_time[-2:]
+    if "Z" == creation_time[-1:]:
+        creation_time = creation_time[:-1] + "+0000"
+    return datetime.datetime.strptime(creation_time, "%Y-%m-%dT%H:%M:%S.%f%z")

@@ -6,8 +6,9 @@ from deepl.api_data import (
     DocumentHandle,
     DocumentStatus,
     Formality,
-    GlossaryInfo,
     GlossaryLanguagePair,
+    GlossaryInfo,
+    MultilingualGlossaryInfo,
     ModelType,
     Language,
     SplitSentences,
@@ -258,7 +259,9 @@ class Translator:
         source_lang: Union[str, Language, None],
         target_lang: Union[str, Language],
         formality: Union[str, Formality, None],
-        glossary: Union[str, GlossaryInfo, None] = None,
+        glossary: Union[
+            str, GlossaryInfo, MultilingualGlossaryInfo, None
+        ] = None,
     ) -> dict:
         # target_lang and source_lang are case insensitive
         target_lang = str(target_lang).upper()
@@ -278,6 +281,18 @@ class Translator:
                     "source_lang and target_lang must match glossary"
                 )
 
+        if isinstance(glossary, MultilingualGlossaryInfo):
+            target_lang_code = Language.remove_regional_variant(target_lang)
+            if not any(
+                glossary_dict.target_lang == target_lang_code
+                and glossary_dict.source_lang == source_lang
+                for glossary_dict in glossary.dictionaries
+            ):
+                raise ValueError(
+                    "must have a glossary with a dictionary for the given "
+                    "source_lang and target_lang"
+                )
+
         self._check_valid_languages(source_lang, target_lang)
 
         request_data = {"target_lang": target_lang}
@@ -285,7 +300,9 @@ class Translator:
             request_data["source_lang"] = source_lang
         if formality is not None:
             request_data["formality"] = str(formality).lower()
-        if isinstance(glossary, GlossaryInfo):
+        if isinstance(glossary, GlossaryInfo) or isinstance(
+            glossary, MultilingualGlossaryInfo
+        ):
             request_data["glossary_id"] = glossary.glossary_id
         elif glossary is not None:
             request_data["glossary_id"] = glossary
@@ -342,7 +359,9 @@ class Translator:
         split_sentences: Union[str, SplitSentences, None] = None,
         preserve_formatting: Optional[bool] = None,
         formality: Union[str, Formality, None] = None,
-        glossary: Union[str, GlossaryInfo, None] = None,
+        glossary: Union[
+            str, GlossaryInfo, MultilingualGlossaryInfo, None
+        ] = None,
         tag_handling: Optional[str] = None,
         outline_detection: Optional[bool] = None,
         non_splitting_tags: Union[str, List[str], None] = None,
@@ -535,7 +554,9 @@ class Translator:
         source_lang: Optional[str] = None,
         target_lang: str,
         formality: Union[str, Formality] = Formality.DEFAULT,
-        glossary: Union[str, GlossaryInfo, None] = None,
+        glossary: Union[
+            str, GlossaryInfo, MultilingualGlossaryInfo, None
+        ] = None,
         timeout_s: Optional[int] = None,
     ) -> DocumentStatus:
         """Upload document at given input path, translate it into the target
@@ -593,7 +614,9 @@ class Translator:
         source_lang: Optional[str] = None,
         target_lang: str,
         formality: Union[str, Formality] = Formality.DEFAULT,
-        glossary: Union[str, GlossaryInfo, None] = None,
+        glossary: Union[
+            str, GlossaryInfo, MultilingualGlossaryInfo, None
+        ] = None,
         filename: Optional[str] = None,
         output_format: Optional[str] = None,
         timeout_s: Optional[int] = None,
@@ -660,7 +683,9 @@ class Translator:
         source_lang: Optional[str] = None,
         target_lang: str,
         formality: Union[str, Formality, None] = None,
-        glossary: Union[str, GlossaryInfo, None] = None,
+        glossary: Union[
+            str, GlossaryInfo, MultilingualGlossaryInfo, None
+        ] = None,
         filename: Optional[str] = None,
         output_format: Optional[str] = None,
     ) -> DocumentHandle:
