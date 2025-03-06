@@ -7,6 +7,7 @@ include:
     file:
       - '/templates/.buildkit.yml'
       - '/templates/.secret-detection.yml'
+  - template: Security/SAST.gitlab-ci.yml
 
 # Global --------------------------
 
@@ -17,6 +18,7 @@ variables:
   XDG_CACHE_HOME: "${CI_PROJECT_DIR}/.cache"
   POETRY_VIRTUALENVS_IN_PROJECT: "true"
   REQUESTS_CA_BUNDLE: "/etc/ssl/certs/ca-certificates.crt"
+  GITLAB_ADVANCED_SAST_ENABLED: 'true'
 
 cache:
   key:
@@ -131,6 +133,26 @@ mypy_manual:
   extends: .mypy_base
   rules:
     - if: $CI_PIPELINE_SOURCE != "schedule"
+
+gitlab-advanced-sast:
+  stage: check
+  before_script:
+    - ''
+  rules:
+    - when: always
+  variables:
+    SAST_EXCLUDED_PATHS: '$DEFAULT_SAST_EXCLUDED_PATHS'
+    GIT_STRATEGY: clone
+
+semgrep-sast:
+  stage: check
+  before_script:
+    - ''
+  rules:
+    - when: always
+  variables:
+    SAST_EXCLUDED_PATHS: '$DEFAULT_SAST_EXCLUDED_PATHS'
+    GIT_STRATEGY: clone
 
 # stage: build ----------------------
 
