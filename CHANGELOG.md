@@ -6,10 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
-* (beta) optional parameter to specify timeout for document translation calls
 <!-- * add to here -->
 ### Changed
 <!-- * add to here -->
+
+## [1.21.1] - 2025-03-12
+### Added
+* (beta) optional parameter to specify timeout for document translation calls
 
 ## [1.21.0] - 2025-01-15
 ### Added
@@ -331,7 +334,8 @@ Version increased to avoid conflicts with old packages on PyPI.
 Initial version.
 
 <!-- Unreleased shoud never be deleted -->
-[Unreleased]: https://github.com/DeepLcom/deepl-python/compare/v1.21.0...HEAD
+[Unreleased]: https://github.com/DeepLcom/deepl-python/compare/v1.21.1...HEAD
+[1.21.1]: https://github.com/DeepLcom/deepl-python/compare/v1.21.0...v1.21.1
 [1.21.0]: https://github.com/DeepLcom/deepl-python/compare/v1.20.0...v1.21.0
 [1.20.0]: https://github.com/DeepLcom/deepl-python/compare/v1.19.1...v1.20.0
 [1.19.1]: https://github.com/DeepLcom/deepl-python/compare/v1.19.0...v1.19.1
