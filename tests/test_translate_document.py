@@ -74,6 +74,48 @@ def test_translate_document_with_waiting(
 
 
 @needs_mock_server
+def test_translate_document_with_timeout_succeeds(
+    translator,
+    server,
+    example_document_path,
+    example_document_translation,
+    output_document_path,
+):
+    server.set_doc_queue_time(2 * 1000)
+    server.set_doc_translate_time(2 * 1000)
+
+    translator.translate_document_from_filepath(
+        example_document_path,
+        output_path=output_document_path,
+        timeout_s=10,
+        **default_lang_args,
+    )
+    assert example_document_translation == output_document_path.read_text()
+
+
+@needs_mock_server
+def test_translate_document_with_manual_timeout_fails(
+    translator,
+    server,
+    example_document_path,
+    output_document_path,
+):
+    server.set_doc_queue_time(11 * 1000)
+    server.set_doc_translate_time(11 * 1000)
+
+    with pytest.raises(
+        deepl.DeepLException,
+        match="Manual timeout of 10s exceeded for document translation",
+    ):
+        translator.translate_document_from_filepath(
+            example_document_path,
+            output_path=output_document_path,
+            timeout_s=10,
+            **default_lang_args,
+        )
+
+
+@needs_mock_server
 def test_translate_large_document(
     translator, example_large_document_path, example_large_document_translation
 ):

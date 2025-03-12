@@ -536,6 +536,7 @@ class Translator:
         target_lang: str,
         formality: Union[str, Formality] = Formality.DEFAULT,
         glossary: Union[str, GlossaryInfo, None] = None,
+        timeout_s: Optional[int] = None,
     ) -> DocumentStatus:
         """Upload document at given input path, translate it into the target
         language, and download result to given output path.
@@ -551,6 +552,9 @@ class Translator:
             Formality enum, "less", "more", "prefer_less", or "prefer_more".
         :param glossary: (Optional) glossary or glossary ID to use for
             translation. Must match specified source_lang and target_lang.
+        :param timeout_s: (beta) (Optional) Maximum time to wait before
+            the call raises an error. Note that this is not accurate to the
+            second, but only polls every 5 seconds.
         :return: DocumentStatus when document translation completed, this
             allows the number of billed characters to be queried.
 
@@ -574,6 +578,7 @@ class Translator:
                         formality=formality,
                         glossary=glossary,
                         output_format=output_format,
+                        timeout_s=timeout_s,
                     )
                 except Exception as e:
                     out_file.close()
@@ -591,6 +596,7 @@ class Translator:
         glossary: Union[str, GlossaryInfo, None] = None,
         filename: Optional[str] = None,
         output_format: Optional[str] = None,
+        timeout_s: Optional[int] = None,
     ) -> DocumentStatus:
         """Upload document, translate it into the target language, and download
         result.
@@ -612,6 +618,9 @@ class Translator:
             if uploading string or bytes containing file content.
         :param output_format: (Optional) Desired output file extension, if
             it differs from the input file format.
+        :param timeout_s: (beta) (Optional) Maximum time to wait before
+            the call raises an error. Note that this is not accurate to the
+            second, but only polls every 5 seconds.
         :return: DocumentStatus when document translation completed, this
             allows the number of billed characters to be queried.
 
@@ -630,7 +639,7 @@ class Translator:
         )
 
         try:
-            status = self.translate_document_wait_until_done(handle)
+            status = self.translate_document_wait_until_done(handle, timeout_s)
             if status.ok:
                 self.translate_document_download(handle, output_document)
         except Exception as e:
@@ -752,27 +761,44 @@ class Translator:
         )
 
     def translate_document_wait_until_done(
-        self, handle: DocumentHandle
+        self,
+        handle: DocumentHandle,
+        timeout_s: Optional[int] = None,
     ) -> DocumentStatus:
         """
         Continually polls the status of the document translation associated
         with the given handle, sleeping in between requests, and returns the
         final status when the translation completes (whether successful or
         not).
-
         :param handle: DocumentHandle to the document translation to wait on.
+        :param timeout_s: (beta) (Optional) Maximum time to wait before
+            the call raises an error. Note that this is not accurate to the
+            second, but only polls every 5 seconds.
         :return: DocumentStatus containing the status when completed.
         """
         status = self.translate_document_get_status(handle)
+        start_time_s = time.time()
         while status.ok and not status.done:
-            secs = 5.0  # seconds_remaining is currently unreliable, so just
-            # poll equidistantly
-            util.log_info(
-                f"Rechecking document translation status "
-                f"after sleeping for {secs:.3f} seconds."
-            )
-            time.sleep(secs)
-            status = self.translate_document_get_status(handle)
+            if (
+                timeout_s is not None
+                and time.time() - start_time_s > timeout_s
+            ):
+                raise DeepLException(
+                    f"Manual timeout of {timeout_s}s exceeded for"
+                    + " document translation",
+                    should_retry=False,
+                )
+            else:
+                secs = (
+                    5.0  # seconds_remaining is currently unreliable, so just
+                )
+                # poll equidistantly
+                util.log_info(
+                    f"Rechecking document translation status "
+                    f"after sleeping for {secs:.3f} seconds."
+                )
+                time.sleep(secs)
+                status = self.translate_document_get_status(handle)
         return status
 
     def translate_document_download(

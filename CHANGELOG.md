@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Added
+* (beta) optional parameter to specify timeout for document translation calls
+<!-- * add to here -->
+### Changed
+<!-- * add to here -->
 
 ## [1.21.0] - 2025-01-15
 ### Added
@@ -324,7 +330,8 @@ Version increased to avoid conflicts with old packages on PyPI.
 ## [0.1.0] - 2021-07-26
 Initial version.
 
-
+<!-- Unreleased shoud never be deleted -->
+[Unreleased]: https://github.com/DeepLcom/deepl-python/compare/v1.21.0...HEAD
 [1.21.0]: https://github.com/DeepLcom/deepl-python/compare/v1.20.0...v1.21.0
 [1.20.0]: https://github.com/DeepLcom/deepl-python/compare/v1.19.1...v1.20.0
 [1.19.1]: https://github.com/DeepLcom/deepl-python/compare/v1.19.0...v1.19.1
