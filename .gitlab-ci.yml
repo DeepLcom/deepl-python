@@ -7,6 +7,7 @@ include:
     file:
       - '/templates/.buildkit.yml'
       - '/templates/.secret-detection.yml'
+      - '/templates/.gitlab-release.yml'
   - template: Security/SAST.gitlab-ci.yml
 
 # Global --------------------------
@@ -297,3 +298,9 @@ pypi upload:
     - if: '$CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]+$/'
   script:
     - poetry publish --verbose --no-interaction
+
+gitlab release:
+  stage: publish
+  extends: .create_gitlab_release
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]+$/'
