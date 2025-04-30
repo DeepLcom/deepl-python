@@ -6,8 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+<!-- * add to here -->
+### Changed
+<!-- * add to here -->
+
+## [1.22.0] - 2025-04-30
+### Added
 * Added support for the /v3 Glossary APIs in the client library while providing backwards
-  compatability for the previous /v2 Glossary endpoints. Please refer to the README for 
+  compatability for the previous /v2 Glossary endpoints. Please refer to the README for
   usage instructions.
 
 
@@ -337,7 +343,8 @@ Initial version.
 
 
 <!-- Unreleased shoud never be deleted -->
-[Unreleased]: https://github.com/DeepLcom/deepl-python/compare/v1.21.1...HEAD
+[Unreleased]: https://github.com/DeepLcom/deepl-python/compare/v1.22.0...HEAD
+[1.22.0]: https://github.com/DeepLcom/deepl-python/compare/v1.21.1...v1.22.0
 [1.21.1]: https://github.com/DeepLcom/deepl-python/compare/v1.21.0...v1.21.1
 [1.21.0]: https://github.com/DeepLcom/deepl-python/compare/v1.20.0...v1.21.0
 [1.20.0]: https://github.com/DeepLcom/deepl-python/compare/v1.19.1...v1.20.0
