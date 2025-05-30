@@ -335,7 +335,7 @@ endpoints, please continue to use the existing endpoints in the `translator.py`
 
 To migrate to use the new multilingual glossary methods from the current 
 monolingual glossary methods, please refer to 
-[this migration guide](upgrade_to_multilingual_glossaries.md).
+[this migration guide](upgrading_to_multilingual_glossaries.md).
 
 The following sections describe how to interact with multilingual glossaries 
 using the new functionality:
