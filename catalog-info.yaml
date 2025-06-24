@@ -1,0 +1,11 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: deepl-python
+  title: DeepL Python Library
+  description: Public Python library for interacting with the DeepL API
+spec:
+  type: library
+  lifecycle: production
+  owner: api-core-team
+  system: oss-client-libraries
