@@ -37,7 +37,7 @@ requests = "^2"
 keyring = {version = "^23.4.1", python = ">=3.6,<4", optional = true}
 
 [tool.poetry.dev-dependencies]
-black = "^21.4b2"
+black = {version = "^25.1.0", python = ">=3.9,<4"}
 pydantic = "^1.8.1"
 flake8 = {version = "^7.3.0", python = ">=3.9,<4"}
 mypy = [
