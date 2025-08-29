@@ -1,0 +1,26 @@
+# Configuration file for bumpversion GitHub action
+# See https://github.com/callowayproject/bump-my-version
+[tool.bumpversion]
+current_version = "1.24.0"
+parse = "(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)"
+serialize = ["{major}.{minor}.{patch}"]
+search = "{current_version}"
+replace = "{new_version}"
+regex = false
+ignore_missing_version = false
+tag = false
+allow_dirty = false
+commit = false
+
+[[tool.bumpversion.files]]
+filename = "deepl/version.py"
+
+[[tool.bumpversion.files]]
+filename = "tests/test_general.py"
+search = "\"{current_version}\" == deepl.__version__"
+replace = "\"{new_version}\" == deepl.__version__"
+
+[[tool.bumpversion.files]]
+filename = "pyproject.toml"
+search = "name = \"deepl\"\nversion = \"{current_version}\""
+replace = "name = \"deepl\"\nversion = \"{new_version}\""
