@@ -121,8 +121,8 @@ def test_glossary_get_entries(translator, glossary_manager):
         "Apple": "Apfel",
         "Banana": "Banane",
         "A%=&": "B&=%",
-        "\u0394\u3041": "\u6DF1",
-        "\U0001FAA8": "\U0001FAB5",
+        "\u0394\u3041": "\u6df1",
+        "\U0001faa8": "\U0001fab5",
     }
     with glossary_manager(
         source_lang=source_lang, target_lang=target_lang, entries=entries
