@@ -1,0 +1,154 @@
+name: Bump Version
+run-name: Bump version (${{ inputs.bump-type }}) by @${{ github.actor }}
+
+# Note: need to allow GitHub Actions to create pull requests in repository
+# settings (Actions -> General - > Workflow permissions).
+# Optional secrets:
+# - GPG_PRIVATE_KEY: The private GPG key for signing commits and tags
+# - GPG_KEY_ID: The GPG key ID for signing commits and tags
+
+permissions:
+  contents: write
+  pull-requests: write
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump-type:
+        description: 'Bump type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+        - major
+        - minor
+        - patch
+        - post-review-release # Do not bump version, just create tag & release based on latest changelog
+      fail-on-empty-changelog:
+        description: 'Fail if changelog is empty'
+        required: false
+        default: true
+        type: boolean
+      create-pull-request:
+        description: 'Create pull request for review'
+        required: false
+        default: true
+        type: boolean
+      gpg-signing:
+        description: 'Sign commits and tags with GPG'
+        required: false
+        default: true
+        type: boolean
+
+jobs:
+  bump_version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Install bump-my-version
+        run: |
+          uv tool install bump-my-version
+
+      # Bump version in source files (if necessary) and output current version
+      - name: Bump version
+        id: bump
+        shell: bash
+        run: |
+          if [[ "${{ inputs.bump-type }}" == "post-review-release" ]]; then
+            echo "Post-review-release selected, not bumping version"
+          else
+            bump-my-version bump ${{ inputs.bump-type }}
+          fi
+          echo "current-version=$(bump-my-version show current_version)" >> $GITHUB_OUTPUT
+
+      # Update changelog with new release section and tag links
+      - name: Update changelog
+        id: changelog
+        uses: release-flow/keep-a-changelog-action@v2
+        if: ${{ inputs.bump-type != 'post-review-release' }}
+        with:
+          command: bump
+          version: ${{ inputs.bump-type }}
+          keep-unreleased-section: true
+          fail-on-empty-release-notes: ${{ inputs.fail-on-empty-changelog }}
+
+      # Query the changelog for the latest release notes, specifically for the case inputs.bump-type == 'post-review-release'
+      - name: Query latest changelog
+        id: query_changelog
+        uses: release-flow/keep-a-changelog-action@v2
+        with:
+          command: query
+          version: latest
+
+      - name: git config and GPG setup
+        id: git_setup
+        run: |
+          if ${{ inputs.gpg-signing }}; then
+            echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --import --batch --yes
+            echo "use-agent" >> ~/.gnupg/gpg.conf
+            echo "default-cache-ttl 600" >> ~/.gnupg/gpg-agent.conf
+            echo "max-cache-ttl 7200" >> ~/.gnupg/gpg-agent.conf
+            echo "GPG setup complete"
+          
+            git config --global commit.gpgSign true
+            git config --global tag.gpgSign true
+            git config --global user.signingkey "${{ secrets.GPG_KEY_ID }}"
+          else
+            echo "GPG signing disabled"
+            git config --global commit.gpgSign false
+            git config --global tag.gpgSign false
+          fi
+          
+          git config --global user.name "${{ github.actor }}"
+          git config --global user.email "${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com>"
+
+      - name: Create commit
+        id: create_commit
+        if: ${{ inputs.bump-type != 'post-review-release' }}
+        run: |
+          git add .
+          git commit -m "docs: Increase version to ${{ steps.bump.outputs.current-version }}"
+          
+          if ${{ inputs.create-pull-request }}; then
+            echo "Not pushing commit, creating pull request instead"
+          else
+            git push
+          fi
+
+      - name: Create Pull Request
+        id: create_pr
+        uses: peter-evans/create-pull-request@v7
+        if: ${{ inputs.create-pull-request && inputs.bump-type != 'post-review-release' }}
+        with:
+          title: "Bump version to ${{ steps.bump.outputs.current-version }}"
+          body: |
+            This PR bumps the version to ${{ steps.bump.outputs.current-version }} and updates the changelog.
+            After merging this PR, remember to re-trigger this action with the 'post-review-release' option to create the tag & release.
+          branch: bumpversion-${{ steps.bump.outputs.current-version }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create tag
+        id: create_tag
+        if: ${{ ! inputs.create-pull-request || inputs.bump-type == 'post-review-release' }}
+        run: |
+          git tag v${{ steps.bump.outputs.current-version }} -m "Version ${{ steps.bump.outputs.current-version }}" 
+          git push origin v${{ steps.bump.outputs.current-version }}
+
+      - name: Create GitHub release
+        id: create_release
+        if: ${{ ! inputs.create-pull-request || inputs.bump-type == 'post-review-release' }}
+        uses: ncipollo/release-action@v1
+        with:
+          tag: v${{ steps.bump.outputs.current-version }}
+          name: v${{ steps.bump.outputs.current-version }}
+          body: ${{ steps.query_changelog.outputs.release-notes }}
+          draft: false
+          prerelease: false
+          token: ${{ secrets.GITHUB_TOKEN }}
