@@ -34,25 +34,15 @@ fail_under = 70
 [tool.poetry.dependencies]
 python = ">=3.9,<4"
 requests = ">=2.32.4"
-keyring = {version = "^23.4.1", python = ">=3.6,<4", optional = true}
+keyring = {version = "^23.4.1", optional = true}
 
 [tool.poetry.group.dev.dependencies]
-black = {version = "^25.1.0", python = ">=3.9,<4"}
+black = "^25.1.0"
 pydantic = "^1.8.1"
-flake8 = {version = "^7.3.0", python = ">=3.9,<4"}
-mypy = [
-    {version = "^0.991", python = ">=3.7,<4"},
-    {version = "^0.812", python = "<3.7"},
-]
-# pytest v7.2.0 addresses a vulnerability but unfortunately only supports Python 3.7+
-pytest = [
-    {version = "^7.2.0", python = ">=3.7,<4"},
-    {version = "^6.2.3", python = "<3.7"},
-]
-coverage = [
-    {extras = ["toml"], version = "^6.5.0", python = ">=3.7,<4"},
-    {extras = ["toml"], version = "^5.5.0", python = "<3.7"},
-]
+flake8 = "^7.3.0"
+mypy = "^1.17.1"
+pytest = "^8.4.2"
+coverage = "^7.10.6"
 
 [tool.poetry.extras]
 keyring = ["keyring"]
