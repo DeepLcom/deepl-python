@@ -173,13 +173,6 @@ package:
   parallel:
     matrix:
       - DOCKER_IMAGE: "python:3.13"
-      - DOCKER_IMAGE: "python:3.6"
-        USE_MOCK_SERVER: "use mock server"
-        USE_OLD_POETRY_VERSION: "use old poetry version"
-      - DOCKER_IMAGE: "python:3.7"
-        USE_MOCK_SERVER: "use mock server"
-      - DOCKER_IMAGE: "python:3.8"
-        USE_MOCK_SERVER: "use mock server"
       - DOCKER_IMAGE: "python:3.9"
         USE_MOCK_SERVER: "use mock server"
       - DOCKER_IMAGE: "python:3.10"
@@ -189,17 +182,6 @@ package:
       - DOCKER_IMAGE: "python:3.12"
         USE_MOCK_SERVER: "use mock server"
       - DOCKER_IMAGE: "python:3.13"
-        USE_MOCK_SERVER: "use mock server"
-      - DOCKER_IMAGE: "python:3.6"
-        EXTRA_POETRY_ADD_ARGUMENT: "requests@2.0"
-        USE_MOCK_SERVER: "use mock server"
-        USE_OLD_POETRY_VERSION: "use old poetry version"
-      - DOCKER_IMAGE: "python:3.9"
-        EXTRA_POETRY_ADD_ARGUMENT: "requests@2.0"
-        USE_MOCK_SERVER: "use mock server"
-      - DOCKER_IMAGE: "python:3.13"
-        # Set minimum possible requests and urllib3 versions to work with Python 3.13
-        EXTRA_POETRY_ADD_ARGUMENT: "requests@2.20 urllib3@1.23"
         USE_MOCK_SERVER: "use mock server"
   image: ${DOCKER_IMAGE}
   script:
