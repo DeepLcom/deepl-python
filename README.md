@@ -41,15 +41,14 @@ explained in this [bug report][bug-report-ubuntu-2204].
 
 ### Requirements
 
-The library is tested with Python versions 3.6 to 3.11.
+The library is tested with Python versions 3.9 to 3.13.
 
 The `requests` module is used to perform HTTP requests; the minimum is version
-2.0.
+2.32.4.
 
-Starting in 2024, we will drop support for older Python versions that have
+We periodically drop support for older Python versions that have
 reached official end-of-life. You can find the Python versions and support
 timelines [here][python-version-list].
-To continue using this library, you should update to Python 3.8+.
 
 ## Usage
 
