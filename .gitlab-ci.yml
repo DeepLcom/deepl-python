@@ -57,7 +57,7 @@ before_script:
       pip install poetry==1.1.15
     else
       echo "Installing newer poetry version"
-      pip install poetry==1.4.2
+      pip install poetry==2.1.2
     fi
   - poetry --version
   - poetry install -vv -E keyring
