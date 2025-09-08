@@ -14,7 +14,6 @@ from functools import lru_cache
 from typing import Dict, Optional, Tuple, Union
 from .util import log_info
 from deepl import util
-import json as json_module
 
 
 user_agent = None
@@ -229,16 +228,8 @@ class HttpClient:
                     self._app_info_version,
                 ),
             )
-            # TODO review when minimum Python version is raised
-            if tuple(map(int, requests.__version__.split("."))) >= (2, 4, 2):
-                kwargs["json"] = json
-            elif json is not None:
-                # This is fine, see official docs
-                # https://requests.readthedocs.io/en/latest/user/quickstart/#more-complicated-post-requests # noqa: E501
-                data = json_module.dumps(json)  # type: ignore[assignment]
-                headers["Content-Type"] = "application/json"
             return requests.Request(
-                method, url, data=data, headers=headers, **kwargs
+                method, url, data=data, headers=headers, json=json, **kwargs
             ).prepare()
         except Exception as e:
             raise DeepLException(
