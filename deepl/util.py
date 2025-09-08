@@ -188,9 +188,4 @@ def convert_csv_to_dict(
 
 
 def parse_timestamp(creation_time: str) -> datetime.datetime:
-    # Workaround for bugs in strptime() in Python 3.6
-    if ":" == creation_time[-3:-2]:
-        creation_time = creation_time[:-3] + creation_time[-2:]
-    if "Z" == creation_time[-1:]:
-        creation_time = creation_time[:-1] + "+0000"
     return datetime.datetime.strptime(creation_time, "%Y-%m-%dT%H:%M:%S.%f%z")
