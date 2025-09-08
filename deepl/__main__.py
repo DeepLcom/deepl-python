@@ -287,8 +287,9 @@ def get_parser(prog_name):
         "fallback",
     )
 
-    # Note: add_subparsers param 'required' is not available in py36
-    subparsers = parser.add_subparsers(metavar="command", dest="command")
+    subparsers = parser.add_subparsers(
+        metavar="command", dest="command", required=True
+    )
 
     def add_common_arguments(subparser: argparse.ArgumentParser):
         """Adds arguments shared between text and document commands to the
@@ -492,9 +493,8 @@ def get_parser(prog_name):
         description="manage glossaries using subcommands",
     )
 
-    # Note: add_subparsers param 'required' is not available in py36
     glossary_subparsers = parser_glossary.add_subparsers(
-        metavar="subcommand", dest="subcommand"
+        metavar="subcommand", dest="subcommand", required=True
     )
     parser_glossary_create = glossary_subparsers.add_parser(
         "create",
@@ -600,12 +600,6 @@ def main(args=None, prog_name=None):
     parser, parser_glossary = get_parser(prog_name)
     args = parser.parse_args(args)
 
-    if args.command is None:
-        # Support for Python 3.6 - subcommands cannot be required
-        sys.stderr.write("Error: command is required\n")
-        parser.print_help(sys.stderr)
-        sys.exit(1)
-
     logger = logging.getLogger("deepl")
     if args.verbose == 1:
         logger.setLevel(logging.INFO)
@@ -652,13 +646,6 @@ def main(args=None, prog_name=None):
         if args.command in ["text", "translate", "rephrase"]:
             if len(args.text) == 1 and args.text[0] == "-":
                 args.text = [sys.stdin.read()]
-
-        elif args.command == "glossary":
-            if args.subcommand is None:
-                # Support for Python 3.6 - subcommands cannot be required
-                sys.stderr.write("Error: glossary subcommand is required\n")
-                parser_glossary.print_help(sys.stderr)
-                sys.exit(1)
 
         # Remove global args so they are not unrecognised in action functions
         del (

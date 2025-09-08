@@ -103,8 +103,8 @@ def test_env_auth_no_keyring(mock, runner):
 
 def test_no_command(runner):
     result = runner.invoke(main_function, "")
-    assert result.exit_code == 1, f"exit: {result.exit_code}\n {result.output}"
-    assert "command is required" in result.output
+    assert result.exit_code == 2, f"exit: {result.exit_code}\n {result.output}"
+    assert "required: command" in result.output
 
 
 def test_usage(runner):
@@ -284,8 +284,8 @@ def test_invalid_document(runner, tmpdir):
 
 def test_glossary_no_subcommand(runner):
     result = runner.invoke(main_function, "glossary")
-    assert result.exit_code == 1, f"exit: {result.exit_code}\n {result.output}"
-    assert "subcommand is required" in result.output
+    assert result.exit_code == 2, f"exit: {result.exit_code}\n {result.output}"
+    assert "required: subcommand" in result.output
 
 
 def test_glossary_create(
