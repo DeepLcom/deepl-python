@@ -26,7 +26,7 @@ jobs:
           python3 -m venv .venv
           source .venv/bin/activate
           pip install --upgrade pip
-          pip install poetry==1.4.2
+          pip install poetry==2.1.2
           poetry install -vv -E keyring
       - name: Run black check
         run: |
@@ -43,7 +43,7 @@ jobs:
           python3 -m venv .venv
           source .venv/bin/activate
           pip install --upgrade pip
-          pip install poetry==1.4.2
+          pip install poetry==2.1.2
           poetry install -vv -E keyring
       - name: Run flake8 check
         run: |
@@ -70,7 +70,7 @@ jobs:
           python3 -m venv .venv
           source .venv/bin/activate
           pip install --upgrade pip
-          pip install poetry==1.4.2
+          pip install poetry==2.1.2
           poetry install -vv -E keyring
       - name: Run mypy check
         run: |
@@ -109,7 +109,7 @@ jobs:
           python3 -m venv .venv
           source .venv/bin/activate
           pip install --upgrade pip
-          pip install poetry==1.4.2
+          pip install poetry==2.1.2
           poetry install -vv -E keyring
       - name: Build package
         run: |
@@ -189,7 +189,7 @@ jobs:
 #         python3 -m venv .venv
 #         source .venv/bin/activate
 #         pip install --upgrade pip
-#         pip install poetry==1.4.2
+#         pip install poetry==2.1.2
 #         poetry install -vv -E keyring
 #     - name: Run mustache example
 #       run: |
@@ -211,7 +211,7 @@ jobs:
 #         python3 -m venv .venv
 #         source .venv/bin/activate
 #         pip install --upgrade pip
-#         pip install poetry==1.4.2
+#         pip install poetry==2.1.2
 #         poetry install -vv -E keyring
 #     - name: Run basic usage example
 #       run: |
