@@ -403,3 +403,18 @@ def test_mixed_case_languages(translator):
     )
     assert example_text["EN-US"] == result.text.lower()
     assert "DE" == result.detected_source_lang
+
+
+def test_extra_body_params(translator):
+    # Checks `target_lang` is not overwritten, does not check
+    # debug is actually sent
+    extra = {"target_lang": "FR", "debug": "1"}
+    res = translator.translate_text(
+        example_text["EN"],
+        target_lang="DE",
+        extra_body_parameters=extra,
+    )
+    assert isinstance(res, deepl.TextResult)
+    assert example_text["DE"] == res.text
+    assert "EN" == res.detected_source_lang
+    assert res.billed_characters == len(example_text["EN"])
