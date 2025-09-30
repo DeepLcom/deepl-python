@@ -368,6 +368,7 @@ class Translator:
         splitting_tags: Union[str, List[str], None] = None,
         ignore_tags: Union[str, List[str], None] = None,
         model_type: Union[str, ModelType, None] = None,
+        extra_body_parameters: Optional[dict] = None,
     ) -> Union[TextResult, List[TextResult]]:
         """Translate text(s) into the target language.
 
@@ -410,6 +411,11 @@ class Translator:
         :type ignore_tags: List of XML tags or comma-separated-list of tags.
         :param model_type: (Optional) Controls whether the translation engine
             should use a potentially slower model to achieve higher quality.
+        :param extra_body_parameters: (Optional) Additional key/value pairs to
+            include in the JSON request body sent to the API. If provided,
+            keys in this dict will be added to the request body. Existing
+            keys set by the client will not be overwritten by entries in
+            extra_body_parameters.
         :return: List of TextResult objects containing results, unless input
             text was one string, then a single TextResult object is returned.
         """
@@ -466,6 +472,13 @@ class Translator:
             request_data["splitting_tags"] = join_tags(splitting_tags)
         if ignore_tags is not None:
             request_data["ignore_tags"] = join_tags(ignore_tags)
+
+        # Do not overwrite keys that were explicitly set by this method.
+        if extra_body_parameters:
+            for k, v in extra_body_parameters.items():
+                if k in request_data:
+                    continue
+                request_data[k] = v
 
         status, content, json = self._api_call(
             "v2/translate", json=request_data
@@ -558,6 +571,7 @@ class Translator:
             str, GlossaryInfo, MultilingualGlossaryInfo, None
         ] = None,
         timeout_s: Optional[int] = None,
+        extra_body_parameters: Optional[dict] = None,
     ) -> DocumentStatus:
         """Upload document at given input path, translate it into the target
         language, and download result to given output path.
@@ -576,6 +590,11 @@ class Translator:
         :param timeout_s: (beta) (Optional) Maximum time to wait before
             the call raises an error. Note that this is not accurate to the
             second, but only polls every 5 seconds.
+        :param extra_body_parameters: (Optional) Additional key/value pairs to
+            include in the JSON request body sent to the API. If provided,
+            keys in this dict will be added to the request body. Existing
+            keys set by the client will not be overwritten by entries in
+            extra_body_parameters.
         :return: DocumentStatus when document translation completed, this
             allows the number of billed characters to be queried.
 
@@ -600,6 +619,7 @@ class Translator:
                         glossary=glossary,
                         output_format=output_format,
                         timeout_s=timeout_s,
+                        extra_body_parameters=extra_body_parameters,
                     )
                 except Exception as e:
                     out_file.close()
@@ -620,6 +640,7 @@ class Translator:
         filename: Optional[str] = None,
         output_format: Optional[str] = None,
         timeout_s: Optional[int] = None,
+        extra_body_parameters: Optional[dict] = None,
     ) -> DocumentStatus:
         """Upload document, translate it into the target language, and download
         result.
@@ -644,6 +665,11 @@ class Translator:
         :param timeout_s: (beta) (Optional) Maximum time to wait before
             the call raises an error. Note that this is not accurate to the
             second, but only polls every 5 seconds.
+        :param extra_body_parameters: (Optional) Additional key/value pairs to
+            include in the JSON request body sent to the API. If provided,
+            keys in this dict will be added to the request body. Existing
+            keys set by the client will not be overwritten by entries in
+            extra_body_parameters.
         :return: DocumentStatus when document translation completed, this
             allows the number of billed characters to be queried.
 
@@ -659,6 +685,7 @@ class Translator:
             glossary=glossary,
             filename=filename,
             output_format=output_format,
+            extra_body_parameters=extra_body_parameters,
         )
 
         try:
@@ -688,6 +715,7 @@ class Translator:
         ] = None,
         filename: Optional[str] = None,
         output_format: Optional[str] = None,
+        extra_body_parameters: Optional[dict] = None,
     ) -> DocumentHandle:
         """Upload document to be translated and return handle associated with
         request.
@@ -707,6 +735,11 @@ class Translator:
             if uploading string or bytes containing file content.
         :param output_format: (Optional) Desired output file extension, if
             it differs from the input file format.
+        :param extra_body_parameters: (Optional) Additional key/value pairs to
+            include in the JSON request body sent to the API. If provided,
+            keys in this dict will be added to the request body. Existing
+            keys set by the client will not be overwritten by entries in
+            extra_body_parameters.
         :return: DocumentHandle with ID and key identifying document.
         """
 
@@ -726,6 +759,12 @@ class Translator:
             files = {"file": (filename, input_document)}
         else:
             files = {"file": input_document}
+        if extra_body_parameters:
+            for k, v in extra_body_parameters.items():
+                if k in request_data:
+                    continue
+                request_data[k] = v
+
         status, content, json = self._api_call(
             "v2/document", data=request_data, files=files
         )
