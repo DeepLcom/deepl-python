@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+<!-- * add to here -->
+### Changed
+<!-- * add to here -->
+
+
+## [1.23.0]
+### Added
 * Added feature to add arbitrary body parameters in `translate_text`
 ### Deprecated
 * Dropped support for Python 3.8 and older.
@@ -347,7 +354,8 @@ Initial version.
 
 
 <!-- Unreleased shoud never be deleted -->
-[Unreleased]: https://github.com/DeepLcom/deepl-python/compare/v1.22.0...HEAD
+[Unreleased]: https://github.com/DeepLcom/deepl-python/compare/v1.23.0...HEAD
+[1.23.0]: https://github.com/DeepLcom/deepl-python/compare/v1.22.0...v1.23.0
 [1.22.0]: https://github.com/DeepLcom/deepl-python/compare/v1.21.1...v1.22.0
 [1.21.1]: https://github.com/DeepLcom/deepl-python/compare/v1.21.0...v1.21.1
 [1.21.0]: https://github.com/DeepLcom/deepl-python/compare/v1.20.0...v1.21.0
