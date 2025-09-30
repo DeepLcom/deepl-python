@@ -912,7 +912,7 @@ class Translator:
         else:
             return response
 
-    def get_source_languages(self, skip_cache=False) -> List[Language]:
+    def get_source_languages(self, skip_cache: bool = False) -> List[Language]:
         """Request the list of available source languages.
 
         :param skip_cache: Deprecated, and now has no effect as the
@@ -931,7 +931,7 @@ class Translator:
             for language in languages
         ]
 
-    def get_target_languages(self, skip_cache=False) -> List[Language]:
+    def get_target_languages(self, skip_cache: bool = False) -> List[Language]:
         """Request the list of available target languages.
 
         :param skip_cache: Deprecated, and now has no effect as the
