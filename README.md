@@ -173,6 +173,9 @@ arguments are:
     model that minimizes response time, at the cost of translation quality.
 - `tag_handling`: type of tags to parse before translation, options are `'html'`
   and `'xml'`.
+- `extra_body_parameter`: Dictionary of extra parameters to pass in the body of
+  the HTTP request. Mostly used by DeepL employees to test functionality, or for
+  beta programs.
 
 The following options are only used if `tag_handling` is `'xml'`:
 
