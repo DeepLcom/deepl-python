@@ -278,5 +278,7 @@ pypi upload:
 gitlab release:
   stage: publish
   extends: .create_gitlab_release
+  before_script:
+    - echo "overriding default before_script..."
   rules:
     - if: '$CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]+$/'
