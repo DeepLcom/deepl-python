@@ -16,6 +16,19 @@ env:
   SECRET_DETECTION_JSON_REPORT_FILE: "gitleaks.json"
 
 jobs:
+  parse-changelog:
+    name: Parse changelog to verify it is valid
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v2
+      - name: Install keep-a-changelog
+        run: |
+          npm install -g keep-a-changelog
+
+      - name: Parse changelog
+        run: changelog
+
   black:
     runs-on: ubuntu-latest
     steps:
