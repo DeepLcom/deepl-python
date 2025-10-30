@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 <!-- * add to here -->
 
+## [1.24.0]
+### Changed
+* `extra_body_parameters` will now overwrite already set HTTP parameters
 
 ## [1.23.0]
 ### Added
@@ -354,7 +357,8 @@ Initial version.
 
 
 <!-- Unreleased shoud never be deleted -->
-[Unreleased]: https://github.com/DeepLcom/deepl-python/compare/v1.23.0...HEAD
+[Unreleased]: https://github.com/DeepLcom/deepl-python/compare/v1.24.0...HEAD
+[1.24.0]: https://github.com/DeepLcom/deepl-python/compare/v1.23.0...v1.24.0
 [1.23.0]: https://github.com/DeepLcom/deepl-python/compare/v1.22.0...v1.23.0
 [1.22.0]: https://github.com/DeepLcom/deepl-python/compare/v1.21.1...v1.22.0
 [1.21.1]: https://github.com/DeepLcom/deepl-python/compare/v1.21.0...v1.21.1
