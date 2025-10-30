@@ -476,8 +476,6 @@ class Translator:
         # Do not overwrite keys that were explicitly set by this method.
         if extra_body_parameters:
             for k, v in extra_body_parameters.items():
-                if k in request_data:
-                    continue
                 request_data[k] = v
 
         status, content, json = self._api_call(
@@ -761,8 +759,6 @@ class Translator:
             files = {"file": input_document}
         if extra_body_parameters:
             for k, v in extra_body_parameters.items():
-                if k in request_data:
-                    continue
                 request_data[k] = v
 
         status, content, json = self._api_call(
