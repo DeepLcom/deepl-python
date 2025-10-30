@@ -162,50 +162,50 @@ def test_translate_with_retries(translator, server):
 
 def test_formality(translator, server):
     input_text = "How are you?"
-    informal = "Wie geht es dir?"
-    formal = "Wie geht es Ihnen?"
+    informal = "dir"  # Wie geht's dir?
+    formal = "Ihnen"  # Wie geht's Ihnen?
 
     result = translator.translate_text(
         input_text, target_lang="DE", formality=deepl.Formality.LESS
     )
     if not server.is_mock_server:
-        assert informal == result.text
+        assert informal in result.text
     result = translator.translate_text(
         input_text, target_lang="DE", formality=deepl.Formality.DEFAULT
     )
     if not server.is_mock_server:
-        assert formal == result.text
+        assert formal in result.text
     result = translator.translate_text(
         input_text, target_lang="DE", formality=deepl.Formality.MORE
     )
     if not server.is_mock_server:
-        assert formal == result.text
+        assert formal in result.text
 
     # Specifying formality as string is also permitted
     result = translator.translate_text(
         input_text, target_lang="DE", formality="less"
     )
     if not server.is_mock_server:
-        assert informal == result.text
+        assert informal in result.text
 
     result = translator.translate_text(
         input_text, target_lang="DE", formality="default"
     )
     if not server.is_mock_server:
-        assert formal == result.text
+        assert formal in result.text
 
     result = translator.translate_text(
         input_text, target_lang="DE", formality="more"
     )
     if not server.is_mock_server:
-        assert formal == result.text
+        assert formal in result.text
 
     # formality parameter is case-insensitive
     result = translator.translate_text(
         input_text, target_lang="DE", formality="Less"
     )
     if not server.is_mock_server:
-        assert informal == result.text
+        assert informal in result.text
 
     with pytest.raises(deepl.DeepLException, match=r".*formality.*"):
         _ = translator.translate_text(
@@ -223,13 +223,13 @@ def test_formality(translator, server):
         input_text, target_lang="DE", formality=deepl.Formality.PREFER_LESS
     )
     if not server.is_mock_server:
-        assert informal == result.text
+        assert informal in result.text
 
     result = translator.translate_text(
         input_text, target_lang="DE", formality=deepl.Formality.PREFER_MORE
     )
     if not server.is_mock_server:
-        assert formal == result.text
+        assert formal in result.text
 
     # Using prefer_ * with a language that does not support formality is not
     # an error

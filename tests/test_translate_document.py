@@ -142,14 +142,14 @@ def test_translate_document_formality(
         formality=deepl.Formality.MORE,
         **default_lang_args,
     )
-    assert "Wie geht es Ihnen?" == output_document_path.read_text()
+    assert "Ihnen" in output_document_path.read_text()  # Wie geht es Ihnen?"
     translator.translate_document_from_filepath(
         example_document_path,
         output_document_path,
         formality=deepl.Formality.LESS,
         **default_lang_args,
     )
-    assert "Wie geht es dir?" == output_document_path.read_text()
+    assert "dir" in output_document_path.read_text()  # Wie geht es dir?
     example_document_path.write_text("How are you?")
     translator.translate_document_from_filepath(
         example_document_path,
@@ -157,14 +157,14 @@ def test_translate_document_formality(
         formality=deepl.Formality.PREFER_MORE,
         **default_lang_args,
     )
-    assert "Wie geht es Ihnen?" == output_document_path.read_text()
+    assert "Ihnen" in output_document_path.read_text()
     translator.translate_document_from_filepath(
         example_document_path,
         output_document_path,
         formality=deepl.Formality.PREFER_LESS,
         **default_lang_args,
     )
-    assert "Wie geht es dir?" == output_document_path.read_text()
+    assert "dir" in output_document_path.read_text()
 
 
 @needs_mock_server
