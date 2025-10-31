@@ -3,6 +3,7 @@
 # license that can be found in the LICENSE file.
 
 import argparse
+import json
 import deepl
 import logging
 import os
@@ -321,6 +322,15 @@ def get_parser(prog_name):
             dest="glossary",
             type=str,
             help="ID of glossary to use for translation",
+        )
+        subparser.add_argument(
+            "--extra-body-parameters",
+            dest="extra_body_parameters",
+            type=json.loads,
+            default=None,
+            help="additional body parameters to include in the API request, "
+            "specified as a JSON object string, for example: "
+            '\'{"tag_handling": "xml", "show_billed_characters": true}\'',
         )
 
     # create the parser for the "text" command
