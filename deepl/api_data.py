@@ -676,3 +676,233 @@ class WritingTone(Enum):
 
     def __str__(self):
         return self.value
+
+
+class ConfiguredRules:
+    """Configuration rules for a style rule list.
+
+    :param dates_and_times: Date and time formatting rules.
+    :param formatting: Text formatting rules.
+    :param numbers: Number formatting rules.
+    :param punctuation: Punctuation rules.
+    :param spelling_and_grammar: Spelling and grammar rules.
+    :param style_and_tone: Style and tone rules.
+    :param vocabulary: Vocabulary rules.
+    """
+
+    def __init__(
+        self,
+        dates_and_times: Optional[Dict[str, str]] = None,
+        formatting: Optional[Dict[str, str]] = None,
+        numbers: Optional[Dict[str, str]] = None,
+        punctuation: Optional[Dict[str, str]] = None,
+        spelling_and_grammar: Optional[Dict[str, str]] = None,
+        style_and_tone: Optional[Dict[str, str]] = None,
+        vocabulary: Optional[Dict[str, str]] = None,
+    ):
+        self._dates_and_times = dates_and_times or {}
+        self._formatting = formatting or {}
+        self._numbers = numbers or {}
+        self._punctuation = punctuation or {}
+        self._spelling_and_grammar = spelling_and_grammar or {}
+        self._style_and_tone = style_and_tone or {}
+        self._vocabulary = vocabulary or {}
+
+    @staticmethod
+    def from_json(json) -> "ConfiguredRules":
+        """Create ConfiguredRules from the given API JSON object."""
+        if not json:
+            return ConfiguredRules()
+
+        return ConfiguredRules(
+            dates_and_times=json.get("dates_and_times"),
+            formatting=json.get("formatting"),
+            numbers=json.get("numbers"),
+            punctuation=json.get("punctuation"),
+            spelling_and_grammar=json.get("spelling_and_grammar"),
+            style_and_tone=json.get("style_and_tone"),
+            vocabulary=json.get("vocabulary"),
+        )
+
+    @property
+    def dates_and_times(self) -> Dict[str, str]:
+        """Returns date and time formatting rules."""
+        return self._dates_and_times
+
+    @property
+    def formatting(self) -> Dict[str, str]:
+        """Returns text formatting rules."""
+        return self._formatting
+
+    @property
+    def numbers(self) -> Dict[str, str]:
+        """Returns number formatting rules."""
+        return self._numbers
+
+    @property
+    def punctuation(self) -> Dict[str, str]:
+        """Returns punctuation rules."""
+        return self._punctuation
+
+    @property
+    def spelling_and_grammar(self) -> Dict[str, str]:
+        """Returns spelling and grammar rules."""
+        return self._spelling_and_grammar
+
+    @property
+    def style_and_tone(self) -> Dict[str, str]:
+        """Returns style and tone rules."""
+        return self._style_and_tone
+
+    @property
+    def vocabulary(self) -> Dict[str, str]:
+        """Returns vocabulary rules."""
+        return self._vocabulary
+
+
+class CustomInstruction:
+    """Custom instruction for a style rule.
+
+    :param label: Label for the custom instruction.
+    :param prompt: Prompt text for the custom instruction.
+    :param source_language: Optional source language code for the custom
+        instruction.
+    """
+
+    def __init__(
+        self,
+        label: str,
+        prompt: str,
+        source_language: Optional[str] = None,
+    ):
+        self._label = label
+        self._prompt = prompt
+        self._source_language = source_language
+
+    @staticmethod
+    def from_json(json) -> "CustomInstruction":
+        """Create CustomInstruction from the given API JSON object."""
+        return CustomInstruction(
+            label=json["label"],
+            prompt=json["prompt"],
+            source_language=json.get("source_language"),
+        )
+
+    @property
+    def label(self) -> str:
+        """Returns the label of the custom instruction."""
+        return self._label
+
+    @property
+    def prompt(self) -> str:
+        """Returns the prompt text of the custom instruction."""
+        return self._prompt
+
+    @property
+    def source_language(self) -> Optional[str]:
+        """Returns the source language code, if specified."""
+        return self._source_language
+
+
+class StyleRuleInfo:
+    """Information about a style rule list.
+
+    :param style_id: Unique ID assigned to the style rule list.
+    :param name: User-defined name assigned to the style rule list.
+    :param creation_time: Timestamp when the style rule list was created.
+    :param updated_time: Timestamp when the style rule list was last updated.
+    :param language: Language code for the style rule list.
+    :param version: Version number of the style rule list.
+    :param configured_rules: The predefined rules that have been enabled.
+    :param custom_instructions: Optional list of custom instructions.
+    """
+
+    def __init__(
+        self,
+        style_id: str,
+        name: str,
+        creation_time: datetime.datetime,
+        updated_time: datetime.datetime,
+        language: str,
+        version: int,
+        configured_rules: Optional[ConfiguredRules] = None,
+        custom_instructions: Optional[List[CustomInstruction]] = None,
+    ):
+        self._style_id = style_id
+        self._name = name
+        self._creation_time = creation_time
+        self._updated_time = updated_time
+        self._language = language
+        self._version = version
+        self._configured_rules = configured_rules
+        self._custom_instructions = custom_instructions
+
+    def __str__(self) -> str:
+        return f'StyleRule "{self.name}" ({self.style_id})'
+
+    @staticmethod
+    def from_json(json) -> "StyleRuleInfo":
+        """Create StyleRuleInfo from the given API JSON object."""
+        configured_rules_data = json.get("configured_rules")
+        configured_rules = None
+        if configured_rules_data:
+            configured_rules = ConfiguredRules.from_json(configured_rules_data)
+
+        custom_instructions_data = json.get("custom_instructions")
+        custom_instructions = None
+        if custom_instructions_data:
+            custom_instructions = [
+                CustomInstruction.from_json(instruction)
+                for instruction in custom_instructions_data
+            ]
+
+        return StyleRuleInfo(
+            style_id=json["style_id"],
+            name=json["name"],
+            creation_time=parse_timestamp(json["creation_time"]),
+            updated_time=parse_timestamp(json["updated_time"]),
+            language=json["language"],
+            version=json["version"],
+            configured_rules=configured_rules,
+            custom_instructions=custom_instructions,
+        )
+
+    @property
+    def style_id(self) -> str:
+        """Returns the unique ID of the style rule set."""
+        return self._style_id
+
+    @property
+    def name(self) -> str:
+        """Returns the name of the style rule set."""
+        return self._name
+
+    @property
+    def creation_time(self) -> datetime.datetime:
+        """Returns the creation timestamp."""
+        return self._creation_time
+
+    @property
+    def updated_time(self) -> datetime.datetime:
+        """Returns the last update timestamp."""
+        return self._updated_time
+
+    @property
+    def language(self) -> str:
+        """Returns the language code."""
+        return self._language
+
+    @property
+    def version(self) -> int:
+        """Returns the version number."""
+        return self._version
+
+    @property
+    def configured_rules(self) -> Optional[ConfiguredRules]:
+        """Returns the detailed configuration rules."""
+        return self._configured_rules
+
+    @property
+    def custom_instructions(self) -> List[CustomInstruction]:
+        """Returns the list of custom instructions."""
+        return self._custom_instructions or []

@@ -12,6 +12,7 @@ from deepl.api_data import (
     ModelType,
     Language,
     SplitSentences,
+    StyleRuleInfo,
     TextResult,
     Usage,
 )
@@ -262,6 +263,7 @@ class Translator:
         glossary: Union[
             str, GlossaryInfo, MultilingualGlossaryInfo, None
         ] = None,
+        style_rule: Union[str, StyleRuleInfo, None] = None,
     ) -> dict:
         # target_lang and source_lang are case insensitive
         target_lang = str(target_lang).upper()
@@ -293,6 +295,13 @@ class Translator:
                     "source_lang and target_lang"
                 )
 
+        if isinstance(style_rule, StyleRuleInfo):
+            if (
+                Language.remove_regional_variant(target_lang)
+                != style_rule.language
+            ):
+                raise ValueError("target_lang must match style rule language")
+
         self._check_valid_languages(source_lang, target_lang)
 
         request_data = {"target_lang": target_lang}
@@ -306,6 +315,10 @@ class Translator:
             request_data["glossary_id"] = glossary.glossary_id
         elif glossary is not None:
             request_data["glossary_id"] = glossary
+        if isinstance(style_rule, StyleRuleInfo):
+            request_data["style_id"] = style_rule.style_id
+        elif style_rule is not None:
+            request_data["style_id"] = style_rule
         return request_data
 
     def _create_glossary(
@@ -368,6 +381,7 @@ class Translator:
         splitting_tags: Union[str, List[str], None] = None,
         ignore_tags: Union[str, List[str], None] = None,
         model_type: Union[str, ModelType, None] = None,
+        style_rule: Union[str, StyleRuleInfo, None] = None,
         extra_body_parameters: Optional[dict] = None,
     ) -> Union[TextResult, List[TextResult]]:
         """Translate text(s) into the target language.
@@ -395,6 +409,8 @@ class Translator:
             "default".
         :param glossary: (Optional) glossary or glossary ID to use for
             translation. Must match specified source_lang and target_lang.
+        :param style_rule: (Optional) style rule or style rule ID to use for
+            translation.
         :param tag_handling: (Optional) Type of tags to parse before
             translation, only "xml" and "html" are currently available.
         :param outline_detection: (Optional) Set to False to disable automatic
@@ -433,10 +449,7 @@ class Translator:
             )
 
         request_data = self._check_language_and_formality(
-            source_lang,
-            target_lang,
-            formality,
-            glossary,
+            source_lang, target_lang, formality, glossary, style_rule
         )
         request_data["text"] = text
 
@@ -456,6 +469,11 @@ class Translator:
             request_data["outline_detection"] = bool(outline_detection)
         if model_type is not None:
             request_data["model_type"] = str(model_type)
+        if style_rule is not None:
+            if isinstance(style_rule, StyleRuleInfo):
+                request_data["style_id"] = style_rule.style_id
+            else:
+                request_data["style_id"] = style_rule
 
         def join_tags(tag_argument: Union[str, Iterable[str]]) -> List[str]:
             if isinstance(tag_argument, str):

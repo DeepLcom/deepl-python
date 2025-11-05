@@ -380,6 +380,12 @@ def get_parser(prog_name):
         help="control model used for translation, see API for information",
     )
     parser_text.add_argument(
+        "--style-id",
+        dest="style_rule",
+        type=str,
+        help="ID of style rule to use for translation",
+    )
+    parser_text.add_argument(
         "text",
         nargs="+",
         type=str,

@@ -173,6 +173,8 @@ arguments are:
     model that minimizes response time, at the cost of translation quality.
 - `tag_handling`: type of tags to parse before translation, options are `'html'`
   and `'xml'`.
+- `style_rule`: specifies a style rule to use with translation, either as a string
+  containing the ID of the style rule, or a `StyleRuleInfo` object.
 - `extra_body_parameter`: Dictionary of extra parameters to pass in the body of
   the HTTP request. Mostly used by DeepL employees to test functionality, or for
   beta programs.
@@ -626,6 +628,46 @@ You can also find the list of supported glossary language pairs in the
 Note that glossaries work for all target regional-variants: a glossary for the
 target language English (`"EN"`) supports translations to both American English
 (`"EN-US"`) and British English (`"EN-GB"`).
+
+
+### Style Rules
+
+Style rules allow you to customize your translations using a managed, shared list
+of rules for style, formatting, and more. Multiple style rules can be stored with 
+your account, each with a user-specified name and a uniquely-assigned ID.
+
+#### Creating and managing style rules
+
+Currently style rules must be created and managed in the DeepL UI via
+https://www.deepl.com/en/custom-rules. Full CRUD functionality via the APIs will
+come shortly.
+
+#### Listing all style rules
+
+`get_all_style_rules()` returns a list of `StyleRuleInfo` objects
+corresponding to all of your stored style rules. The method accepts optional
+parameters: `page` (page number for pagination, 0-indexed), `page_size` (number
+of items per page), and `detailed` (whether to include detailed configuration
+rules in the `configured_rules` property).
+
+```python
+# Get all style rules
+style_rules = deepl_client.get_all_style_rules()
+for rule in style_rules:
+    print(f"{rule.name} ({rule.style_id})")
+
+# Get style rules with detailed configuration
+style_rules = deepl_client.get_all_style_rules(detailed=True)
+for rule in style_rules:
+    if rule.configured_rules:
+        print(f"  Number formatting: {rule.configured_rules.numbers}")
+```
+
+Style rules can also be used with the command line interface for text translation:
+
+```bash
+python3 -m deepl --auth-key=YOUR_AUTH_KEY text --to=DE --style-id=YOUR_STYLE_ID "Text to translate"
+``` 
 
 ### Writing a Plugin
 

@@ -9,6 +9,7 @@ from deepl.api_data import (
     MultilingualGlossaryInfo,
     Language,
     WriteResult,
+    StyleRuleInfo,
 )
 from deepl.translator import Translator
 from deepl import util
@@ -621,3 +622,44 @@ class DeepLClient(Translator):
             method="DELETE",
         )
         self._raise_for_status(status, content, json, glossary=True)
+
+    def get_all_style_rules(
+        self,
+        page: Optional[int] = None,
+        page_size: Optional[int] = None,
+        detailed: Optional[bool] = None,
+    ) -> List[StyleRuleInfo]:
+        """Retrieves a list of StyleRuleInfo for all available style rules.
+
+        :param page: Page number for pagination, 0-indexed (optional).
+        :param page_size: Number of items per page (optional).
+        :param detailed: Whether to include detailed configuration rules
+            (optional).
+        :return: List of StyleRuleInfo objects for all available style rules.
+        """
+        params = {}
+        if page is not None:
+            params["page"] = str(page)
+        if page_size is not None:
+            params["page_size"] = str(page_size)
+        if detailed is not None:
+            params["detailed"] = str(detailed).lower()
+
+        query_string = "&".join(
+            [f"{key}={value}" for key, value in params.items()]
+        )
+        endpoint = "v3/style_rules"
+        if query_string:
+            endpoint += f"?{query_string}"
+
+        status, content, json = self._api_call(endpoint, method="GET")
+        self._raise_for_status(status, content, json)
+
+        style_rules = (
+            json.get("style_rules", [])
+            if (json and isinstance(json, dict))
+            else []
+        )
+        return [
+            StyleRuleInfo.from_json(style_rule) for style_rule in style_rules
+        ]
