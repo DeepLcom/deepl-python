@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.25.0] - 2025-11-12
+### Added
+- Added support for the `GET /v3/style_rules` endpoint in the client library, the
+  implementation can be found in the `DeepLClient` class. Please refer to the
+  README for usage instructions
+- Added `style_id` option to `translate_text()` which allows text translation with
+  style rules.
+
 ## [1.24.0] - 2025-11-04
 ### Changed
 - `extra_body_parameters` will now overwrite already set HTTP parameters
@@ -337,7 +345,8 @@ Version increased to avoid conflicts with old packages on PyPI.
 ## [0.1.0] - 2021-07-26
 Initial version.
 
-[Unreleased]: https://github.com/DeepLcom/deepl-python/compare/v1.24.0...HEAD
+[Unreleased]: https://github.com/DeepLcom/deepl-python/compare/v1.25.0...HEAD
+[1.25.0]: https://github.com/DeepLcom/deepl-python/compare/v1.24.0...v1.25.0
 [1.24.0]: https://github.com/DeepLcom/deepl-python/compare/v1.23.0...v1.24.0
 [1.23.0]: https://github.com/DeepLcom/deepl-python/compare/v1.22.0...v1.23.0
 [1.22.0]: https://github.com/DeepLcom/deepl-python/compare/v1.21.1...v1.22.0
