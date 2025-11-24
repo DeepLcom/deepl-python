@@ -175,7 +175,7 @@ arguments are:
   and `'xml'`.
 - `style_rule`: specifies a style rule to use with translation, either as a string
   containing the ID of the style rule, or a `StyleRuleInfo` object.
-- `extra_body_parameter`: Dictionary of extra parameters to pass in the body of
+- `extra_body_parameters`: Dictionary of extra parameters to pass in the body of
   the HTTP request. Mostly used by DeepL employees to test functionality, or for
   beta programs.
 
