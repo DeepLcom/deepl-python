@@ -1,0 +1,27 @@
+# Copyright 2025 DeepL SE (https://www.deepl.com)
+# Use of this source code is governed by an MIT
+# license that can be found in the LICENSE file.
+
+[project]
+name = "deepl-voice-api-cli"
+version = "1.0.0"
+package-mode = false
+requires-python = ">=3.11"
+dependencies = [
+    "aiohttp>=3.13.2",
+    "certifi>=2025.11.12",
+    "click>=8.3.1",
+    "websockets>=15.0.1",
+]
+
+[dependency-groups]
+dev = [
+    "black>=25.11.0",
+]
+mic = [
+    "pyaudio>=0.2.14",
+]
+
+[tool.black]
+line-length = 79
+
