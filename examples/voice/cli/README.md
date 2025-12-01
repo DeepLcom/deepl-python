@@ -12,6 +12,8 @@ Install dependencies for this example:
 ```shell
 cd examples/voice/cli
 uv sync
+# or
+poetry install
 ```
 
 For microphone support, install the `mic` dependency group. You may need to install
@@ -19,6 +21,8 @@ a system package for `pyaudio` first (e.g. `portaudio19-dev` on Debian/Ubuntu, `
 
 ```shell
 uv sync --group mic
+# or
+poetry install --with mic
 ```
 
 Define your DeepL Auth key as an environment variable `DEEPL_AUTH_KEY`.
@@ -30,19 +34,25 @@ export DEEPL_AUTH_KEY=your-api-key-here
 Translate an audio file to one or more target languages:
 
 ```shell
-python examples/voice/cli/deepl-voice-api-cli.py audio.mp3 de fr
+uv run python deepl-voice-api-cli.py audio.mp3 de fr
+# or
+poetry run python deepl-voice-api-cli.py audio.mp3 de fr
 ```
 
 For live microphone translation, use `-` as the audio file path:
 
 ```shell
-python examples/voice/cli/deepl-voice-api-cli.py - es
+uv run python deepl-voice-api-cli.py - es
+# or
+poetry run python deepl-voice-api-cli.py - es
 ```
 
 For an explanation of the command line arguments, provide the `--help` option:
 
 ```shell
-python examples/voice/cli/deepl-voice-api-cli.py --help
+uv run python deepl-voice-api-cli.py --help
+# or
+poetry run python deepl-voice-api-cli.py --help
 ```
 
 ## How it works

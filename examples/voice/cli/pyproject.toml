@@ -5,7 +5,6 @@
 [project]
 name = "deepl-voice-api-cli"
 version = "1.0.0"
-package-mode = false
 requires-python = ">=3.11"
 dependencies = [
     "aiohttp>=3.13.2",
@@ -14,6 +13,7 @@ dependencies = [
     "websockets>=15.0.1",
 ]
 
+# (supported by uv)
 [dependency-groups]
 dev = [
     "black>=25.11.0",
@@ -21,6 +21,17 @@ dev = [
 mic = [
     "pyaudio>=0.2.14",
 ]
+
+# poetry configuration needs non-package mode
+[tool.poetry]
+package-mode = false
+
+# (for poetry compatibility)
+[tool.poetry.group.dev.dependencies]
+black = ">=25.11.0"
+
+[tool.poetry.group.mic.dependencies]
+pyaudio = ">=0.2.14"
 
 [tool.black]
 line-length = 79
