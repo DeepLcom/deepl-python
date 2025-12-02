@@ -206,7 +206,7 @@ def translator_with_random_auth_key_and_proxy(server):
 
 
 @pytest.fixture
-def cleanup_matching_glossaries(translator):
+def cleanup_matching_glossaries(deepl_client):
     """
     Fixture function to remove all glossaries from the server matching the
     given predicate. Can be used, for example, to remove all glossaries with a
@@ -221,11 +221,11 @@ def cleanup_matching_glossaries(translator):
     """
 
     def do_cleanup(predicate: Callable[[deepl.GlossaryInfo], bool]):
-        glossaries = translator.list_glossaries()
+        glossaries = deepl_client.list_multilingual_glossaries()
         for glossary in glossaries:
             if predicate(glossary):
                 try:
-                    translator.delete_glossary(glossary)
+                    deepl_client.delete_multilingual_glossary(glossary)
                 except deepl.DeepLException:
                     pass
 

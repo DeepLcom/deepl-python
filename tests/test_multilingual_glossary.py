@@ -140,9 +140,7 @@ def test_glossary_name_update(
         with pytest.raises(ValueError):
             deepl_client.update_multilingual_glossary_name(glossary, "")
     finally:
-        cleanup_matching_glossaries(
-            lambda glossary: glossary.name == glossary_name
-        )
+        cleanup_matching_glossaries(lambda glossary: glossary.name == new_name)
 
 
 def test_glossary_dictionary_replace(
