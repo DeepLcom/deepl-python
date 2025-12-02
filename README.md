@@ -161,7 +161,7 @@ arguments are:
   `get_glossary()`.
 - `context`: specifies additional context to influence translations, that is not
   translated itself. Characters in the `context` parameter are not counted toward billing.
-  See the [API documentation][api-docs-context-param] for more information and 
+  See the [API documentation][api-docs-context-param] for more information and
   example usage.
 - `model_type`: specifies the type of translation model to use, options are:
   - `'quality_optimized'` (`ModelType.QUALITY_OPTIMIZED`): use a translation
@@ -175,6 +175,14 @@ arguments are:
   and `'xml'`.
 - `style_rule`: specifies a style rule to use with translation, either as a string
   containing the ID of the style rule, or a `StyleRuleInfo` object.
+- `custom_instructions`: an array of instructions to customize the text 
+  translation behavior. Up to 10 custom instructions can be specified, each with 
+  a maximum of 300 characters.
+  Important: The target language must be `de`, `en`, `es`, `fr`, `it`, `ja`, 
+  `ko`, `zh` or any variants of these languages.
+  Note: Any request with the `custom_instructions` parameter enabled will use
+  the `quality_optimized` model type as the default. Requests combining
+  `custom_instructions` and `model_type: latency_optimized` will be rejected.
 - `extra_body_parameters`: Dictionary of extra parameters to pass in the body of
   the HTTP request. Mostly used by DeepL employees to test functionality, or for
   beta programs.

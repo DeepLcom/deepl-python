@@ -382,6 +382,7 @@ class Translator:
         ignore_tags: Union[str, List[str], None] = None,
         model_type: Union[str, ModelType, None] = None,
         style_rule: Union[str, StyleRuleInfo, None] = None,
+        custom_instructions: Optional[List[str]] = None,
         extra_body_parameters: Optional[dict] = None,
     ) -> Union[TextResult, List[TextResult]]:
         """Translate text(s) into the target language.
@@ -427,6 +428,9 @@ class Translator:
         :type ignore_tags: List of XML tags or comma-separated-list of tags.
         :param model_type: (Optional) Controls whether the translation engine
             should use a potentially slower model to achieve higher quality.
+        :param custom_instructions: (Optional) List of custom instructions to
+            guide the translation. Maximum of 10 instructions, each with a
+            maximum length of 300 characters.
         :param extra_body_parameters: (Optional) Additional key/value pairs to
             include in the JSON request body sent to the API. If provided,
             keys in this dict will be added to the request body. Existing
@@ -490,6 +494,8 @@ class Translator:
             request_data["splitting_tags"] = join_tags(splitting_tags)
         if ignore_tags is not None:
             request_data["ignore_tags"] = join_tags(ignore_tags)
+        if custom_instructions is not None:
+            request_data["custom_instructions"] = custom_instructions
 
         # Do not overwrite keys that were explicitly set by this method.
         if extra_body_parameters:

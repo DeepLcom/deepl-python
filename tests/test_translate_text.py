@@ -418,3 +418,28 @@ def test_extra_body_params(translator):
     assert example_text["FR"] == res.text
     assert "EN" == res.detected_source_lang
     assert res.billed_characters == len(example_text["EN"])
+
+
+@needs_real_server
+def test_custom_instructions(translator):
+    text = "I am testing if custom instructions are working correctly."
+    no_custom_instructions_result = translator.translate_text(
+        text,
+        target_lang="DE",
+    )
+
+    custom_instructions_result = translator.translate_text(
+        text,
+        target_lang="DE",
+        custom_instructions=["Use informal language", "Be concise"],
+    )
+
+    assert isinstance(custom_instructions_result, deepl.TextResult)
+    assert custom_instructions_result.text is not None
+    assert len(custom_instructions_result.text) > 0
+    assert custom_instructions_result.detected_source_lang == "EN"
+
+    # Check that applying custom instructions results in different translations
+    assert (
+        custom_instructions_result.text != no_custom_instructions_result.text
+    )

@@ -386,6 +386,14 @@ def get_parser(prog_name):
         help="ID of style rule to use for translation",
     )
     parser_text.add_argument(
+        "--custom-instructions",
+        dest="custom_instructions",
+        action="append",
+        type=str,
+        help="custom instructions to guide translation (can be specified "
+        "multiple times, max 10 instructions, each max 300 characters)",
+    )
+    parser_text.add_argument(
         "text",
         nargs="+",
         type=str,
