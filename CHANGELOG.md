@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Added an example CLI script for realtime audio translation using DeepL's Voice API.
 
+## [1.26.0] - 2025-12-03
+### Added
+- Added `custom_instructions` parameter to `translate_text()` to customize translation
+  behavior with up to 10 instructions (max 300 characters each). Only supported for
+  target languages: `de`, `en`, `es`, `fr`, `it`, `ja`, `ko`, `zh` and their variants.
+  Note: using the `custom_instructions` parameter will use the `quality_optimized` model
+  type as the default. Requests combining `custom_instructions` and the
+  `latency_optimized` model type will be rejected.
+
+### Fixed
+- Fixed the cleanup of multilingual glossaries in the test suite where glossaries
+  were not properly deleted after the test execution
+
 ## [1.25.0] - 2025-11-12
 ### Added
 - Added support for the `GET /v3/style_rules` endpoint in the client library, the
@@ -347,7 +360,8 @@ Version increased to avoid conflicts with old packages on PyPI.
 ## [0.1.0] - 2021-07-26
 Initial version.
 
-[Unreleased]: https://github.com/DeepLcom/deepl-python/compare/v1.25.0...HEAD
+[Unreleased]: https://github.com/DeepLcom/deepl-python/compare/v1.26.0...HEAD
+[1.26.0]: https://github.com/DeepLcom/deepl-python/compare/v1.25.0...v1.26.0
 [1.25.0]: https://github.com/DeepLcom/deepl-python/compare/v1.24.0...v1.25.0
 [1.24.0]: https://github.com/DeepLcom/deepl-python/compare/v1.23.0...v1.24.0
 [1.23.0]: https://github.com/DeepLcom/deepl-python/compare/v1.22.0...v1.23.0
