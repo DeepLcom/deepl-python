@@ -423,6 +423,13 @@ def get_parser(prog_name):
         help="activate processing of formatting tags, for example 'xml'",
     )
     tag_handling_group.add_argument(
+        "--tag-handling-version",
+        type=str,
+        choices=["v1", "v2"],
+        default=None,
+        help="specify which version of the tag handling algorithm to use",
+    )
+    tag_handling_group.add_argument(
         "--outline-detection-off",
         dest="outline_detection",
         default=True,

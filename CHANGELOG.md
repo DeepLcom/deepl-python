@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Added `tag_handling_version` parameter to `translate_text()` to specify which version
+  of the tag handling algorithm to use. Options are `v1` and `v2`.
 - Added an example CLI script for realtime audio translation using DeepL's Voice API.
 
 ## [1.26.0] - 2025-12-03

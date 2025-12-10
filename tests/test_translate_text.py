@@ -443,3 +443,25 @@ def test_custom_instructions(translator):
     assert (
         custom_instructions_result.text != no_custom_instructions_result.text
     )
+
+
+@needs_real_server
+def test_tag_handling_version_v1(translator):
+    text = "<p>Hello world</p>"
+    result = translator.translate_text(
+        text, target_lang="DE", tag_handling="html", tag_handling_version="v1"
+    )
+    assert isinstance(result, deepl.TextResult)
+    assert result.text is not None
+    assert len(result.text) > 0
+
+
+@needs_real_server
+def test_tag_handling_version_v2(translator):
+    text = "<p>Hello world</p>"
+    result = translator.translate_text(
+        text, target_lang="DE", tag_handling="html", tag_handling_version="v2"
+    )
+    assert isinstance(result, deepl.TextResult)
+    assert result.text is not None
+    assert len(result.text) > 0

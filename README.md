@@ -173,6 +173,8 @@ arguments are:
     model that minimizes response time, at the cost of translation quality.
 - `tag_handling`: type of tags to parse before translation, options are `'html'`
   and `'xml'`.
+- `tag_handling_version`: specifies which version of the tag handling algorithm to
+  use, options are `'v1'` and `'v2'`.
 - `style_rule`: specifies a style rule to use with translation, either as a string
   containing the ID of the style rule, or a `StyleRuleInfo` object.
 - `custom_instructions`: an array of instructions to customize the text 

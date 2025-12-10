@@ -376,6 +376,7 @@ class Translator:
             str, GlossaryInfo, MultilingualGlossaryInfo, None
         ] = None,
         tag_handling: Optional[str] = None,
+        tag_handling_version: Optional[str] = None,
         outline_detection: Optional[bool] = None,
         non_splitting_tags: Union[str, List[str], None] = None,
         splitting_tags: Union[str, List[str], None] = None,
@@ -414,6 +415,8 @@ class Translator:
             translation.
         :param tag_handling: (Optional) Type of tags to parse before
             translation, only "xml" and "html" are currently available.
+        :param tag_handling_version: (Optional) Version of tag handling
+            algorithm to use, "v1" or "v2".
         :param outline_detection: (Optional) Set to False to disable automatic
             tag detection.
         :param non_splitting_tags: (Optional) XML tags that should not split a
@@ -469,6 +472,8 @@ class Translator:
             request_data["preserve_formatting"] = bool(preserve_formatting)
         if tag_handling is not None:
             request_data["tag_handling"] = tag_handling
+        if tag_handling_version is not None:
+            request_data["tag_handling_version"] = tag_handling_version
         if outline_detection is not None:
             request_data["outline_detection"] = bool(outline_detection)
         if model_type is not None:
