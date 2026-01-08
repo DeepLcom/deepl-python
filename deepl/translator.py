@@ -199,7 +199,7 @@ class Translator:
                     http_status_code=status_code,
                 )
             raise DeepLException(
-                f"Not found, check server_url{message}",
+                f"Not found{message}",
                 http_status_code=status_code,
             )
         elif status_code == http.HTTPStatus.BAD_REQUEST:

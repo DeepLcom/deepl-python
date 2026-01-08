@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Changed
 - Updated three tests to be less flakey and reflect new behavior regarding the model type.
+- Improved `NotFoundException` error message by removing the misleading "check server_url" suggestion.
 
 ### Security
 - Updated dependencies to fix CVE-2025-66418 and CVE-2025-66471
