@@ -195,7 +195,7 @@ def test_text_preserve_formatting(runner):
         main_function, 'text --to DE --preserve-formatting "proton beam"'
     )
     assert result.exit_code == 0, f"exit: {result.exit_code}\n {result.output}"
-    assert example_text["DE"].lower() in result.output
+    assert example_text["DE"].lower() in result.output.lower()
 
 
 def test_text_split_sentences(runner):

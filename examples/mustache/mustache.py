@@ -67,7 +67,7 @@ def convert_mustache_to_xml(
         if tag_type == "tag":
             tag_id = str(id_counter)
             id_counter += 1
-            xml += f"<{placeholder_tag} id={tag_id} />"
+            xml += f'<{placeholder_tag} id="{tag_id}" />'
             extracted_tokens[f"{placeholder_tag}#{tag_id}"] = tag_content
         else:
             xml += tag_content

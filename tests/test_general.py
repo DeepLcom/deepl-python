@@ -43,7 +43,7 @@ def test_example_translation(lang, translator):
 def test_mixed_direction_text(translator):
     ar_ignore_part = "<ignore>يجب تجاهل هذا الجزء.</ignore>"
     en_sentence_with_ar_ignore_part = (
-        "<p>This is a <b>short</b> <i>sentence</i>. "
+        "<p>This is a <b>short</b> <i>sentence</i>.</p>"
         f"{ar_ignore_part} This is another sentence."
     )
     en_result = translator.translate_text(
