@@ -298,7 +298,7 @@ class Translator:
         if isinstance(style_rule, StyleRuleInfo):
             if (
                 Language.remove_regional_variant(target_lang)
-                != style_rule.language
+                != style_rule.language.upper()
             ):
                 raise ValueError("target_lang must match style rule language")
 

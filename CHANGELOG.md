@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated three tests to be less flakey and reflect new behavior regarding the model type.
 - Improved `NotFoundException` error message by removing the misleading "check server_url" suggestion.
 
+### Fixed
+- Fixed a bug where translating with style rules would sometimes incorrectly result in
+  a "target_lang must match style rule language" error
+
 ### Security
 - Updated dependencies to fix CVE-2025-66418 and CVE-2025-66471
 
