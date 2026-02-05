@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [1.28.0] - 2026-02-05
 ### Changed
 - Updated three tests to be less flakey and reflect new behavior regarding the model type.
 - Improved `NotFoundException` error message by removing the misleading "check server_url" suggestion.
@@ -374,7 +376,8 @@ Version increased to avoid conflicts with old packages on PyPI.
 ## [0.1.0] - 2021-07-26
 Initial version.
 
-[Unreleased]: https://github.com/DeepLcom/deepl-python/compare/v1.27.0...HEAD
+[Unreleased]: https://github.com/DeepLcom/deepl-python/compare/v1.28.0...HEAD
+[1.28.0]: https://github.com/DeepLcom/deepl-python/compare/v1.27.0...v1.28.0
 [1.27.0]: https://github.com/DeepLcom/deepl-python/compare/v1.26.0...v1.27.0
 [1.26.0]: https://github.com/DeepLcom/deepl-python/compare/v1.25.0...v1.26.0
 [1.25.0]: https://github.com/DeepLcom/deepl-python/compare/v1.24.0...v1.25.0
