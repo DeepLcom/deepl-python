@@ -1,0 +1,152 @@
+# GitHub action to bump version, update changelog, and create pull request for review.
+
+name: Bump Version
+run-name: Bump version (${{ inputs.bump-type }}) by @${{ github.actor }}
+
+# Note: Enable GitHub Actions to create pull requests in repository settings:
+# Settings -> Actions -> General -> Workflow permissions -> Allow GitHub Actions to create and approve pull requests
+
+permissions:
+  contents: write
+  pull-requests: write
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump-type:
+        description: 'Version bump type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - major
+          - minor
+          - patch
+      fail-on-empty-changelog:
+        description: 'Fail if changelog is empty'
+        required: false
+        default: true
+        type: boolean
+
+jobs:
+  bump_version:
+    runs-on: ubuntu-latest
+
+    outputs:
+      version: ${{ steps.bump.outputs.current-version }}
+      pr-number: ${{ steps.create_pr.outputs.pull-request-number }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Python environment
+        uses: astral-sh/setup-uv@v6
+
+      - name: Install bump-my-version
+        run: uv tool install bump-my-version
+
+      - name: Bump version
+        id: bump
+        shell: bash
+        run: |
+          echo "::notice::Bumping version with type: ${{ inputs.bump-type }}"
+          bump-my-version bump ${{ inputs.bump-type }}
+          
+          CURRENT_VERSION=$(bump-my-version show current_version)
+          echo "current-version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          echo "::notice::Current version: $CURRENT_VERSION"
+
+      - name: Update changelog
+        id: changelog
+        uses: release-flow/keep-a-changelog-action@v2
+        with:
+          command: bump
+          version: ${{ inputs.bump-type }}
+          keep-unreleased-section: true
+          fail-on-empty-release-notes: ${{ inputs.fail-on-empty-changelog }}
+
+      - name: Query changelog for release notes
+        id: query_changelog
+        uses: release-flow/keep-a-changelog-action@v2
+        with:
+          command: query
+          version: latest
+
+      - name: Configure Git
+        id: git_setup
+        run: |
+          # Configure Git user
+          git config --global user.name "${{ github.actor }}"
+          git config --global user.email "${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com"
+
+      - name: Create version commit
+        id: create_commit
+        run: |
+          git add .
+          git commit -m "docs: Increase version to ${{ steps.bump.outputs.current-version }} (${{ inputs.bump-type }} bump)"
+          echo "::notice::Commit created, will be pushed via pull request"
+
+      - name: Create Pull Request
+        id: create_pr
+        uses: peter-evans/create-pull-request@v7
+        with:
+          title: "Bump version to ${{ steps.bump.outputs.current-version }} (${{ inputs.bump-type }} bump)"
+          body: |
+            This PR **${{ inputs.bump-type }}** bumps the version to `${{ steps.bump.outputs.current-version }}` and updates the changelog.
+            
+            ### Reviewer Checklist
+            Please verify the following before merging:
+            
+            - [ ] **Version bump type is appropriate**: Confirm that the `${{ inputs.bump-type }}` bump matches the nature of changes since the last version:
+              - **Major**: Breaking changes or significant API modifications
+              - **Minor**: New features or functionality additions (backward compatible)
+              - **Patch**: Bug fixes, documentation updates, or minor improvements
+              - **no bump necessary**: Changes only to tests, CI, documentation, or examples. 
+              
+              If the bump type is not appropriate, close the PR and re-run the workflow with the correct bump type.
+            
+            - [ ] **Changelog accuracy**: Review that the changelog entries accurately reflect the changes being released, and are understandable to end users.
+              
+              If not, edit the changelog before merging.
+            
+            ### Next Steps
+            After merging this PR, **trigger a release** to publish version `${{ steps.bump.outputs.current-version }}`.
+            
+            ### Changelog (automatically extracted from Unreleased section)
+            ${{ steps.query_changelog.outputs.release-notes }}
+            
+            ---
+            *This PR was automatically created by the Bump Version workflow*
+          branch: bumpversion-${{ steps.bump.outputs.current-version }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          delete-branch: true
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## Workflow Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Bump Type:** ${{ inputs.bump-type }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version:** ${{ steps.bump.outputs.current-version }}" >> $GITHUB_STEP_SUMMARY
+          
+          if [[ "${{ steps.create_pr.outputs.pull-request-number }}" != "" ]]; then
+            PR_NUMBER="${{ steps.create_pr.outputs.pull-request-number }}"
+            PR_URL="https://github.com/${{ github.repository }}/pull/$PR_NUMBER"
+            echo "- **Pull Request:** [#$PR_NUMBER]($PR_URL)" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
+            echo "1. Review and merge [Pull Request #$PR_NUMBER]($PR_URL)" >> $GITHUB_STEP_SUMMARY
+            echo "2. **Trigger a release** to publish version \`${{ steps.bump.outputs.current-version }}\`" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### ⚠️ Warning" >> $GITHUB_STEP_SUMMARY
+            echo "Pull request creation failed. Please check the workflow logs." >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📋 Workflow Details" >> $GITHUB_STEP_SUMMARY
+          echo "- **Triggered by:** @${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Repository:** ${{ github.repository }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Run ID:** [${{ github.run_id }}](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> $GITHUB_STEP_SUMMARY
