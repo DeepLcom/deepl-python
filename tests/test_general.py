@@ -20,6 +20,21 @@ def test_version():
     assert "1.28.0" == deepl.__version__
 
 
+def test_remove_regional_variant():
+    for lang, expected in [
+        ("EN-US", "EN"),
+        ("en-GB", "EN"),
+        ("de-AT", "DE"),
+        (deepl.Language.ENGLISH_AMERICAN, "EN"),
+        (deepl.Language.ENGLISH_BRITISH, "EN"),
+        (deepl.Language.GERMAN, "DE"),
+        (deepl.Language.ACEHNESE, "ACE"),
+        (deepl.Language.KURDISH_KURMANJI, "KMR"),
+        (deepl.Language.SPANISH_LATIN_AMERICAN, "ES"),
+    ]:
+        assert deepl.Language.remove_regional_variant(lang) == expected
+
+
 @pytest.mark.parametrize(
     "lang",
     [k for k in example_text.keys()],
