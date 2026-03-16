@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Added new language constants from January 2026 API release of 81 new languages.
 
+### Changed
+- Updated formality tests to accept either formal or informal output when using default formality,
+  since the default formality is automatic.
+
 ## [1.28.0] - 2026-02-05
 ### Changed
 - Updated three tests to be less flakey and reflect new behavior regarding the model type.
