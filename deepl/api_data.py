@@ -865,10 +865,12 @@ class CustomInstruction:
         label: str,
         prompt: str,
         source_language: Optional[str] = None,
+        id: Optional[str] = None,
     ):
         self._label = label
         self._prompt = prompt
         self._source_language = source_language
+        self._id = id
 
     @staticmethod
     def from_json(json) -> "CustomInstruction":
@@ -877,7 +879,13 @@ class CustomInstruction:
             label=json["label"],
             prompt=json["prompt"],
             source_language=json.get("source_language"),
+            id=json.get("id"),
         )
+
+    @property
+    def id(self) -> Optional[str]:
+        """Returns the unique ID of the custom instruction."""
+        return self._id
 
     @property
     def label(self) -> str:

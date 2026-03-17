@@ -2,7 +2,10 @@
 # Use of this source code is governed by an MIT
 # license that can be found in the LICENSE file.
 
+import datetime
+
 import deepl
+from deepl.util import parse_timestamp
 import pytest
 
 
@@ -33,3 +36,27 @@ def test_convert_dict_to_tsv():
         deepl.convert_dict_to_tsv({"": "target"})
     with pytest.raises(ValueError, match="not a valid string"):
         deepl.convert_dict_to_tsv({"\t": "target"})
+
+
+def test_parse_timestamp_microseconds():
+    """Standard 6-digit fractional seconds should parse correctly."""
+    result = parse_timestamp("2025-01-15T10:30:00.123456+0000")
+    assert result == datetime.datetime(
+        2025, 1, 15, 10, 30, 0, 123456, tzinfo=datetime.timezone.utc
+    )
+
+
+def test_parse_timestamp_nanoseconds():
+    """7-digit fractional seconds (nanoseconds) should be truncated to 6."""
+    result = parse_timestamp("2025-01-15T10:30:00.1234567+0000")
+    assert result == datetime.datetime(
+        2025, 1, 15, 10, 30, 0, 123456, tzinfo=datetime.timezone.utc
+    )
+
+
+def test_parse_timestamp_extra_nanoseconds():
+    """9-digit fractional seconds should be truncated to 6."""
+    result = parse_timestamp("2025-01-15T10:30:00.123456789+0000")
+    assert result == datetime.datetime(
+        2025, 1, 15, 10, 30, 0, 123456, tzinfo=datetime.timezone.utc
+    )

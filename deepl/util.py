@@ -7,6 +7,7 @@ import importlib
 import io
 import itertools
 import logging
+import re
 from typing import Any, BinaryIO, Dict, Optional, TextIO, Union
 
 logger = logging.getLogger("deepl")
@@ -188,4 +189,7 @@ def convert_csv_to_dict(
 
 
 def parse_timestamp(creation_time: str) -> datetime.datetime:
+    # Truncate fractional seconds to 6 digits (microseconds) since Python's
+    # %f only handles up to 6 digits, but the API may return 7 (nanoseconds).
+    creation_time = re.sub(r"(\.\d{6})\d+", r"\1", creation_time)
     return datetime.datetime.strptime(creation_time, "%Y-%m-%dT%H:%M:%S.%f%z")

@@ -53,6 +53,9 @@ def main() -> None:
 
     print("Success")
 
+    # cleanup
+    translator.delete_glossary(ginfo.glossary_id)
+
 
 if __name__ == "__main__":
     main()
