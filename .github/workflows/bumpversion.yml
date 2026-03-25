@@ -6,9 +6,11 @@ run-name: Bump version (${{ inputs.bump-type }}) by @${{ github.actor }}
 # Note: Enable GitHub Actions to create pull requests in repository settings:
 # Settings -> Actions -> General -> Workflow permissions -> Allow GitHub Actions to create and approve pull requests
 
-permissions:
-  contents: write
-  pull-requests: write
+permissions: {}
+
+concurrency:
+  group: bumpversion
+  cancel-in-progress: false
 
 on:
   workflow_dispatch:
@@ -31,6 +33,9 @@ on:
 jobs:
   bump_version:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
 
     outputs:
       version: ${{ steps.bump.outputs.current-version }}
@@ -75,24 +80,11 @@ jobs:
           command: query
           version: latest
 
-      - name: Configure Git
-        id: git_setup
-        run: |
-          # Configure Git user
-          git config --global user.name "${{ github.actor }}"
-          git config --global user.email "${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com"
-
-      - name: Create version commit
-        id: create_commit
-        run: |
-          git add .
-          git commit -m "chore: Increase version to ${{ steps.bump.outputs.current-version }} (${{ inputs.bump-type }} bump)"
-          echo "::notice::Commit created, will be pushed via pull request"
-
       - name: Create Pull Request
         id: create_pr
         uses: peter-evans/create-pull-request@v7
         with:
+          commit-message: "chore: bump version to ${{ steps.bump.outputs.current-version }} (${{ inputs.bump-type }} bump)"
           title: "Bump version to ${{ steps.bump.outputs.current-version }} (${{ inputs.bump-type }} bump)"
           body: |
             This PR **${{ inputs.bump-type }}** bumps the version to `${{ steps.bump.outputs.current-version }}` and updates the changelog.
