@@ -163,11 +163,13 @@ def test_formality(translator, server):
     )
     if not server.is_mock_server:
         assert informal in result.text
+    # Default formality is automatic, so the output may be either
+    # formal or informal
     result = translator.translate_text(
         input_text, target_lang="DE", formality=deepl.Formality.DEFAULT
     )
     if not server.is_mock_server:
-        assert formal in result.text
+        assert formal in result.text or informal in result.text
     result = translator.translate_text(
         input_text, target_lang="DE", formality=deepl.Formality.MORE
     )
@@ -185,7 +187,7 @@ def test_formality(translator, server):
         input_text, target_lang="DE", formality="default"
     )
     if not server.is_mock_server:
-        assert formal in result.text
+        assert formal in result.text or informal in result.text
 
     result = translator.translate_text(
         input_text, target_lang="DE", formality="more"

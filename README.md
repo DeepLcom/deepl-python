@@ -644,35 +644,111 @@ target language English (`"EN"`) supports translations to both American English
 ### Style Rules
 
 Style rules allow you to customize your translations using a managed, shared list
-of rules for style, formatting, and more. Multiple style rules can be stored with 
+of rules for style, formatting, and more. Multiple style rules can be stored with
 your account, each with a user-specified name and a uniquely-assigned ID.
 
-#### Creating and managing style rules
+#### Creating a style rule
 
-Currently style rules must be created and managed in the DeepL UI via
-https://www.deepl.com/en/custom-rules. Full CRUD functionality via the APIs will
-come shortly.
+Use `create_style_rule()` to create a new style rule with a name and language
+code. You can optionally provide `configured_rules` and `custom_instructions`.
 
-#### Listing all style rules
+```python
+style_rule = deepl_client.create_style_rule(
+    name="My Style Rule",
+    language="en",
+)
+print(f"Created: {style_rule.name} ({style_rule.style_id})")
+```
+
+#### Retrieving and listing style rules
+
+Use `get_style_rule()` to retrieve a single style rule by ID, or
+`get_all_style_rules()` to list all style rules.
 
 `get_all_style_rules()` returns a list of `StyleRuleInfo` objects
 corresponding to all of your stored style rules. The method accepts optional
 parameters: `page` (page number for pagination, 0-indexed), `page_size` (number
-of items per page), and `detailed` (whether to include detailed configuration
-rules in the `configured_rules` property).
+of items per page), and `detailed`. When `True`, the response includes
+`configured_rules` and `custom_instructions` for each style rule. When `False`
+(default), these fields are omitted for faster responses.
 
 ```python
-# Get all style rules
+# Get a single style rule by ID
+style_rule = deepl_client.get_style_rule("YOUR_STYLE_ID")
+print(f"{style_rule.name} ({style_rule.language})")
+
+# List all style rules
 style_rules = deepl_client.get_all_style_rules()
 for rule in style_rules:
     print(f"{rule.name} ({rule.style_id})")
 
-# Get style rules with detailed configuration
+# List with detailed configuration
 style_rules = deepl_client.get_all_style_rules(detailed=True)
 for rule in style_rules:
     if rule.configured_rules:
         print(f"  Number formatting: {rule.configured_rules.numbers}")
 ```
+
+#### Updating a style rule
+
+Use `update_style_rule_name()` to rename a style rule, and
+`update_style_rule_configured_rules()` to update its configured rules.
+
+```python
+# Update the name
+updated = deepl_client.update_style_rule_name("YOUR_STYLE_ID", "New Name")
+
+# Update configured rules
+updated = deepl_client.update_style_rule_configured_rules(
+    "YOUR_STYLE_ID",
+    {"style_and_tone": {"formality": "formal"}},
+)
+```
+
+#### Managing custom instructions
+
+Custom instructions allow you to add free-text prompts to a style rule. Use
+`create_style_rule_custom_instruction()`, `get_style_rule_custom_instruction()`,
+`update_style_rule_custom_instruction()`, and
+`delete_style_rule_custom_instruction()` to manage them.
+
+```python
+# Create a custom instruction
+instruction = deepl_client.create_style_rule_custom_instruction(
+    "YOUR_STYLE_ID",
+    label="Formal tone",
+    prompt="Always use formal language",
+)
+print(f"Created instruction: {instruction.id}")
+
+# Get a custom instruction
+instruction = deepl_client.get_style_rule_custom_instruction(
+    "YOUR_STYLE_ID", instruction.id
+)
+
+# Update a custom instruction
+updated = deepl_client.update_style_rule_custom_instruction(
+    "YOUR_STYLE_ID",
+    instruction.id,
+    label="Updated label",
+    prompt="Use very formal language",
+)
+
+# Delete a custom instruction
+deepl_client.delete_style_rule_custom_instruction(
+    "YOUR_STYLE_ID", instruction.id
+)
+```
+
+#### Deleting a style rule
+
+Use `delete_style_rule()` to delete a style rule by ID.
+
+```python
+deepl_client.delete_style_rule("YOUR_STYLE_ID")
+```
+
+#### Using a style rule in translations
 
 Style rules can also be used with the command line interface for text translation:
 

@@ -3,6 +3,7 @@
 # license that can be found in the LICENSE file.
 
 from deepl.api_data import (
+    CustomInstruction,
     MultilingualGlossaryDictionaryEntries,
     MultilingualGlossaryDictionaryEntriesResponse,
     MultilingualGlossaryDictionaryInfo,
@@ -13,6 +14,7 @@ from deepl.api_data import (
 )
 from deepl.translator import Translator
 from deepl import util
+import urllib.parse
 from typing import (
     Any,
     BinaryIO,
@@ -645,11 +647,9 @@ class DeepLClient(Translator):
         if detailed is not None:
             params["detailed"] = str(detailed).lower()
 
-        query_string = "&".join(
-            [f"{key}={value}" for key, value in params.items()]
-        )
         endpoint = "v3/style_rules"
-        if query_string:
+        if params:
+            query_string = urllib.parse.urlencode(params)
             endpoint += f"?{query_string}"
 
         status, content, json = self._api_call(endpoint, method="GET")
@@ -663,3 +663,247 @@ class DeepLClient(Translator):
         return [
             StyleRuleInfo.from_json(style_rule) for style_rule in style_rules
         ]
+
+    def create_style_rule(
+        self,
+        name: str,
+        language: str,
+        configured_rules: Optional[dict] = None,
+        custom_instructions: Optional[List[dict]] = None,
+    ) -> StyleRuleInfo:
+        """Creates a new style rule.
+
+        :param name: Name for the style rule.
+        :param language: Language code for the style rule.
+        :param configured_rules: Optional dict of configured rules.
+        :param custom_instructions: Optional list of custom instruction dicts.
+        :return: StyleRuleInfo for the created style rule.
+        """
+        if not name:
+            raise ValueError("name must not be empty")
+        if not language:
+            raise ValueError("language must not be empty")
+
+        request_data: Dict[str, Any] = {"name": name, "language": language}
+        if configured_rules is not None:
+            request_data["configured_rules"] = configured_rules
+        if custom_instructions is not None:
+            request_data["custom_instructions"] = custom_instructions
+
+        status, content, json = self._api_call(
+            "v3/style_rules", json=request_data
+        )
+        self._raise_for_status(status, content, json)
+        return StyleRuleInfo.from_json(json)
+
+    def get_style_rule(
+        self,
+        style_rule: Union[str, StyleRuleInfo],
+    ) -> StyleRuleInfo:
+        """Retrieves a single style rule by ID.
+
+        :param style_rule: Style rule ID string or StyleRuleInfo object.
+        :return: StyleRuleInfo for the requested style rule.
+        """
+        if isinstance(style_rule, StyleRuleInfo):
+            style_rule = style_rule.style_id
+        if not style_rule:
+            raise ValueError("style_rule must not be empty")
+        status, content, json = self._api_call(
+            f"v3/style_rules/{style_rule}", method="GET"
+        )
+        self._raise_for_status(status, content, json)
+        return StyleRuleInfo.from_json(json)
+
+    def update_style_rule_name(
+        self,
+        style_rule: Union[str, StyleRuleInfo],
+        name: str,
+    ) -> StyleRuleInfo:
+        """Updates the name of a style rule.
+
+        :param style_rule: Style rule ID string or StyleRuleInfo object.
+        :param name: New name for the style rule.
+        :return: Updated StyleRuleInfo.
+        """
+        if isinstance(style_rule, StyleRuleInfo):
+            style_rule = style_rule.style_id
+        if not style_rule:
+            raise ValueError("style_rule must not be empty")
+        if not name:
+            raise ValueError("name must not be empty")
+        request_data = {"name": name}
+        status, content, json = self._api_call(
+            f"v3/style_rules/{style_rule}", method="PATCH", json=request_data
+        )
+        self._raise_for_status(status, content, json)
+        return StyleRuleInfo.from_json(json)
+
+    def delete_style_rule(
+        self,
+        style_rule: Union[str, StyleRuleInfo],
+    ) -> None:
+        """Deletes a style rule.
+
+        :param style_rule: Style rule ID string or StyleRuleInfo object.
+        """
+        if isinstance(style_rule, StyleRuleInfo):
+            style_rule = style_rule.style_id
+        if not style_rule:
+            raise ValueError("style_rule must not be empty")
+        status, content, json = self._api_call(
+            f"v3/style_rules/{style_rule}", method="DELETE"
+        )
+        self._raise_for_status(status, content, json)
+
+    def update_style_rule_configured_rules(
+        self,
+        style_rule: Union[str, StyleRuleInfo],
+        configured_rules: dict,
+    ) -> StyleRuleInfo:
+        """Updates the configured rules of a style rule.
+
+        :param style_rule: Style rule ID string or StyleRuleInfo object.
+        :param configured_rules: Dict of configured rules to set.
+        :return: Updated StyleRuleInfo.
+        """
+        if isinstance(style_rule, StyleRuleInfo):
+            style_rule = style_rule.style_id
+        if not style_rule:
+            raise ValueError("style_rule must not be empty")
+        status, content, json = self._api_call(
+            f"v3/style_rules/{style_rule}/configured_rules",
+            method="PUT",
+            json=configured_rules,
+        )
+        self._raise_for_status(status, content, json)
+        return StyleRuleInfo.from_json(json)
+
+    def create_style_rule_custom_instruction(
+        self,
+        style_rule: Union[str, StyleRuleInfo],
+        label: str,
+        prompt: str,
+        source_language: Optional[str] = None,
+    ) -> CustomInstruction:
+        """Creates a custom instruction for a style rule.
+
+        :param style_rule: Style rule ID string or StyleRuleInfo object.
+        :param label: Label for the custom instruction.
+        :param prompt: Prompt text for the custom instruction.
+        :param source_language: Optional source language code.
+        :return: Created CustomInstruction.
+        """
+        if isinstance(style_rule, StyleRuleInfo):
+            style_rule = style_rule.style_id
+        if not style_rule:
+            raise ValueError("style_rule must not be empty")
+        if not label:
+            raise ValueError("label must not be empty")
+        if not prompt:
+            raise ValueError("prompt must not be empty")
+        request_data = {"label": label, "prompt": prompt}
+        if source_language is not None:
+            request_data["source_language"] = source_language
+        status, content, json = self._api_call(
+            f"v3/style_rules/{style_rule}/custom_instructions",
+            json=request_data,
+        )
+        self._raise_for_status(status, content, json)
+        return CustomInstruction.from_json(json)
+
+    def get_style_rule_custom_instruction(
+        self,
+        style_rule: Union[str, StyleRuleInfo],
+        instruction_id: str,
+    ) -> CustomInstruction:
+        """Retrieves a custom instruction by ID.
+
+        :param style_rule: Style rule ID string or StyleRuleInfo object.
+        :param instruction_id: ID of the custom instruction.
+        :return: CustomInstruction.
+        """
+        if isinstance(style_rule, StyleRuleInfo):
+            style_rule = style_rule.style_id
+        if not style_rule:
+            raise ValueError("style_rule must not be empty")
+        if not instruction_id:
+            raise ValueError("instruction_id must not be empty")
+        url = (
+            f"v3/style_rules/{style_rule}"
+            f"/custom_instructions/{instruction_id}"
+        )
+        status, content, json = self._api_call(
+            url,
+            method="GET",
+        )
+        self._raise_for_status(status, content, json)
+        return CustomInstruction.from_json(json)
+
+    def update_style_rule_custom_instruction(
+        self,
+        style_rule: Union[str, StyleRuleInfo],
+        instruction_id: str,
+        label: str,
+        prompt: str,
+        source_language: Optional[str] = None,
+    ) -> CustomInstruction:
+        """Updates a custom instruction.
+
+        :param style_rule: Style rule ID string or StyleRuleInfo object.
+        :param instruction_id: ID of the custom instruction.
+        :param label: New label for the custom instruction.
+        :param prompt: New prompt text for the custom instruction.
+        :param source_language: Optional source language code.
+        :return: Updated CustomInstruction.
+        """
+        if isinstance(style_rule, StyleRuleInfo):
+            style_rule = style_rule.style_id
+        if not style_rule:
+            raise ValueError("style_rule must not be empty")
+        if not instruction_id:
+            raise ValueError("instruction_id must not be empty")
+        if not label:
+            raise ValueError("label must not be empty")
+        if not prompt:
+            raise ValueError("prompt must not be empty")
+        request_data = {"label": label, "prompt": prompt}
+        if source_language is not None:
+            request_data["source_language"] = source_language
+        url = (
+            f"v3/style_rules/{style_rule}"
+            f"/custom_instructions/{instruction_id}"
+        )
+        status, content, json = self._api_call(
+            url,
+            method="PUT",
+            json=request_data,
+        )
+        self._raise_for_status(status, content, json)
+        return CustomInstruction.from_json(json)
+
+    def delete_style_rule_custom_instruction(
+        self,
+        style_rule: Union[str, StyleRuleInfo],
+        instruction_id: str,
+    ) -> None:
+        """Deletes a custom instruction from a style rule.
+
+        :param style_rule: Style rule ID string or StyleRuleInfo object.
+        :param instruction_id: ID of the custom instruction to delete.
+        """
+        if isinstance(style_rule, StyleRuleInfo):
+            style_rule = style_rule.style_id
+        if not style_rule:
+            raise ValueError("style_rule must not be empty")
+        if not instruction_id:
+            raise ValueError("instruction_id must not be empty")
+        url = (
+            f"v3/style_rules/{style_rule}"
+            f"/custom_instructions/{instruction_id}"
+        )
+        status, content, json = self._api_call(
+            url,
+            method="DELETE",
+        )
+        self._raise_for_status(status, content, json)

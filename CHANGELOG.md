@@ -6,6 +6,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.29.0] - 2026-03-26
+### Added
+- Added new language constants from January 2026 API release of 81 new languages.
+- Added support for style rules CRUD endpoints in the `DeepLClient` class:
+  `create_style_rule()`, `get_style_rule()`, `update_style_rule_name()`,
+  `update_style_rule_configured_rules()`, and `delete_style_rule()`.
+- Added support for style rule custom instruction CRUD endpoints in the
+  `DeepLClient` class: `create_style_rule_custom_instruction()`,
+  `get_style_rule_custom_instruction()`,
+  `update_style_rule_custom_instruction()`, and
+  `delete_style_rule_custom_instruction()`.
+  Please refer to the README for usage instructions.
+
+### Changed
+- Updated formality tests to accept either formal or informal output when using default formality,
+  since the default formality is automatic.
+
 ## [1.28.0] - 2026-02-05
 ### Changed
 - Updated three tests to be less flakey and reflect new behavior regarding the model type.
@@ -376,7 +393,8 @@ Version increased to avoid conflicts with old packages on PyPI.
 ## [0.1.0] - 2021-07-26
 Initial version.
 
-[Unreleased]: https://github.com/DeepLcom/deepl-python/compare/v1.28.0...HEAD
+[Unreleased]: https://github.com/DeepLcom/deepl-python/compare/v1.29.0...HEAD
+[1.29.0]: https://github.com/DeepLcom/deepl-python/compare/v1.28.0...v1.29.0
 [1.28.0]: https://github.com/DeepLcom/deepl-python/compare/v1.27.0...v1.28.0
 [1.27.0]: https://github.com/DeepLcom/deepl-python/compare/v1.26.0...v1.27.0
 [1.26.0]: https://github.com/DeepLcom/deepl-python/compare/v1.25.0...v1.26.0
