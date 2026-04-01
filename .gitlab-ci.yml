@@ -277,6 +277,7 @@ pypi upload:
 
 gitlab release:
   stage: publish
+  image: registry.gitlab.com/gitlab-org/release-cli:latest
   extends: .create_gitlab_release
   before_script:
     - echo "overriding default before_script..."
