@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.30.1] - 2026-04-17
+
 ## [1.30.0] - 2026-04-09
 ### Added
 - Added support for translation memories in text translation via
@@ -406,7 +408,8 @@ Version increased to avoid conflicts with old packages on PyPI.
 ## [0.1.0] - 2021-07-26
 Initial version.
 
-[Unreleased]: https://github.com/DeepLcom/deepl-python/compare/v1.30.0...HEAD
+[Unreleased]: https://github.com/DeepLcom/deepl-python/compare/v1.30.1...HEAD
+[1.30.1]: https://github.com/DeepLcom/deepl-python/compare/v1.30.0...v1.30.1
 [1.30.0]: https://github.com/DeepLcom/deepl-python/compare/v1.29.0...v1.30.0
 [1.29.0]: https://github.com/DeepLcom/deepl-python/compare/v1.28.0...v1.29.0
 [1.28.0]: https://github.com/DeepLcom/deepl-python/compare/v1.27.0...v1.28.0
