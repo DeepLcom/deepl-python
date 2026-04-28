@@ -64,21 +64,28 @@ jobs:
           echo "current-version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
           echo "::notice::Current version: $CURRENT_VERSION"
 
-      - name: Update changelog
+      - name: Update changelog and extract release notes
         id: changelog
-        uses: release-flow/keep-a-changelog-action@74931dec7ecdbfc8e38ac9ae7e8dd84c08db2f32  # v3.0.0 https://github.com/release-flow/keep-a-changelog-action/releases/tag/v3.0.0
-        with:
-          command: bump
-          version: ${{ inputs.bump-type }}
-          keep-unreleased-section: true
-          fail-on-empty-release-notes: ${{ inputs.fail-on-empty-changelog }}
+        shell: bash
+        run: |
+          VERSION="${{ steps.bump.outputs.current-version }}"
 
-      - name: Query changelog for release notes
-        id: query_changelog
-        uses: release-flow/keep-a-changelog-action@74931dec7ecdbfc8e38ac9ae7e8dd84c08db2f32  # v3.0.0 https://github.com/release-flow/keep-a-changelog-action/releases/tag/v3.0.0
-        with:
-          command: query
-          version: latest
+          # Stamp Unreleased section with version number and todays date
+          npx --yes keep-a-changelog@2.8.0 --release "$VERSION"
+          # Add new Unreleased section
+          npx --yes keep-a-changelog@2.8.0 --create
+
+          RELEASE_NOTES=$(npx --yes keep-a-changelog@2.8.0 --latest-release-full)
+          RELEASE_BODY=$(echo "$RELEASE_NOTES" | tail -n +2)  # omits ## [x.y.z] line 
+
+          if ${{ inputs.fail-on-empty-changelog }} && [ -z "$(echo "$RELEASE_BODY" | tr -d '[:space:]')" ]; then
+            echo "::error::Changelog for $VERSION is empty"
+            exit 1
+          fi
+
+          echo "release-notes<<EOF_BUMPVERSION" >> $GITHUB_OUTPUT
+          echo "$RELEASE_NOTES" >> $GITHUB_OUTPUT
+          echo "EOF_BUMPVERSION" >> $GITHUB_OUTPUT
 
       - name: Create Pull Request
         id: create_pr
@@ -108,7 +115,7 @@ jobs:
             After merging this PR, **trigger a release** to publish version `${{ steps.bump.outputs.current-version }}`.
             
             ### Changelog (automatically extracted from Unreleased section)
-            ${{ steps.query_changelog.outputs.release-notes }}
+            ${{ steps.changelog.outputs.release-notes }}
             
             ---
             *This PR was automatically created by the Bump Version workflow*

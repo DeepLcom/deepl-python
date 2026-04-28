@@ -178,6 +178,12 @@ arguments are:
   use, options are `'v1'` and `'v2'`.
 - `style_rule`: specifies a style rule to use with translation, either as a string
   containing the ID of the style rule, or a `StyleRuleInfo` object.
+- `translation_memory`: specifies a translation memory to use with translation,
+  either as a string containing the ID of the translation memory, or a
+  `TranslationMemoryInfo` object.
+- `translation_memory_threshold`: the minimum matching percentage for fuzzy
+  matches from the translation memory (0-100). We recommend a minimum threshold
+  of 75%.
 - `custom_instructions`: an array of instructions to customize the text 
   translation behavior. Up to 10 custom instructions can be specified, each with 
   a maximum of 300 characters.
@@ -755,6 +761,68 @@ Style rules can also be used with the command line interface for text translatio
 ```bash
 python3 -m deepl --auth-key=YOUR_AUTH_KEY text --to=DE --style-id=YOUR_STYLE_ID "Text to translate"
 ``` 
+
+### Translation Memories
+
+Translation memories allow you to store and reuse previously created translations.
+They can be used in text translation requests to improve consistency by matching
+against stored segments. Multiple translation memories can be stored with your
+account, each with a source language and one or more target languages.
+
+#### Uploading and managing translation memories
+
+Currently translation memories must be uploaded and managed in the DeepL UI via
+https://www.deepl.com/translation-memory. Full CRUD functionality via the APIs will
+come shortly.
+
+#### Listing translation memories
+
+`list_translation_memories()` returns a list of `TranslationMemoryInfo` objects
+for your stored translation memories. The number of translation memories
+returned is controlled by `page_size` (max 25). The method accepts
+optional parameters: `page` (page number for pagination, 0-indexed)
+and `page_size` (number of items per page).
+
+```python
+# List translation memories
+translation_memories = deepl_client.list_translation_memories()
+for tm in translation_memories:
+    print(f"{tm.name} ({tm.translation_memory_id})")
+    print(f"  Source: {tm.source_language}, Targets: {tm.target_languages}")
+    print(f"  Segments: {tm.segment_count}")
+```
+
+#### Using a translation memory in translations
+
+Pass the `translation_memory` parameter to `translate_text()` to use a
+translation memory. You can pass either a string containing the translation
+memory ID, or a `TranslationMemoryInfo` object. Use
+`translation_memory_threshold` to control the minimum matching percentage for
+fuzzy matches (0-100, recommended minimum of 75%).
+
+```python
+# Translate with a translation memory ID
+result = deepl_client.translate_text(
+    "Hello, world!",
+    target_lang="DE",
+    translation_memory="YOUR_TM_ID",
+    translation_memory_threshold=80,
+)
+
+# Or use a TranslationMemoryInfo object
+translation_memories = deepl_client.list_translation_memories()
+result = deepl_client.translate_text(
+    "Hello, world!",
+    target_lang="DE",
+    translation_memory=translation_memories[0],
+)
+```
+
+Translation memories can also be used with the command line interface:
+
+```bash
+python3 -m deepl --auth-key=YOUR_AUTH_KEY text --to=DE --translation-memory-id=YOUR_TM_ID --translation-memory-threshold=75 "Text to translate"
+```
 
 ### Writing a Plugin
 

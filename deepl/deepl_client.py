@@ -11,6 +11,7 @@ from deepl.api_data import (
     Language,
     WriteResult,
     StyleRuleInfo,
+    TranslationMemoryInfo,
 )
 from deepl.translator import Translator
 from deepl import util
@@ -907,3 +908,39 @@ class DeepLClient(Translator):
             method="DELETE",
         )
         self._raise_for_status(status, content, json)
+
+    def list_translation_memories(
+        self,
+        page: Optional[int] = None,
+        page_size: Optional[int] = None,
+    ) -> List[TranslationMemoryInfo]:
+        """Retrieves a list of TranslationMemoryInfo for available
+        translation memories. The maximum number of translation memories
+        returned is controlled by page_size (max 25).
+
+        :param page: Page number for pagination, 0-indexed (optional).
+        :param page_size: Number of items per page (optional).
+        :return: List of TranslationMemoryInfo objects.
+        """
+        params = {}
+        if page is not None:
+            params["page"] = str(page)
+        if page_size is not None:
+            params["page_size"] = str(page_size)
+
+        endpoint = "v3/translation_memories"
+        if params:
+            query_string = urllib.parse.urlencode(params)
+            endpoint += f"?{query_string}"
+
+        status, content, json = self._api_call(endpoint, method="GET")
+        self._raise_for_status(status, content, json)
+
+        translation_memories = (
+            json.get("translation_memories", [])
+            if (json and isinstance(json, dict))
+            else []
+        )
+        return [
+            TranslationMemoryInfo.from_json(tm) for tm in translation_memories
+        ]

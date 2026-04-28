@@ -1005,3 +1005,70 @@ class StyleRuleInfo:
     def custom_instructions(self) -> List[CustomInstruction]:
         """Returns the list of custom instructions."""
         return self._custom_instructions or []
+
+
+class TranslationMemoryInfo:
+    """Information about a translation memory.
+
+    :param translation_memory_id: Unique ID assigned to the translation memory.
+    :param name: User-defined name assigned to the translation memory.
+    :param source_language: Source language code for the translation memory.
+    :param target_languages: List of target language codes available.
+    :param segment_count: Number of segments stored in the translation memory.
+    """
+
+    def __init__(
+        self,
+        translation_memory_id: str,
+        name: str,
+        source_language: str,
+        target_languages: List[str],
+        segment_count: int,
+    ):
+        self._translation_memory_id = translation_memory_id
+        self._name = name
+        self._source_language = source_language
+        self._target_languages = target_languages
+        self._segment_count = segment_count
+
+    def __str__(self) -> str:
+        return (
+            f'TranslationMemory "{self.name}" '
+            f"({self.translation_memory_id})"
+        )
+
+    @staticmethod
+    def from_json(json) -> "TranslationMemoryInfo":
+        """Create TranslationMemoryInfo from the given API JSON object."""
+        return TranslationMemoryInfo(
+            translation_memory_id=json["translation_memory_id"],
+            name=json["name"],
+            source_language=json["source_language"],
+            target_languages=json.get("target_languages", []),
+            segment_count=json.get("segment_count", 0),
+        )
+
+    @property
+    def translation_memory_id(self) -> str:
+        """Returns the unique ID of the translation memory."""
+        return self._translation_memory_id
+
+    @property
+    def name(self) -> str:
+        """Returns the name of the translation memory."""
+        return self._name
+
+    @property
+    def source_language(self) -> str:
+        """Returns the source language code."""
+        return self._source_language
+
+    @property
+    def target_languages(self) -> List[str]:
+        """Returns the list of target language codes."""
+        return self._target_languages
+
+    @property
+    def segment_count(self) -> int:
+        """Returns the number of segments stored."""
+        return self._segment_count

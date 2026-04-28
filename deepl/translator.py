@@ -14,6 +14,7 @@ from deepl.api_data import (
     SplitSentences,
     StyleRuleInfo,
     TextResult,
+    TranslationMemoryInfo,
     Usage,
 )
 from . import http_client, util
@@ -264,6 +265,8 @@ class Translator:
             str, GlossaryInfo, MultilingualGlossaryInfo, None
         ] = None,
         style_rule: Union[str, StyleRuleInfo, None] = None,
+        translation_memory: Union[str, TranslationMemoryInfo, None] = None,
+        translation_memory_threshold: Optional[int] = None,
     ) -> dict:
         # target_lang and source_lang are case insensitive
         target_lang = str(target_lang).upper()
@@ -304,7 +307,7 @@ class Translator:
 
         self._check_valid_languages(source_lang, target_lang)
 
-        request_data = {"target_lang": target_lang}
+        request_data: dict = {"target_lang": target_lang}
         if source_lang is not None:
             request_data["source_lang"] = source_lang
         if formality is not None:
@@ -319,6 +322,25 @@ class Translator:
             request_data["style_id"] = style_rule.style_id
         elif style_rule is not None:
             request_data["style_id"] = style_rule
+        if isinstance(translation_memory, TranslationMemoryInfo):
+            request_data["translation_memory_id"] = (
+                translation_memory.translation_memory_id
+            )
+        elif translation_memory is not None:
+            request_data["translation_memory_id"] = translation_memory
+        if translation_memory_threshold is not None:
+            if translation_memory is None:
+                raise ValueError(
+                    "translation_memory_threshold requires"
+                    " translation_memory"
+                )
+            if not (0 <= translation_memory_threshold <= 100):
+                raise ValueError(
+                    "translation_memory_threshold must be between 0 and 100"
+                )
+            request_data["translation_memory_threshold"] = (
+                translation_memory_threshold
+            )
         return request_data
 
     def _create_glossary(
@@ -383,6 +405,8 @@ class Translator:
         ignore_tags: Union[str, List[str], None] = None,
         model_type: Union[str, ModelType, None] = None,
         style_rule: Union[str, StyleRuleInfo, None] = None,
+        translation_memory: Union[str, TranslationMemoryInfo, None] = None,
+        translation_memory_threshold: Optional[int] = None,
         custom_instructions: Optional[List[str]] = None,
         extra_body_parameters: Optional[dict] = None,
     ) -> Union[TextResult, List[TextResult]]:
@@ -413,6 +437,11 @@ class Translator:
             translation. Must match specified source_lang and target_lang.
         :param style_rule: (Optional) style rule or style rule ID to use for
             translation.
+        :param translation_memory: (Optional) translation memory or translation
+            memory ID to use for translation.
+        :param translation_memory_threshold: (Optional) minimum matching
+            percentage for fuzzy matches from the translation memory (0-100).
+            Recommended minimum is 75%.
         :param tag_handling: (Optional) Type of tags to parse before
             translation, only "xml" and "html" are currently available.
         :param tag_handling_version: (Optional) Version of tag handling
@@ -456,7 +485,13 @@ class Translator:
             )
 
         request_data = self._check_language_and_formality(
-            source_lang, target_lang, formality, glossary, style_rule
+            source_lang,
+            target_lang,
+            formality,
+            glossary,
+            style_rule,
+            translation_memory,
+            translation_memory_threshold,
         )
         request_data["text"] = text
 
@@ -478,11 +513,6 @@ class Translator:
             request_data["outline_detection"] = bool(outline_detection)
         if model_type is not None:
             request_data["model_type"] = str(model_type)
-        if style_rule is not None:
-            if isinstance(style_rule, StyleRuleInfo):
-                request_data["style_id"] = style_rule.style_id
-            else:
-                request_data["style_id"] = style_rule
 
         def join_tags(tag_argument: Union[str, Iterable[str]]) -> List[str]:
             if isinstance(tag_argument, str):

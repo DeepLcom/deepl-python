@@ -386,6 +386,19 @@ def get_parser(prog_name):
         help="ID of style rule to use for translation",
     )
     parser_text.add_argument(
+        "--translation-memory-id",
+        dest="translation_memory",
+        type=str,
+        help="ID of translation memory to use for translation",
+    )
+    parser_text.add_argument(
+        "--translation-memory-threshold",
+        dest="translation_memory_threshold",
+        type=int,
+        help="minimum matching percentage (0-100) for translation memory "
+        "fuzzy matches, recommended minimum is 75",
+    )
+    parser_text.add_argument(
         "--custom-instructions",
         dest="custom_instructions",
         action="append",
